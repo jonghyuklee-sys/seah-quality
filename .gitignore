@@ -1,0 +1,9 @@
+# Local environment
+venv/
+.env
+.DS_Store
+
+# IDE and other files
+.vscode/
+.idea/
+*.log

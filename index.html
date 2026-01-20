@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="세아씨엠 품질관리 시스템 - 강종별 규격 및 기계적 성질 관리">
+    <title>세아씨엠 품질 조회 시스템</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="seah-logo.jpg" alt="SeAH Logo" class="logo-img">
+                    <div class="sidebar-title">
+                        <h1>세아씨엠 품질 조회 시스템</h1>
+                        <p>Quality Search System</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-nav">
+                <p class="nav-group-title">Main Menu</p>
+                <a href="#search-view" class="active nav-link">
+                    <span>🔍</span> 규격 조회
+                </a>
+                <a href="#comparison-view" class="nav-link">
+                    <span>📊</span> 규격 비교
+                </a>
+                <a href="#info-view" class="nav-link">
+                    <span>📖</span> 강종 정보
+                </a>
+
+                <p class="nav-group-title" style="margin-top: 24px;">Support</p>
+                <a href="#management-view" class="nav-link">
+                    <span>📋</span> 규격 데이터 관리
+                </a>
+                <a href="#settings-view" class="nav-link">
+                    <span>⚙️</span> 시스템 설정
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>© 2026 SeAH CM</p>
+                <p>품질경영팀 v2.0</p>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    Dashboard / <span id="current-page">규격 조회</span>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name">품질관리자</span>
+                        <span class="user-role">품질경영팀</span>
+                    </div>
+                    <div class="avatar"
+                        style="width: 36px; height: 36px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #64748b;">
+                        QM</div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-padding">
+
+                <!-- 1. Search Section (Default View) -->
+                <section id="search-view" class="page-section">
+                    <div class="page-header">
+                        <h2>강종 규격 조회</h2>
+                        <p>강종, 규격, 재질을 선택하여 상세 물성 정보를 조회합니다.</p>
+                    </div>
+
+                    <!-- Quick Stats (Optional aesthetic touch for internal tools) -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-label">조회 가능한 강종</span>
+                            <span class="stat-value">10 EA</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">등록된 규격</span>
+                            <span class="stat-value">4 Type</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">업데이트 일자</span>
+                            <span class="stat-value" style="font-size: 18px;">2026-01-20</span>
+                        </div>
+                    </div>
+
+                    <div class="search-container">
+                        <h3 class="section-title-line">🔎 조회 필터</h3>
+                        <div class="search-form-grid">
+                            <div class="form-field">
+                                <label for="steel-type">강종 (Steel Type)</label>
+                                <select id="steel-type">
+                                    <option value="">강종 선택</option>
+                                    <option value="GI">GI (용융아연도금강판)</option>
+                                    <option value="GL">GL (갈바륨강판)</option>
+                                    <option value="AL">AL (알루미늄도금강판)</option>
+                                    <option value="GIX">GIX (삼원계 3030)</option>
+                                    <option value="GLX">GLX (삼원계 3033)</option>
+                                    <option value="PPGI">PPGI (도장 아연도금강판)</option>
+                                    <option value="PPGL">PPGL (도장 갈바륨강판)</option>
+                                    <option value="PPAL">PPAL (도장 알루미늄강판)</option>
+                                    <option value="PPZM">PPZM (도장 삼원계 강판)</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="standard-type">규격 (Standard)</label>
+                                <select id="standard-type">
+                                    <option value="">규격 선택</option>
+                                    <option value="KS">KS (한국산업표준)</option>
+                                    <option value="JIS">JIS (일본공업규격)</option>
+                                    <option value="ASTM">ASTM (미국재료시험협회)</option>
+                                    <option value="EN">EN (유럽표준)</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="grade-type">재질 (Grade)</label>
+                                <select id="grade-type" disabled>
+                                    <option value="">강종/규격 먼저 선택</option>
+                                </select>
+                            </div>
+                            <button id="search-btn" class="btn-primary">데이터 조회</button>
+                        </div>
+
+                    </div>
+            </div>
+
+            <!-- Results Table -->
+            <div id="results-card" class="results-card" style="display: none;">
+                <div class="results-header-box">
+                    <h3 id="results-title">조회 결과</h3>
+                    <div class="badge-group" id="results-badges"></div>
+                </div>
+
+                <div class="table-section">
+                    <!-- Common: Mechanical Properties -->
+                    <h4 class="sub-title">⚙️ 기계적 성질 (Mechanical Properties)</h4>
+                    <table class="data-table">
+                        <thead id="mech-thead">
+                            <tr>
+                                <th>항목</th>
+                                <th>기호</th>
+                                <th>기준치</th>
+                                <th>단위</th>
+                                <th>비고</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mechanical-tbody"></tbody>
+                    </table>
+
+                    <!-- Non-Coated Specific: Chemical, Tolerance, Flatness -->
+                    <div id="non-coated-results">
+                        <h4 class="sub-title" style="margin-top: 32px;">🧪 화학 성분 (Chemical Composition)</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>원소</th>
+                                    <th>C</th>
+                                    <th>Mn</th>
+                                    <th>P</th>
+                                    <th>S</th>
+                                    <th>Si</th>
+                                    <th>Al</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chemical-tbody"></tbody>
+                        </table>
+
+                        <h4 class="sub-title" style="margin-top: 32px;">📏 제품 허용차 및 평탈도</h4>
+                        <div class="coating-grid">
+                            <div class="info-box">
+                                <span class="label">두께 허용차</span>
+                                <span class="value" id="val-thickness">-</span>
+                            </div>
+                            <div class="info-box">
+                                <span class="label">평탄도 기준</span>
+                                <span class="value" id="val-flatness">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coated Specific: Resin Tests -->
+                    <div id="coated-results" style="display: none;">
+                        <h4 class="sub-title" style="margin-top: 32px;">🎨 도장 제품 품질 기준 (Resin Type Specs)</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>수지 종류</th>
+                                    <th>굽힘 시험 (Bending)</th>
+                                    <th>충격 시험 (Impact)</th>
+                                    <th>염수분무 (Salt Spray)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coated-tbody">
+                                <!-- Will be filled per grade/resin -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 class="sub-title" style="margin-top: 32px;">🛡️ 도금 및 규격 정보</h4>
+                    <div class="coating-grid" id="coating-cards"></div>
+
+                    <div class="info-banner" id="standard-info"></div>
+                </div>
+            </div>
+            </section>
+
+            <!-- 2. Comparison Section -->
+            <section id="comparison-view" class="page-section" style="display: none;">
+                <div class="page-header">
+                    <h2>규격별 비교</h2>
+                    <p>지역별 주요 규격의 특징을 비교 분석합니다.</p>
+                </div>
+
+                <div class="standard-grid">
+                    <div class="standard-card">
+                        <div class="card-header">
+                            <h3>KS</h3>
+                            <span class="region-tag">🇰🇷</span>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>KS D 3506 (아연도금강판)</li>
+                                <li>KS D 3770 (갈바륨강판)</li>
+                                <li>KS D 3030 (삼원계 3030: GIX)</li>
+                                <li>KS D 3033 (삼원계 3033: GLX)</li>
+                                <li>KS D 3520 (도장 아연도금강판)</li>
+                                <li>KS D 3862 (도장 갈바륨강판)</li>
+                                <li>KS D 6711 (도장 알루미늄강판)</li>
+                                <li>KS D 3030/3033 (도장 삼원계)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="standard-card">
+                        <div class="card-header">
+                            <h3>JIS</h3>
+                            <span class="region-tag">🇯🇵</span>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>JIS G 3302 (아연도금강판)</li>
+                                <li>JIS G 3321 (갈바륨강판)</li>
+                                <li>JIS G 3323 (삼원계 3030)</li>
+                                <li>JIS G 3323 (삼원계 3033)</li>
+                                <li>JIS G 3312 (도장 아연도금강판)</li>
+                                <li>JIS G 3322 (도장 갈바륨강판)</li>
+                                <li>JIS H 4001 (도장 알루미늄강판)</li>
+                                <li>JIS G 3323 (도장 삼원계)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="standard-card">
+                        <div class="card-header">
+                            <h3>ASTM</h3>
+                            <span class="region-tag">🇺🇸</span>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>ASTM A653 (아연도금강판)</li>
+                                <li>ASTM A792 (갈바륨강판)</li>
+                                <li>ASTM A1046 (삼원계 3030)</li>
+                                <li>ASTM A1046 (삼원계 3033)</li>
+                                <li>ASTM A755 (도장 아연도금강판)</li>
+                                <li>ASTM A755 (도장 갈바륨강판)</li>
+                                <li>ASTM B209 (도장 알루미늄강판)</li>
+                                <li>ASTM A1046 (도장 삼원계)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="standard-card">
+                        <div class="card-header">
+                            <h3>EN</h3>
+                            <span class="region-tag">🇪🇺</span>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>EN 10346 (아연도금강판)</li>
+                                <li>EN 10346 (갈바륨강판)</li>
+                                <li>EN 10346 (삼원계 3030)</li>
+                                <li>EN 10346 (삼원계 3033)</li>
+                                <li>EN 10169 (도장 아연도금강판)</li>
+                                <li>EN 10169 (도장 갈바륨강판)</li>
+                                <li>EN 1396 (도장 알루미늄강판)</li>
+                                <li>EN 10346 (도장 삼원계)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Info Section -->
+            <section id="info-view" class="page-section" style="display: none;">
+                <div class="page-header">
+                    <h2>강종 상세 정보</h2>
+                    <p>생산 강종별 상세 특징 및 물성 가이드를 확인합니다.</p>
+                </div>
+
+                <div class="tab-container">
+                    <div class="tab-header">
+                        <button class="tab-btn active" data-tab="gi">GI</button>
+                        <button class="tab-btn" data-tab="gl">GL</button>
+                        <button class="tab-btn" data-tab="al">AL</button>
+                        <button class="tab-btn" data-tab="gix">GIX</button>
+                        <button class="tab-btn" data-tab="glx">GLX</button>
+                    </div>
+                    <div class="tab-content">
+                        <!-- GI -->
+                        <div class="info-panel active" id="panel-gi">
+                            <div class="info-layout">
+                                <div class="info-text">
+                                    <h3>GI <small>용융아연도금강판</small></h3>
+                                    <p class="info-title-sub">Hot-Dip Galvanized Steel Sheet</p>
+                                    <p class="info-desc">냉연강판을 아연욕조에 통과시켜 아연도금층을 형성한 제품으로, 우수한 내식성과 경제성을 가집니다.</p>
+                                    <div class="info-feature-grid">
+                                        <div class="feature-tag">✅ 우수한 내식성</div>
+                                        <div class="feature-tag">✅ 경제적인 가격</div>
+                                        <div class="feature-tag">✅ 가공성 우수</div>
+                                        <div class="feature-tag">✅ 용접성 양호</div>
+                                    </div>
+                                </div>
+                                <div class="info-spec-box">
+                                    <h4>주요 고시 정보</h4>
+                                    <ul>
+                                        <li>건축 내외장재, 가전, 자동차</li>
+                                        <li>도금량: 60 ~ 450 g/m²</li>
+                                    </ul>
+                                    <span class="label">대표 물성 범위</span>
+                                    <span class="spec-highlight">Standard Grade</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- GL -->
+                        <div class="info-panel" id="panel-gl">
+                            <div class="info-layout">
+                                <div class="info-text">
+                                    <h3>GL <small>갈바륨강판</small></h3>
+                                    <p class="info-title-sub">Galvalume Steel Sheet (55% Al-Zn)</p>
+                                    <p class="info-desc">알루미늄 55% 함유 합금도금으로 GI 대비 3~6배 우수한 내식성을 제공합니다.</p>
+                                    <div class="info-feature-grid">
+                                        <div class="feature-tag">✅ 탁월한 내식성</div>
+                                        <div class="feature-tag">✅ 미려한 외관</div>
+                                        <div class="feature-tag">✅ 우수한 내열성</div>
+                                        <div class="feature-tag">✅ 고반사성</div>
+                                    </div>
+                                </div>
+                                <div class="info-spec-box">
+                                    <h4>주요 고시 정보</h4>
+                                    <ul>
+                                        <li>지붕/벽체, 가전 내장, 열반사</li>
+                                        <li>도금량: 70 ~ 275 g/m²</li>
+                                    </ul>
+                                    <span class="label">내마모성 등급</span>
+                                    <span class="spec-highlight">High Durability</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- AL -->
+                        <div class="info-panel" id="panel-al">
+                            <div class="info-layout">
+                                <div class="info-text">
+                                    <h3>AL <small>알루미늄도금강판</small></h3>
+                                    <p class="info-title-sub">Aluminized Steel Sheet</p>
+                                    <p class="info-desc">고온 내산화성과 내열성이 뛰어나 자동차 배기계 등에 주로 사용됩니다.</p>
+                                    <div class="info-feature-grid">
+                                        <div class="feature-tag">✅ 고온 내열성</div>
+                                        <div class="feature-tag">✅ 내산화성</div>
+                                        <div class="feature-tag">✅ 열반사 우수</div>
+                                        <div class="feature-tag">✅ 특수 용도</div>
+                                    </div>
+                                </div>
+                                <div class="info-spec-box">
+                                    <h4>주요 고시 정보</h4>
+                                    <ul>
+                                        <li>배기계, 오븐, 히터 부품</li>
+                                        <li>도금량: 40 ~ 120 g/m²</li>
+                                    </ul>
+                                    <span class="label">최대 가용 온도</span>
+                                    <span class="spec-highlight">600 ℃</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- GIX -->
+                        <div class="info-panel" id="panel-gix">
+                            <div class="info-layout">
+                                <div class="info-text">
+                                    <h3>GIX <small>합금화용융아연도금</small></h3>
+                                    <p class="info-title-sub">Galvannealed Steel Sheet (GA)</p>
+                                    <p class="info-desc">도금 후 열처리를 통해 아연-철 합금층을 형성, 도장성과 용접성을 극대화한 제품입니다.</p>
+                                    <div class="info-feature-grid">
+                                        <div class="feature-tag">✅ 우수한 도장성</div>
+                                        <div class="feature-tag">✅ 뛰어난 용접성</div>
+                                        <div class="feature-tag">✅ 균일한 품질</div>
+                                        <div class="feature-tag">✅ Powdering 저항</div>
+                                    </div>
+                                </div>
+                                <div class="info-spec-box">
+                                    <h4>주요 고시 정보</h4>
+                                    <ul>
+                                        <li>자동차 패널, 고급 가전 외장</li>
+                                        <li>도금량: 30 ~ 90 g/m²</li>
+                                    </ul>
+                                    <span class="label">합금화 특징</span>
+                                    <span class="spec-highlight">High Weldability</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- GLX -->
+                        <div class="info-panel" id="panel-glx">
+                            <div class="info-layout">
+                                <div class="info-text">
+                                    <h3>GLX <small>합금화갈바륨</small></h3>
+                                    <p class="info-title-sub">Galvalume Alloy Steel Sheet</p>
+                                    <p class="info-desc">갈바륨의 내식성과 합금화의 도장성을 결합한 고기능성 하이브리드 강판입니다.</p>
+                                    <div class="info-feature-grid">
+                                        <div class="feature-tag">✅ 복합 내식성</div>
+                                        <div class="feature-tag">✅ 향상된 도장성</div>
+                                        <div class="feature-tag">✅ 고내열성</div>
+                                        <div class="feature-tag">✅ 복합 내구성</div>
+                                    </div>
+                                </div>
+                                <div class="info-spec-box">
+                                    <h4>주요 고시 정보</h4>
+                                    <ul>
+                                        <li>건축 외장, 특수 산업용</li>
+                                        <li>도금량: 90 ~ 185 g/m²</li>
+                                    </ul>
+                                    <span class="label">제품 등급</span>
+                                    <span class="spec-highlight">Premium Grade</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Management View -->
+            <section id="management-view" class="page-section" style="display: none;">
+                <div class="page-header">
+                    <h2>규격 데이터 관리</h2>
+                    <p>OCR 및 AI를 활용하여 품질 규격서 파일을 관리하고 최신 데이터를 동기화합니다.</p>
+                </div>
+
+                <div class="search-container">
+                    <div class="ai-analysis-box">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                            <span style="font-size: 20px;">🤖</span>
+                            <h4 style="font-size: 16px; color: var(--primary);">AI 규격 자동 분석 및 라이브러리</h4>
+                        </div>
+
+                        <div class="search-form-grid"
+                            style="grid-template-columns: 1fr auto; gap: 15px; margin-bottom: 24px;">
+                            <div class="form-field">
+                                <label>신규 규격서 업로드 (PDF/JPG/PNG)</label>
+                                <input type="file" id="spec-file" accept=".pdf,image/*" style="display: none;" multiple>
+                                <button type="button" id="custom-file-upload-btn" class="btn-secondary"
+                                    style="width: 100%;">
+                                    <span>📁</span> 내 컴퓨터에서 파일 선택
+                                </button>
+                            </div>
+                            <button type="button" id="ai-analyze-btn" class="btn-primary"
+                                style="align-self: flex-end; height: 42px; background: var(--secondary);">
+                                <span>✨</span> 전체 라이브러리 분석
+                            </button>
+                        </div>
+
+                        <div id="file-status-container"
+                            style="display: flex; flex-direction: column; gap: 12px; background: #f8fafc; padding: 20px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">📚 등록된 규격서
+                                    라이브러리</span>
+                                <button type="button" id="clear-all-files-btn"
+                                    style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline; font-weight: 600;">전체
+                                    데이터 초기화</button>
+                            </div>
+                            <div id="registerd-file-list"
+                                style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                                <!-- Individual file items will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-banner" style="margin-top: 24px;">
+                    <h5>💡 데이터 관리 안내</h5>
+                    <p>등록된 규격서는 시스템 전체의 <strong>자동 조회 및 보완 데이터</strong>로 활용됩니다. 동일한 규격을 여러 파일로 등록 시 분석 혼선이 발생할 수 있으니 최신본
+                        위주로 관리해 주시기 바랍니다.</p>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings-view" class="page-section" style="display: none;">
+                <div class="page-header">
+                    <h2>시스템 설정</h2>
+                    <p>사용자 환경 및 시스템 운영 정책을 설정합니다.</p>
+                </div>
+
+                <div class="settings-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+                    <!-- UI & Display Settings -->
+                    <div class="search-container">
+                        <h3 class="section-title-line">🎨 인터페이스 및 표시</h3>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="form-field"
+                                style="flex-direction: row; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <label style="margin-bottom: 0;">다크 모드 적용</label>
+                                    <p style="font-size: 11px; color: var(--text-muted);">시스템 테마를 어둡게 변경합니다.</p>
+                                </div>
+                                <input type="checkbox" id="dark-mode-toggle"
+                                    style="width: 20px; height: 20px; cursor: pointer;">
+                            </div>
+                            <div class="form-field">
+                                <label>기본 표시 단위</label>
+                                <select id="setting-unit">
+                                    <option value="Metric">Metric (MPa, g/m², mm)</option>
+                                    <option value="Imperial">Imperial (ksi, oz/ft², in)</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>검색 결과 로딩 애니메이션</label>
+                                <select id="setting-animation">
+                                    <option value="standard">표준 (스켈레톤)</option>
+                                    <option value="fast">빠름 (즉시 표시)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data & Search Settings -->
+                    <div class="search-container">
+                        <h3 class="section-title-line">🔍 데이터 및 조회 정책</h3>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="form-field">
+                                <label>기본 우선 규격</label>
+                                <select id="setting-default-standard">
+                                    <option value="KS">KS (한국산업표준)</option>
+                                    <option value="JIS">JIS (일본공업규격)</option>
+                                    <option value="ASTM">ASTM (미국재료시험협회)</option>
+                                </select>
+                            </div>
+                            <div class="form-field"
+                                style="flex-direction: row; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <label style="margin-bottom: 0;">조회 이력 자동 저장</label>
+                                    <p style="font-size: 11px; color: var(--text-muted);">최근 검색한 10개의 강종을 로컬에 저장합니다.</p>
+                                </div>
+                                <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
+                            </div>
+                            <div class="form-field">
+                                <label>데이터 캐싱 주기</label>
+                                <select>
+                                    <option value="1h">1시간</option>
+                                    <option value="1d" selected>1일 (권장)</option>
+                                    <option value="none">사용 안 함</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis Settings -->
+                    <div class="search-container">
+                        <h3 class="section-title-line">🤖 AI 분석 설정</h3>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="form-field">
+                                <label>OCR 분석 정밀도</label>
+                                <input type="range" min="1" max="100" value="85" style="width: 100%; cursor: pointer;">
+                                <p style="font-size: 11px; color: var(--text-muted); text-align: right;">현재: 85%
+                                    (Balanced)</p>
+                            </div>
+                            <div class="form-field"
+                                style="flex-direction: row; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <label style="margin-bottom: 0;">분석 결과 자동 승인</label>
+                                    <p style="font-size: 11px; color: var(--text-muted);">신뢰도 95% 이상 시 데이터 즉시 반영</p>
+                                </div>
+                                <input type="checkbox" style="width: 20px; height: 20px; cursor: pointer;">
+                            </div>
+                            <div class="form-field">
+                                <label>Gemini 분석 모델 선택</label>
+                                <select>
+                                    <option value="flash">Gemini 1.5 Flash (빠른 속도)</option>
+                                    <option value="pro" selected>Gemini 1.5 Pro (높은 정확도)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Profile Settings -->
+                    <div class="search-container">
+                        <h3 class="section-title-line">👤 계정 및 보안</h3>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="form-field">
+                                <label>현재 사용자</label>
+                                <p style="font-size: 14px; font-weight: 600; color: var(--primary);">품질경영팀 관리자
+                                    (admin_seah)</p>
+                            </div>
+                            <div class="form-field">
+                                <label>권한 등급</label>
+                                <span class="badge badge-orange" style="width: fit-content;">System Administrator</span>
+                            </div>
+                            <div
+                                style="padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 10px;">
+                                <button class="btn-secondary" style="flex: 1; font-size: 12px;">비밀번호 변경</button>
+                                <button class="btn-primary"
+                                    style="flex: 1; font-size: 12px; background: var(--secondary);">로그아웃</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="btn-secondary" style="width: 120px;">초기화</button>
+                    <button class="btn-primary" id="save-settings-btn" style="width: 120px;">설정 저장</button>
+                </div>
+            </section>
+
+    </div>
+    </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- Config and Logic -->
+    <script src="data.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
