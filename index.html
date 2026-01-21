@@ -6,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="세아씨엠 품질관리 시스템 - 강종별 규격 및 기계적 성질 관리">
     <title>세아씨엠 품질 조회 시스템</title>
+    <link rel="icon" href="seah-logo.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="seah-logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -33,14 +36,26 @@
                 <a href="#search-view" class="active nav-link">
                     <span>🔍</span> 규격 조회
                 </a>
+                <a href="#resin-quality-view" class="nav-link">
+                    <span>🧪</span> 수지별 품질 기준
+                </a>
+                <a href="#dashboard-view" class="nav-link">
+                    <span>📊</span> 품질 분석 대시보드
+                </a>
+                <a href="#complaint-view" class="nav-link">
+                    <span>📢</span> 고객 불만 관리
+                </a>
+
+                <p class="nav-group-title" style="margin-top: 24px;">Support</p>
+                <a href="#defect-view" class="nav-link">
+                    <span>🖼️</span> 불량 유형 도감
+                </a>
                 <a href="#comparison-view" class="nav-link">
                     <span>📊</span> 규격 비교
                 </a>
                 <a href="#info-view" class="nav-link">
                     <span>📖</span> 강종 정보
                 </a>
-
-                <p class="nav-group-title" style="margin-top: 24px;">Support</p>
                 <a href="#management-view" class="nav-link">
                     <span>📋</span> 규격 데이터 관리
                 </a>
@@ -55,12 +70,18 @@
             </div>
         </nav>
 
+        <!-- 모바일 사이드바 오버레이 -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Main Content Area -->
         <main class="main-area">
             <!-- Top Bar -->
             <header class="top-bar">
-                <div class="breadcrumb">
-                    Dashboard / <span id="current-page">규격 조회</span>
+                <div style="display: flex; align-items: center;">
+                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="메뉴 열기">☰</button>
+                    <div class="breadcrumb">
+                        Dashboard / <span id="current-page">규격 조회</span>
+                    </div>
                 </div>
                 <div class="user-profile">
                     <div class="user-info">
@@ -78,13 +99,13 @@
 
                 <!-- 1. Search Section (Default View) -->
                 <section id="search-view" class="page-section">
-                    <div class="page-header">
+                    <div class="page-header" style="text-align: center;">
                         <h2>강종 규격 조회</h2>
                         <p>강종, 규격, 재질을 선택하여 상세 물성 정보를 조회합니다.</p>
                     </div>
 
                     <!-- Quick Stats (Optional aesthetic touch for internal tools) -->
-                    <div class="stats-grid">
+                    <div class="stats-grid" style="margin: 0 auto 32px auto; max-width: 1200px;">
                         <div class="stat-card">
                             <span class="stat-label">조회 가능한 강종</span>
                             <span class="stat-value">10 EA</span>
@@ -99,22 +120,25 @@
                         </div>
                     </div>
 
-                    <div class="search-container">
+                    <div class="search-container" style="margin: 0 auto 32px auto; max-width: 1200px;">
                         <h3 class="section-title-line">🔎 조회 필터</h3>
                         <div class="search-form-grid">
                             <div class="form-field">
                                 <label for="steel-type">강종 (Steel Type)</label>
                                 <select id="steel-type">
-                                    <option value="">강종 선택</option>
-                                    <option value="GI">GI (용융아연도금강판)</option>
-                                    <option value="GL">GL (갈바륨강판)</option>
-                                    <option value="AL">AL (알루미늄도금강판)</option>
-                                    <option value="GIX">GIX (삼원계 3030)</option>
-                                    <option value="GLX">GLX (삼원계 3033)</option>
-                                    <option value="PPGI">PPGI (도장 아연도금강판)</option>
-                                    <option value="PPGL">PPGL (도장 갈바륨강판)</option>
-                                    <option value="PPAL">PPAL (도장 알루미늄강판)</option>
-                                    <option value="PPZM">PPZM (도장 삼원계 강판)</option>
+                                    <option value="">제품군 선택</option>
+                                    <optgroup label="냉연 제품 (Cold Rolled)">
+                                        <option value="GI">GI (용융아연도금)</option>
+                                        <option value="GL">GL (갈바륨)</option>
+                                        <option value="AL">AL (알루미늄도금)</option>
+                                        <option value="GIX">GIX (삼원계 고내식)</option>
+                                    </optgroup>
+                                    <optgroup label="컬러도장 제품 (Color Coated)">
+                                        <option value="PPGI">PPGI (컬러아연도금)</option>
+                                        <option value="PPGL">PPGL (컬러갈바륨)</option>
+                                        <option value="PPAL">PPAL (컬러알루미늄)</option>
+                                        <option value="PPZM">PPZM (컬러삼원계)</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="form-field">
@@ -133,6 +157,26 @@
                                     <option value="">강종/규격 먼저 선택</option>
                                 </select>
                             </div>
+                            <div class="form-field">
+                                <label for="coating-weight">도금량 (Coating)</label>
+                                <select id="coating-weight" disabled>
+                                    <option value="">규격 먼저 선택</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="spec-thickness">두께 (Thickness)</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="spec-thickness" placeholder="0.00" step="0.01">
+                                    <span class="unit">mm</span>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label for="spec-width">폭 (Width)</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="spec-width" placeholder="0">
+                                    <span class="unit">mm</span>
+                                </div>
+                            </div>
                             <button id="search-btn" class="btn-primary">데이터 조회</button>
                         </div>
 
@@ -140,7 +184,7 @@
             </div>
 
             <!-- Results Table -->
-            <div id="results-card" class="results-card" style="display: none;">
+            <div id="results-card" class="results-card" style="display: none; margin: 0 auto; max-width: 1200px;">
                 <div class="results-header-box">
                     <h3 id="results-title">조회 결과</h3>
                     <div class="badge-group" id="results-badges"></div>
@@ -234,14 +278,13 @@
                         </div>
                         <div class="card-body">
                             <ul>
-                                <li>KS D 3506 (아연도금강판)</li>
-                                <li>KS D 3770 (갈바륨강판)</li>
-                                <li>KS D 3030 (삼원계 3030: GIX)</li>
-                                <li>KS D 3033 (삼원계 3033: GLX)</li>
-                                <li>KS D 3520 (도장 아연도금강판)</li>
-                                <li>KS D 3862 (도장 갈바륨강판)</li>
-                                <li>KS D 6711 (도장 알루미늄강판)</li>
-                                <li>KS D 3030/3033 (도장 삼원계)</li>
+                                <li>KS D 3506 (용융 아연 도금 강판 및 강대)</li>
+                                <li>KS D 3770 (55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                <li>KS D 3030 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
+                                <li>KS D 3520 (도장 용융 아연 도금 강판 및 강대)</li>
+                                <li>KS D 3862 (도장 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                <li>KS D 6711 (도장 알루미늄 도금 강판 및 강대)</li>
+                                <li>KS D 3034 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
                             </ul>
                         </div>
                     </div>
@@ -252,14 +295,13 @@
                         </div>
                         <div class="card-body">
                             <ul>
-                                <li>JIS G 3302 (아연도금강판)</li>
-                                <li>JIS G 3321 (갈바륨강판)</li>
-                                <li>JIS G 3323 (삼원계 3030)</li>
-                                <li>JIS G 3323 (삼원계 3033)</li>
-                                <li>JIS G 3312 (도장 아연도금강판)</li>
-                                <li>JIS G 3322 (도장 갈바륨강판)</li>
-                                <li>JIS H 4001 (도장 알루미늄강판)</li>
-                                <li>JIS G 3323 (도장 삼원계)</li>
+                                <li>JIS G 3302 (용융 아연 도금 강판 및 강대)</li>
+                                <li>JIS G 3321 (용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                <li>JIS G 3323 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
+                                <li>JIS G 3312 (도장 용융 아연 도금 강판 및 강대)</li>
+                                <li>JIS G 3322 (도장 용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                <li>JIS H 4001 (알루미늄 및 알루미늄 합금 판)</li>
+                                <li>JIS G 3318 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
                             </ul>
                         </div>
                     </div>
@@ -270,14 +312,13 @@
                         </div>
                         <div class="card-body">
                             <ul>
-                                <li>ASTM A653 (아연도금강판)</li>
-                                <li>ASTM A792 (갈바륨강판)</li>
-                                <li>ASTM A1046 (삼원계 3030)</li>
-                                <li>ASTM A1046 (삼원계 3033)</li>
-                                <li>ASTM A755 (도장 아연도금강판)</li>
-                                <li>ASTM A755 (도장 갈바륨강판)</li>
-                                <li>ASTM B209 (도장 알루미늄강판)</li>
-                                <li>ASTM A1046 (도장 삼원계)</li>
+                                <li>ASTM A653 (용융 아연 도금 또는 아연-철 합금 도금 강판)</li>
+                                <li>ASTM A792 (용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                <li>ASTM A1046 (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
+                                <li>ASTM A755 (도장 용융 금속 도금 강판)</li>
+                                <li>ASTM A755 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                <li>ASTM B209 (알루미늄 및 알루미늄 합금 판재)</li>
+                                <li>ASTM A755 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
                             </ul>
                         </div>
                     </div>
@@ -288,14 +329,13 @@
                         </div>
                         <div class="card-body">
                             <ul>
-                                <li>EN 10346 (아연도금강판)</li>
-                                <li>EN 10346 (갈바륨강판)</li>
-                                <li>EN 10346 (삼원계 3030)</li>
-                                <li>EN 10346 (삼원계 3033)</li>
-                                <li>EN 10169 (도장 아연도금강판)</li>
-                                <li>EN 10169 (도장 갈바륨강판)</li>
-                                <li>EN 1396 (도장 알루미늄강판)</li>
-                                <li>EN 10346 (도장 삼원계)</li>
+                                <li>EN 10346 (연속 용융 도금 강 평판 제품)</li>
+                                <li>EN 10346:AZ (용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                <li>EN 10346:ZM (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
+                                <li>EN 10169 (연속 유기 피복 강 평판 제품)</li>
+                                <li>EN 10169 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                <li>EN 1396 (알루미늄 및 알루미늄 합금 도장 코일 코팅 판)</li>
+                                <li>EN 10169 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
                             </ul>
                         </div>
                     </div>
@@ -451,30 +491,29 @@
             <section id="management-view" class="page-section" style="display: none;">
                 <div class="page-header">
                     <h2>규격 데이터 관리</h2>
-                    <p>OCR 및 AI를 활용하여 품질 규격서 파일을 관리하고 최신 데이터를 동기화합니다.</p>
+                    <p>현장의 품질 규격서 파일을 로컬 라이브러리에 등록하고 조회 데이터와 연동합니다.</p>
                 </div>
 
                 <div class="search-container">
                     <div class="ai-analysis-box">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
-                            <span style="font-size: 20px;">🤖</span>
-                            <h4 style="font-size: 16px; color: var(--primary);">AI 규격 자동 분석 및 라이브러리</h4>
+                            <span style="font-size: 20px;">📁</span>
+                            <h4 style="font-size: 16px; color: var(--primary);">규격 라이브러리 및 인식 엔진</h4>
                         </div>
 
                         <div class="search-form-grid"
-                            style="grid-template-columns: 1fr auto; gap: 15px; margin-bottom: 24px;">
+                            style="grid-template-columns: 1fr; gap: 15px; margin-bottom: 24px;">
                             <div class="form-field">
-                                <label>신규 규격서 업로드 (PDF/JPG/PNG)</label>
+                                <label>규격서 파일 등록 (PDF/이미지)</label>
                                 <input type="file" id="spec-file" accept=".pdf,image/*" style="display: none;" multiple>
-                                <button type="button" id="custom-file-upload-btn" class="btn-secondary"
-                                    style="width: 100%;">
-                                    <span>📁</span> 내 컴퓨터에서 파일 선택
-                                </button>
+                                <div id="drop-zone"
+                                    style="border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
+                                    <p style="color: var(--text-muted); margin-bottom: 10px;">파일을 마우스로 끌어다 놓거나 클릭하여
+                                        선택하세요.</p>
+                                    <button type="button" id="custom-file-upload-btn" class="btn-secondary">파일
+                                        선택</button>
+                                </div>
                             </div>
-                            <button type="button" id="ai-analyze-btn" class="btn-primary"
-                                style="align-self: flex-end; height: 42px; background: var(--secondary);">
-                                <span>✨</span> 전체 라이브러리 분석
-                            </button>
                         </div>
 
                         <div id="file-status-container"
@@ -485,20 +524,434 @@
                                     라이브러리</span>
                                 <button type="button" id="clear-all-files-btn"
                                     style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline; font-weight: 600;">전체
-                                    데이터 초기화</button>
+                                    삭제</button>
                             </div>
                             <div id="registerd-file-list"
                                 style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-                                <!-- Individual file items will be injected here -->
+                                <!-- 파일 리스트가 여기에 동적으로 생성됩니다 -->
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="info-banner" style="margin-top: 24px;">
-                    <h5>💡 데이터 관리 안내</h5>
-                    <p>등록된 규격서는 시스템 전체의 <strong>자동 조회 및 보완 데이터</strong>로 활용됩니다. 동일한 규격을 여러 파일로 등록 시 분석 혼선이 발생할 수 있으니 최신본
-                        위주로 관리해 주시기 바랍니다.</p>
+                    <h5>💡 지능형 연동 안내</h5>
+                    <p>등록된 파일은 <strong>파일명 분석</strong>을 통해 자동으로 규격을 인식합니다. 인식된 파일은 '규격 조회' 시 실시간으로 참조 문서로 자동 매칭됩니다.</p>
+                </div>
+            </section>
+
+            <!-- 4. Complaint Management View -->
+            <section id="complaint-view" class="page-section" style="display: none;">
+                <div class="page-header" style="text-align: center;">
+                    <h2>고객 불만 관리 (VOC)</h2>
+                    <p>본사/영업소의 고객 불만을 체계적으로 기록하고 처리 현황을 실시간으로 관리합니다.</p>
+                </div>
+
+                <!-- [Top] Detailed Registration Form -->
+                <div class="search-container" style="margin: 0 auto 24px auto; max-width: 1100px;">
+                    <h4 class="section-title-line">📝 VOC 상세 정보 접수</h4>
+                    <form id="voc-form" class="search-form-grid">
+                        <div class="form-field">
+                            <label>구분</label>
+                            <select id="voc-category">
+                                <option value="클레임">클레임 (Claim)</option>
+                                <option value="컴플레인">컴플레인 (Complain)</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>내수/수출</label>
+                            <select id="voc-market">
+                                <option value="내수">내수</option>
+                                <option value="수출">수출</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>불만 접수 일자</label>
+                            <input type="date" id="voc-receipt-date" required>
+                        </div>
+                        <div class="form-field">
+                            <label>고객사명</label>
+                            <input type="text" id="voc-customer" placeholder="고객사명" required>
+                        </div>
+                        <div class="form-field">
+                            <label>담당자명</label>
+                            <input type="text" id="voc-manager" placeholder="담당자 이름" required>
+                        </div>
+                        <div class="form-field">
+                            <label>제품 SPEC</label>
+                            <input type="text" id="voc-spec" placeholder="예: 0.5T x 1219W" required>
+                        </div>
+                        <div class="form-field">
+                            <label>색상명</label>
+                            <input type="text" id="voc-color" placeholder="Color Name">
+                        </div>
+                        <div class="form-field">
+                            <label>배치번호 (Batch)</label>
+                            <input type="text" id="voc-batch" placeholder="Lot No.">
+                        </div>
+                        <div class="form-field">
+                            <label>생산 라인</label>
+                            <select id="voc-line">
+                                <option value="CPL">CPL</option>
+                                <option value="CRM">CRM</option>
+                                <option value="CGL">CGL</option>
+                                <option value="1CCL">1CCL</option>
+                                <option value="2CCL">2CCL</option>
+                                <option value="3CCL">3CCL</option>
+                                <option value="SSCL">SSCL</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>생산 일자</label>
+                            <input type="date" id="voc-prod-date">
+                        </div>
+                        <div class="form-field">
+                            <label>납품 수량</label>
+                            <input type="text" id="voc-delivery-qty" placeholder="수량">
+                        </div>
+                        <div class="form-field">
+                            <label>불만 수량</label>
+                            <input type="text" id="voc-complaint-qty" placeholder="수량">
+                        </div>
+                        <div class="form-field" style="grid-column: span 2;">
+                            <label>불만명 (제목)</label>
+                            <input type="text" id="voc-title" placeholder="불만 사항 요약" required>
+                        </div>
+                        <div class="form-field" style="grid-column: span 1;">
+                            <label>현장 사진</label>
+                            <input type="file" id="voc-photo" accept="image/*" style="font-size: 11px;">
+                        </div>
+                        <div class="form-field" style="grid-column: span 1; display: flex; align-items: flex-end;">
+                            <button type="submit" class="btn-primary" style="width: 100%; height: 42px;">VOC
+                                접수완료</button>
+                        </div>
+                        <div class="form-field" style="display:none;">
+                            <input type="hidden" id="voc-desc" value="상세내용없음">
+                        </div>
+                    </form>
+                </div>
+
+                <!-- [Bottom] VOC List Table -->
+                <div class="search-container" style="margin: 0 auto; max-width: 1100px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 class="section-title-line" style="margin-bottom: 0;">📋 VOC 처리 대장</h4>
+                        <div style="font-size: 11px; color: var(--text-muted);">* 행을 클릭하면 상세 내용 및 조치 결과를 입력할 수 있습니다.
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; text-align: left;">
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; width: 60px;">구분</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; width: 100px;">접수일</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; width: 120px;">고객사</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; width: 80px;">라인</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569;">불만명</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; width: 80px;">상태</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; color: #475569; width: 60px; text-align: center;">
+                                        관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="voc-list-body">
+                                <!-- VOC 데이터가 테이블 행으로 추가됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VOC 상세 및 답변 모달 (상세 보기용) -->
+                <div id="voc-modal"
+                    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                    <div
+                        style="background: white; width: 90%; max-width: 600px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;">
+                        <div
+                            style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                            <h3 id="modal-voc-title" style="margin: 0; font-size: 18px; color: var(--text-main);">VOC
+                                상세보기</h3>
+                            <button onclick="document.getElementById('voc-modal').style.display='none'"
+                                style="background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;">✕</button>
+                        </div>
+                        <div style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                            <div id="modal-voc-info" style="margin-bottom: 20px;">
+                                <!-- 상세 정보 렌더링 영역 -->
+                            </div>
+                            <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 24px 0;">
+                            <div id="modal-voc-action-box">
+                                <h4
+                                    style="margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                                    <span>🛠️</span> 품질팀 분석 및 처리 결과 입력
+                                </h4>
+                                <div
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                                    <div class="form-field">
+                                        <label style="font-size: 11px; color: #64748b;">품질 담당자명</label>
+                                        <input type="text" id="modal-reply-manager" placeholder="담당자 성함">
+                                    </div>
+                                    <div class="form-field">
+                                        <label style="font-size: 11px; color: #64748b;">예상 손실 비용</label>
+                                        <input type="text" id="modal-reply-cost" placeholder="예: 500,000원">
+                                    </div>
+                                </div>
+                                <div class="form-field" style="margin-bottom: 12px;">
+                                    <label style="font-size: 11px; color: #64748b;">근본(예상) 원인</label>
+                                    <textarea id="modal-reply-cause" rows="2"
+                                        style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; resize: none;"
+                                        placeholder="원인 분석 내용"></textarea>
+                                </div>
+                                <div class="form-field" style="margin-bottom: 12px;">
+                                    <label style="font-size: 11px; color: #64748b;">개선 대책</label>
+                                    <textarea id="modal-reply-countermeasure" rows="2"
+                                        style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; resize: none;"
+                                        placeholder="재발 방지 대책"></textarea>
+                                </div>
+                                <div class="form-field" style="margin-bottom: 12px;">
+                                    <label style="font-size: 11px; color: #64748b;">유효성 평가</label>
+                                    <textarea id="modal-reply-evaluation" rows="2"
+                                        style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; resize: none;"
+                                        placeholder="조치 결과 평가"></textarea>
+                                </div>
+                                <div class="form-field" style="margin-bottom: 12px;">
+                                    <label style="font-size: 11px; color: #64748b;">특이 사항</label>
+                                    <textarea id="modal-reply-notes" rows="2"
+                                        style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; resize: none;"
+                                        placeholder="기타 참고 사항"></textarea>
+                                </div>
+                                <div class="form-field" style="margin-bottom: 20px;">
+                                    <label style="font-size: 11px; color: #64748b;">최종 처리 상태</label>
+                                    <select id="modal-reply-status"
+                                        style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                                        <option value="완료">처리 완료 (Closed)</option>
+                                        <option value="진행">진행 중 (In Progress)</option>
+                                    </select>
+                                </div>
+                                <button id="modal-voc-save-btn" class="btn-primary"
+                                    style="width: 100%; height: 45px; font-weight: 700;">조치 결과 저장</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. Quality Analysis Dashboard View -->
+            <section id="dashboard-view" class="page-section" style="display: none;">
+                <div class="page-header" style="text-align: center;">
+                    <h2>품질 분석 대시보드 (Quality Dashboard)</h2>
+                    <p>등록된 VOC 데이터를 분석하여 주요 품질 지표 및 실시간 현황을 시각화합니다.</p>
+                </div>
+
+                <!-- [Row 1] Summary Widgets -->
+                <div class="stats-grid" style="margin: 0 auto 32px auto; max-width: 1200px;">
+                    <div class="stat-card" style="border-top: 4px solid var(--primary);">
+                        <span class="stat-label">총 VOC 발생건수</span>
+                        <span id="dash-total-count" class="stat-value">0 EA</span>
+                    </div>
+                    <div class="stat-card" style="border-top: 4px solid var(--warning);">
+                        <span class="stat-label">미처리(접수/진행)</span>
+                        <span id="dash-pending-count" class="stat-value">0 EA</span>
+                    </div>
+                    <div class="stat-card" style="border-top: 4px solid var(--success);">
+                        <span class="stat-label">조치 완료율</span>
+                        <span id="dash-completion-rate" class="stat-value">0%</span>
+                    </div>
+                    <div class="stat-card" style="border-top: 4px solid var(--danger);">
+                        <span class="stat-label">총 예상 손실 비용</span>
+                        <span id="dash-total-cost" class="stat-value" style="font-size: 20px;">₩0</span>
+                    </div>
+                </div>
+
+                <!-- [Row 2] Visual Analytics with Chart.js -->
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin: 0 auto 32px auto; max-width: 1200px;">
+                    <!-- Line Performance Bar Chart -->
+                    <div class="search-container" style="margin-bottom: 0;">
+                        <h4 class="section-title-line">🏭 생산 라인별 발생 현황</h4>
+                        <div style="height: 280px; padding: 10px 0;">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Category Doughnut Chart -->
+                    <div class="search-container" style="margin-bottom: 0;">
+                        <h4 class="section-title-line">⚖️ 클레임/컴플레인 비중</h4>
+                        <div style="height: 280px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [Row 3] Recent High Priority -->
+                <div class="search-container" style="margin: 0 auto; max-width: 1200px;">
+                    <h4 class="section-title-line">⏱️ 최근 주요 발생 내역 (Top 5)</h4>
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8fafc; text-align: left;">
+                                    <th style="padding: 10px; font-size: 12px; color: #64748b;">고객사</th>
+                                    <th style="padding: 10px; font-size: 12px; color: #64748b;">불만명</th>
+                                    <th style="padding: 10px; font-size: 12px; color: #64748b;">상태</th>
+                                    <th style="padding: 10px; font-size: 12px; color: #64748b;">발생일</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-recent-list">
+                                <!-- Recent items injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. Resin Quality Standard View -->
+            <section id="resin-quality-view" class="page-section" style="display: none;">
+                <div class="page-header" style="text-align: center;">
+                    <h2>수지별 품질 기준 (Resin Quality Standard)</h2>
+                    <p>도료별(RMP, HDP 등) 표준 품질 항목 및 검사 기준치를 확인합니다.</p>
+                </div>
+
+                <div class="search-container" style="margin: 0 auto 24px auto; max-width: 1000px;">
+                    <h4 class="section-title-line">🎨 수지(제품) 선택</h4>
+                    <div id="resin-select-buttons"
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                        <!-- Buttons will be generated by app.js -->
+                        <button class="btn-secondary resin-btn" data-resin="RMP">RMP</button>
+                        <button class="btn-secondary resin-btn" data-resin="HDP">HDP</button>
+                        <button class="btn-secondary resin-btn" data-resin="SMP">SMP</button>
+                        <button class="btn-secondary resin-btn" data-resin="ADP">ADP</button>
+                        <button class="btn-secondary resin-btn" data-resin="HBU">HBU</button>
+                        <button class="btn-secondary resin-btn" data-resin="SQP40">SQP40</button>
+                        <button class="btn-secondary resin-btn" data-resin="PVDF">PVDF</button>
+                        <button class="btn-secondary resin-btn" data-resin="HPP">HPP</button>
+                    </div>
+                </div>
+
+                <div id="resin-data-card" class="search-container"
+                    style="display: none; margin: 0 auto; max-width: 1000px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 id="selected-resin-title" style="margin: 0; color: var(--primary);">RMP 품질 기준</h3>
+                        <span class="badge badge-blue">표준 규격</span>
+                    </div>
+
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f1f5f9; text-align: left;">
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; width: 200px;">품질 항목
+                                        (Criteria)</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569;">검사 기준 및 규격</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resin-quality-tbody">
+                                <!-- Data rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. Defect Encyclopedia View -->
+            <section id="defect-view" class="page-section" style="display: none;">
+                <div class="page-header" style="text-align: center; position: relative;">
+                    <h2>불량 유형 도감 (Defect Encyclopedia)</h2>
+                    <p>컬러강판 생산 및 가공 과정에서 발생하는 주요 불량 유형과 판정 기준을 확인합니다.</p>
+                    <button id="add-defect-btn" class="btn-primary"
+                        style="position: absolute; right: 20px; bottom: 0; width: auto; padding: 10px 20px;">
+                        <span>➕</span> 신규 불량 등록
+                    </button>
+                </div>
+
+                <div class="search-container" style="margin: 0 auto 32px auto; max-width: 1200px;">
+                    <div class="standard-grid" id="defect-grid">
+                        <!-- Dynamic Defect Cards rendered by app.js -->
+                    </div>
+                </div>
+
+                <!-- Defect Manage Modal -->
+                <div id="defect-modal" class="modal"
+                    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+                    <div class="modal-content"
+                        style="width:90%; max-width:480px; background:white; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:85vh; overflow-y:auto;">
+                        <!-- Modal Header -->
+                        <div
+                            style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 id="defect-modal-title" style="margin:0; color:white; font-size:18px; font-weight:600;">
+                                📷 불량 유형 등록</h3>
+                            <span onclick="document.getElementById('defect-modal').style.display='none'"
+                                style="color:white; font-size:24px; cursor:pointer; opacity:0.8; transition:opacity 0.2s;"
+                                onmouseover="this.style.opacity='1'"
+                                onmouseout="this.style.opacity='0.8'">&times;</span>
+                        </div>
+                        <!-- Modal Body -->
+                        <form id="defect-form" style="padding:24px;">
+                            <input type="hidden" id="defect-id">
+                            <!-- 불량명 -->
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">불량명</label>
+                                <input type="text" id="defect-title" placeholder="예: 흑청/백청/적청" required
+                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.2s; box-sizing:border-box;"
+                                    onfocus="this.style.borderColor='#3b82f6'"
+                                    onblur="this.style.borderColor='#e5e7eb'">
+                            </div>
+                            <!-- 사진 업로드 -->
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">불량
+                                    사진</label>
+                                <input type="file" id="defect-photo" accept="image/*"
+                                    style="width:100%; padding:10px; border:1px dashed #d1d5db; border-radius:8px; font-size:13px; background:#f9fafb; cursor:pointer; box-sizing:border-box;">
+                                <div id="defect-photo-preview"
+                                    style="margin-top:10px; display:none; text-align:center;">
+                                    <img id="defect-preview-img" src=""
+                                        style="width:120px; height:120px; object-fit:cover; border-radius:8px; border:2px solid #e5e7eb;">
+                                </div>
+                            </div>
+                            <!-- 예상 원인 -->
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">예상
+                                    원인</label>
+                                <textarea id="defect-reason" rows="2" placeholder="주요 발생 원인 입력" required
+                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                    onfocus="this.style.borderColor='#3b82f6'"
+                                    onblur="this.style.borderColor='#e5e7eb'"></textarea>
+                            </div>
+                            <!-- 내부 검토 항목 -->
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">내부
+                                    검토 항목 <span style="font-weight:400; color:#6b7280;">(생산)</span></label>
+                                <textarea id="defect-internal" rows="3" placeholder="생산 현장 검토 항목 입력" required
+                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                    onfocus="this.style.borderColor='#3b82f6'"
+                                    onblur="this.style.borderColor='#e5e7eb'"></textarea>
+                            </div>
+                            <!-- 외부 검토 항목 -->
+                            <div style="margin-bottom:20px;">
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">외부
+                                    검토 항목 <span style="font-weight:400; color:#6b7280;">(영업)</span></label>
+                                <textarea id="defect-external" rows="2" placeholder="영업/고객사 측 검토 항목 입력" required
+                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                    onfocus="this.style.borderColor='#3b82f6'"
+                                    onblur="this.style.borderColor='#e5e7eb'"></textarea>
+                            </div>
+                            <!-- 버튼 -->
+                            <div
+                                style="display:flex; gap:12px; justify-content:flex-end; padding-top:8px; border-top:1px solid #f3f4f6;">
+                                <button type="button"
+                                    onclick="document.getElementById('defect-modal').style.display='none'"
+                                    style="padding:10px 20px; border:1px solid #d1d5db; background:white; color:#374151; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:background 0.2s;"
+                                    onmouseover="this.style.background='#f9fafb'"
+                                    onmouseout="this.style.background='white'">취소</button>
+                                <button type="submit"
+                                    style="padding:10px 24px; border:none; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity 0.2s;"
+                                    onmouseover="this.style.opacity='0.9'"
+                                    onmouseout="this.style.opacity='1'">저장하기</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </section>
 
@@ -531,13 +984,6 @@
                                     <option value="Imperial">Imperial (ksi, oz/ft², in)</option>
                                 </select>
                             </div>
-                            <div class="form-field">
-                                <label>검색 결과 로딩 애니메이션</label>
-                                <select id="setting-animation">
-                                    <option value="standard">표준 (스켈레톤)</option>
-                                    <option value="fast">빠름 (즉시 표시)</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
 
@@ -561,42 +1007,6 @@
                                 </div>
                                 <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
                             </div>
-                            <div class="form-field">
-                                <label>데이터 캐싱 주기</label>
-                                <select>
-                                    <option value="1h">1시간</option>
-                                    <option value="1d" selected>1일 (권장)</option>
-                                    <option value="none">사용 안 함</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Analysis Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">🤖 AI 분석 설정</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field">
-                                <label>OCR 분석 정밀도</label>
-                                <input type="range" min="1" max="100" value="85" style="width: 100%; cursor: pointer;">
-                                <p style="font-size: 11px; color: var(--text-muted); text-align: right;">현재: 85%
-                                    (Balanced)</p>
-                            </div>
-                            <div class="form-field"
-                                style="flex-direction: row; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <label style="margin-bottom: 0;">분석 결과 자동 승인</label>
-                                    <p style="font-size: 11px; color: var(--text-muted);">신뢰도 95% 이상 시 데이터 즉시 반영</p>
-                                </div>
-                                <input type="checkbox" style="width: 20px; height: 20px; cursor: pointer;">
-                            </div>
-                            <div class="form-field">
-                                <label>Gemini 분석 모델 선택</label>
-                                <select>
-                                    <option value="flash">Gemini 1.5 Flash (빠른 속도)</option>
-                                    <option value="pro" selected>Gemini 1.5 Pro (높은 정확도)</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
 
@@ -613,12 +1023,6 @@
                                 <label>권한 등급</label>
                                 <span class="badge badge-orange" style="width: fit-content;">System Administrator</span>
                             </div>
-                            <div
-                                style="padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 10px;">
-                                <button class="btn-secondary" style="flex: 1; font-size: 12px;">비밀번호 변경</button>
-                                <button class="btn-primary"
-                                    style="flex: 1; font-size: 12px; background: var(--secondary);">로그아웃</button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -633,15 +1037,13 @@
     </main>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
     <!-- Config and Logic -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // pdf.js 워커 설정
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
     <script src="data.js"></script>
-    <script src="firebase-config.js"></script>
     <script src="app.js"></script>
 </body>
 
