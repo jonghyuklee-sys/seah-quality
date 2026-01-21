@@ -9,6 +9,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchBtn = document.getElementById('search-btn');
     const resultsCard = document.getElementById('results-card');
     const currentPageLabel = document.getElementById('current-page');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    // 모바일 메뉴 토글
+    if (mobileMenuBtn) {
+        mobileMenuBtn.onclick = () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('open');
+        };
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.onclick = () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+        };
+    }
 
     // 규격 관리 엘리먼트
     const specFileInput = document.getElementById('spec-file');
@@ -548,6 +566,13 @@ document.addEventListener('DOMContentLoaded', function () {
             pageSections.forEach(s => s.style.display = (s.id === targetId) ? 'block' : 'none');
             if (currentPageLabel) currentPageLabel.textContent = this.textContent.trim().replace(/[🔍📊📖📢📋⚙️🧪📊🖼️]/g, '').trim();
             if (resultsCard) { if (targetId === 'search-view') { if (resultsCardWasVisible) resultsCard.style.display = 'block'; } else { resultsCardWasVisible = (resultsCard.style.display === 'block'); resultsCard.style.display = 'none'; } }
+
+            // 모바일에서 링크 클릭 시 사이드바 닫기
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            }
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });

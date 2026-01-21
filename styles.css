@@ -62,7 +62,8 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    z-index: 100;
+    z-index: 1000;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-header {
@@ -175,6 +176,14 @@ body {
 
 .sidebar-overlay {
     display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
 }
 
 .user-profile {
@@ -790,7 +799,23 @@ body {
     /* 상단바 모바일 최적화 */
     .top-bar {
         padding: 0 16px;
-        height: 56px;
+        height: 60px;
+    }
+
+    .main-area {
+        margin-left: 0 !important;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay.open {
+        display: block;
     }
 
     .breadcrumb {
@@ -1099,7 +1124,14 @@ body {
 
     .data-table th,
     .data-table td {
-        padding: 8px 6px;
+        padding: 10px 8px;
+    }
+
+    /* Modal Responsiveness */
+    #voc-modal>div,
+    #defect-modal>div {
+        width: 95% !important;
+        max-height: 90vh !important;
     }
 }
 
