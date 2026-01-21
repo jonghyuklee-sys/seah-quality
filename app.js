@@ -49,25 +49,22 @@ document.addEventListener('DOMContentLoaded', function () {
     let localFiles = [];
     let localComplaints = [];
 
-    // [1. IndexedDB 초기화]
-    const DB_NAME = "SeahSystemDB";
-    const DB_VERSION = 3;
-    let db;
+    // [1. Firebase 초기화 확인 및 데이터 로드]
     let localDefects = [];
 
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (e) => {
-        db = e.target.result;
-        if (!db.objectStoreNames.contains("specs")) db.createObjectStore("specs", { keyPath: "id", autoIncrement: true });
-        if (!db.objectStoreNames.contains("complaints")) db.createObjectStore("complaints", { keyPath: "id", autoIncrement: true });
-        if (!db.objectStoreNames.contains("defects")) db.createObjectStore("defects", { keyPath: "id", autoIncrement: true });
-    };
-    request.onsuccess = (e) => {
-        db = e.target.result;
+    // 데이터 초기 로드
+    function initAppData() {
+        if (typeof firebase === 'undefined') {
+            console.error("Firebase SDK가 로드되지 않았습니다.");
+            return;
+        }
         loadLocalFiles();
         loadLocalComplaints();
         loadLocalDefects();
-    };
+    }
+
+    // Firebase 연결 대기 후 시작
+    // initAppData() 호출 제거 (파일 하단으로 이동)
 
     // [2. 공차 판정 엔진]
     const ToleranceEngine = {
@@ -98,34 +95,71 @@ document.addEventListener('DOMContentLoaded', function () {
         try { const pdf = await pdfjsLib.getDocument(dataUrl).promise; let text = ""; for (let i = 1; i <= Math.min(pdf.numPages, 2); i++) { const page = await pdf.getPage(i); const content = await page.getTextContent(); text += content.items.map(item => item.str).join(' '); } return text; } catch (e) { return ""; }
     }
     async function saveFile(file) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const dataUrl = e.target.result; const text = file.type === "application/pdf" ? await extractTextFromPDF(dataUrl) : "";
+        try {
+            const text = file.type === "application/pdf" ? await extractTextFromPDF(URL.createObjectURL(file)) : "";
             const analysis = recognizeFullSpec(file.name, text);
-            const transaction = db.transaction(["specs"], "readwrite");
-            transaction.objectStore("specs").add({ name: file.name, content: dataUrl, detectedSpec: analysis.spec.name, detectedRef: analysis.spec.ref, detectedGrade: analysis.grade, uploadedAt: new Date().toISOString() });
-            transaction.oncomplete = loadLocalFiles;
-        };
-        reader.readAsDataURL(file);
+
+            // 1. Firebase Storage에 파일 업로드
+            const storageRef = storage.ref(`specs/${Date.now()}_${file.name}`);
+            const snapshot = await storageRef.put(file);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+
+            // 2. Firestore에 메타데이터 저장
+            await db.collection("specs").add({
+                name: file.name,
+                content: downloadURL,
+                detectedSpec: analysis.spec.name,
+                detectedRef: analysis.spec.ref,
+                detectedGrade: analysis.grade,
+                uploadedAt: new Date().toISOString()
+            });
+
+            loadLocalFiles();
+        } catch (error) {
+            console.error("파일 저장 에러:", error);
+            alert("파일 저장 중 오류가 발생했습니다.");
+        }
     }
-    function loadLocalFiles() { if (!db) return; db.transaction(["specs"], "readonly").objectStore("specs").getAll().onsuccess = (e) => { localFiles = e.target.result; renderFileList(); }; }
+
+    function loadLocalFiles() {
+        db.collection("specs").orderBy("uploadedAt", "desc").get().then((querySnapshot) => {
+            localFiles = [];
+            querySnapshot.forEach((doc) => {
+                localFiles.push({ id: doc.id, ...doc.data() });
+            });
+            renderFileList();
+        });
+    }
     function renderFileList() {
         if (!registeredFileList) return; registeredFileList.innerHTML = localFiles.length === 0 ? '<div style="text-align:center; padding:20px; color:#94a3b8;">파일 없음</div>' : '';
         localFiles.forEach(file => {
             const div = document.createElement('div'); div.className = 'file-list-item-new';
             div.innerHTML = `<div class="file-info-header" style="cursor:pointer;"><div class="file-icon">📄</div><div class="file-meta"><span class="file-name-link">${file.name}</span><div class="status-tags"><span class="status-badge badge-blue">${file.detectedSpec}</span><span class="status-badge badge-orange">${file.detectedGrade}</span></div></div></div><button class="btn-icon delete-file">✕</button>`;
-            div.querySelector('.file-info-header').onclick = () => { const win = window.open(); win.document.write(`<iframe src="${file.content}" frameborder="0" style="width:100%; height:100%;"></iframe>`); };
-            div.querySelector('.delete-file').onclick = () => { if (confirm('삭제?')) db.transaction(["specs"], "readwrite").objectStore("specs").delete(file.id).onsuccess = loadLocalFiles; };
+            div.querySelector('.file-info-header').onclick = () => { window.open(file.content); };
+            div.querySelector('.delete-file').onclick = () => {
+                if (confirm('삭제하시겠습니까?')) {
+                    db.collection("specs").doc(file.id).delete().then(loadLocalFiles);
+                }
+            };
             registeredFileList.appendChild(div);
         });
     }
 
-    // [5. 고객 불만 관리 (VOC) 엔진]
     if (vocForm) {
-        vocForm.onsubmit = (e) => {
+        vocForm.onsubmit = async (e) => {
             e.preventDefault();
             const photoFile = document.getElementById('voc-photo').files[0];
-            const submitVoc = (photoData = null) => {
+
+            try {
+                let photoURL = isEditMode ? localComplaints.find(v => v.id === currentVocId).photo : null;
+
+                // 사진이 새로 업로드된 경우
+                if (photoFile) {
+                    const storageRef = storage.ref(`voc_photos/${Date.now()}_${photoFile.name}`);
+                    const snapshot = await storageRef.put(photoFile);
+                    photoURL = await snapshot.ref.getDownloadURL();
+                }
+
                 const vocData = {
                     category: document.getElementById('voc-category').value,
                     market: document.getElementById('voc-market').value,
@@ -143,37 +177,38 @@ document.addEventListener('DOMContentLoaded', function () {
                     desc: document.getElementById('voc-desc').value,
                     status: isEditMode ? localComplaints.find(v => v.id === currentVocId).status : '접수',
                     reply: isEditMode ? localComplaints.find(v => v.id === currentVocId).reply : '',
-                    photo: photoData || (isEditMode ? localComplaints.find(v => v.id === currentVocId).photo : null),
-                    createdAt: isEditMode ? localComplaints.find(v => v.id === currentVocId).createdAt : new Date().toLocaleString()
+                    photo: photoURL,
+                    createdAt: isEditMode ? localComplaints.find(v => v.id === currentVocId).createdAt : new Date().toISOString()
                 };
-                if (isEditMode) vocData.id = currentVocId;
 
-                const transaction = db.transaction(["complaints"], "readwrite");
-                const store = transaction.objectStore("complaints");
-                if (isEditMode) store.put(vocData); else store.add(vocData);
+                if (isEditMode) {
+                    await db.collection("complaints").doc(currentVocId).update(vocData);
+                } else {
+                    await db.collection("complaints").add(vocData);
+                }
 
-                transaction.oncomplete = () => {
-                    vocForm.reset();
-                    isEditMode = false;
-                    currentVocId = null;
-                    vocForm.querySelector('button[type="submit"]').textContent = 'VOC 접수완료';
-                    loadLocalComplaints();
-                    alert(isEditMode ? 'VOC 수정이 완료되었습니다.' : 'VOC 상세 접수가 완료되었습니다.');
-                };
-            };
-
-            if (photoFile) { const reader = new FileReader(); reader.onload = (ev) => submitVoc(ev.target.result); reader.readAsDataURL(photoFile); }
-            else submitVoc();
+                vocForm.reset();
+                isEditMode = false;
+                currentVocId = null;
+                vocForm.querySelector('button[type="submit"]').textContent = 'VOC 접수완료';
+                loadLocalComplaints();
+                alert(isEditMode ? 'VOC 수정이 완료되었습니다.' : 'VOC 상세 접수가 완료되었습니다.');
+            } catch (error) {
+                console.error("VOC 저장 에러:", error);
+                alert("VOC 저장 중 오류가 발생했습니다.");
+            }
         };
     }
 
     function loadLocalComplaints() {
-        if (!db) return;
-        db.transaction(["complaints"], "readonly").objectStore("complaints").getAll().onsuccess = (e) => {
-            localComplaints = e.target.result.sort((a, b) => b.id - a.id);
+        db.collection("complaints").orderBy("createdAt", "desc").get().then((querySnapshot) => {
+            localComplaints = [];
+            querySnapshot.forEach((doc) => {
+                localComplaints.push({ id: doc.id, ...doc.data() });
+            });
             renderVocTable();
             updateQualityDashboard();
-        };
+        });
     }
 
     // Chart.js Instance holders
@@ -287,13 +322,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td style="padding:12px; font-size:12px; color:#64748b; font-weight:700;">${voc.line}</td>
                 <td style="padding:12px; font-size:13px; color:#475569;">${voc.title}</td>
                 <td style="padding:12px;"><span class="voc-status ${isDone ? 'status-done' : 'status-pending'}">${voc.status}</span></td>
-                <td style="padding:12px; text-align:center;"><button class="btn-icon" style="background:#f1f5f9; color:#64748b; width:24px; height:24px;" onclick="deleteVoc(event, ${voc.id})">✕</button></td>
+                <td style="padding:12px; text-align:center;"><button class="btn-icon" style="background:#f1f5f9; color:#64748b; width:24px; height:24px;" onclick="deleteVoc(event, '${voc.id}')">✕</button></td>
             `;
             vocListBody.appendChild(tr);
         });
     }
 
-    window.deleteVoc = (e, id) => { e.stopPropagation(); if (confirm('이 VOC 내역을 완전히 삭제하시겠습니까?')) db.transaction(["complaints"], "readwrite").objectStore("complaints").delete(id).onsuccess = loadLocalComplaints; };
+    window.deleteVoc = (e, id) => { e.stopPropagation(); if (confirm('이 VOC 내역을 완전히 삭제하시겠습니까?')) db.collection("complaints").doc(id).delete().then(loadLocalComplaints); };
 
     function openVocModal(voc) {
         currentVocId = voc.id; vocModal.style.display = 'flex';
@@ -366,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     if (vocModalSaveBtn) {
-        vocModalSaveBtn.onclick = () => {
+        vocModalSaveBtn.onclick = async () => {
             const replyData = {
                 manager: document.getElementById('modal-reply-manager').value,
                 cost: document.getElementById('modal-reply-cost').value,
@@ -379,19 +414,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!replyData.cause || !replyData.countermeasure) return alert('원인과 개선 대책은 필수 입력 항목입니다.');
 
-            const transaction = db.transaction(["complaints"], "readwrite");
-            const store = transaction.objectStore("complaints");
-            store.get(currentVocId).onsuccess = (e) => {
-                const data = e.target.result;
-                data.replyData = replyData;
-                data.status = status;
-                data.repliedAt = new Date().toLocaleString();
-                store.put(data);
-                transaction.oncomplete = () => {
-                    vocModal.style.display = 'none';
-                    loadLocalComplaints();
-                };
-            };
+            try {
+                await db.collection("complaints").doc(currentVocId).update({
+                    replyData: replyData,
+                    status: status,
+                    repliedAt: new Date().toLocaleString()
+                });
+                vocModal.style.display = 'none';
+                loadLocalComplaints();
+            } catch (error) {
+                console.error("조치 결과 저장 에러:", error);
+                alert("저장 중 오류가 발생했습니다.");
+            }
         };
     }
 
@@ -580,7 +614,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // 파일 관리 추가 이벤트
     if (customFileUploadBtn) customFileUploadBtn.onclick = (e) => { e.stopPropagation(); specFileInput.click(); };
     if (specFileInput) specFileInput.onchange = (e) => { if (e.target.files.length > 0) Array.from(e.target.files).forEach(saveFile); specFileInput.value = ''; };
-    if (clearAllBtn) clearAllBtn.onclick = () => { if (confirm('데이터 초기화?')) db.transaction(["specs"], "readwrite").objectStore("specs").clear().onsuccess = loadLocalFiles; };
+    if (clearAllBtn) clearAllBtn.onclick = () => {
+        if (confirm('모든 규격 파일을 삭제하시겠습니까?')) {
+            db.collection("specs").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    doc.ref.delete();
+                });
+                loadLocalFiles();
+            });
+        }
+    };
     if (dropZone) { dropZone.onclick = () => specFileInput.click(); dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }; dropZone.ondragleave = () => dropZone.classList.remove('dragover'); dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); Array.from(e.dataTransfer.files).forEach(saveFile); }; }
 
     // ========== [강종 정보 탭 버튼 이벤트] ==========
@@ -637,21 +680,26 @@ document.addEventListener('DOMContentLoaded', function () {
         { title: '도막 박리', photo: null, reason: '전처리/화성처리 불량, 프라이머 도포/경화 불량, 부착력 부족 등', internal: '1. 전처리 온도/농도, 프라이머/탑코트 도포량 및 경화 조건 확인\n2. 도료 유효기간 및 하지층 부착성 평가 결과 점검', external: '1. 가공 중 과도한 변형/충격 여부 확인\n2. 보관/사용 환경(화학물질, 고온다습) 조사' }
     ];
 
-    function loadLocalDefects() {
-        if (!db) return;
-        const tx = db.transaction(['defects'], 'readonly');
-        tx.objectStore('defects').getAll().onsuccess = (e) => {
-            localDefects = e.target.result;
+    async function loadLocalDefects() {
+        try {
+            const querySnapshot = await db.collection("defects").get();
+            localDefects = [];
+            querySnapshot.forEach((doc) => {
+                localDefects.push({ id: doc.id, ...doc.data() });
+            });
+
             if (localDefects.length === 0) {
                 // 초기 데이터 삽입
-                const txWrite = db.transaction(['defects'], 'readwrite');
-                const store = txWrite.objectStore('defects');
-                defaultDefects.forEach(d => store.add(d));
-                txWrite.oncomplete = loadLocalDefects;
+                for (const d of defaultDefects) {
+                    await db.collection("defects").add(d);
+                }
+                loadLocalDefects();
             } else {
                 renderDefectGrid();
             }
-        };
+        } catch (error) {
+            console.error("불량 데이터 로드 에러:", error);
+        }
     }
 
     function renderDefectGrid() {
@@ -678,13 +726,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
                         <h3 style="margin:0; font-size:15px; font-weight:700; color:#1e293b;">${defect.title}</h3>
                         <div style="display:flex; gap:4px; flex-shrink:0;">
-                            <button style="background:#e0f2fe; color:#0284c7; width:26px; height:26px; border:none; border-radius:6px; cursor:pointer; font-size:12px;" onclick="editDefect(${defect.id})">✏️</button>
-                            <button style="background:#fee2e2; color:#dc2626; width:26px; height:26px; border:none; border-radius:6px; cursor:pointer; font-size:12px;" onclick="deleteDefect(${defect.id})">🗑️</button>
+                            <button style="background:#e0f2fe; color:#0284c7; width:26px; height:26px; border:none; border-radius:6px; cursor:pointer; font-size:12px;" onclick="editDefect('${defect.id}')">✏️</button>
+                            <button style="background:#fee2e2; color:#dc2626; width:26px; height:26px; border:none; border-radius:6px; cursor:pointer; font-size:12px;" onclick="deleteDefect('${defect.id}')">🗑️</button>
                         </div>
                     </div>
                     <div style="font-size:13px; line-height:1.6; color:#475569;">
                         <div style="margin-bottom:10px;">
-                            <div style="font-weight:600; color:#1e3a8a; margin-bottom:4px; font-size:12px;">� 예상 원인</div>
+                            <div style="font-weight:600; color:#1e3a8a; margin-bottom:4px; font-size:12px;">🔍 예상 원인</div>
                             <div style="padding-left:2px;">${defect.reason || '-'}</div>
                         </div>
                         <div style="margin-bottom:10px;">
@@ -743,36 +791,75 @@ document.addEventListener('DOMContentLoaded', function () {
     // 삭제 버튼
     window.deleteDefect = (id) => {
         if (!confirm('이 불량 유형을 삭제하시겠습니까?')) return;
-        const tx = db.transaction(['defects'], 'readwrite');
-        tx.objectStore('defects').delete(id).onsuccess = loadLocalDefects;
+        db.collection("defects").doc(id).delete().then(loadLocalDefects);
     };
 
     // 폼 제출 (추가/수정)
     if (defectForm) {
-        defectForm.onsubmit = (e) => {
+        defectForm.onsubmit = async (e) => {
             e.preventDefault();
-            const idVal = document.getElementById('defect-id').value;
-            const existingDefect = idVal ? localDefects.find(d => d.id === parseInt(idVal)) : null;
-            const defectData = {
-                title: document.getElementById('defect-title').value,
-                photo: pendingDefectPhoto || (existingDefect ? existingDefect.photo : null),
-                reason: document.getElementById('defect-reason').value,
-                internal: document.getElementById('defect-internal').value,
-                external: document.getElementById('defect-external').value
-            };
-            const tx = db.transaction(['defects'], 'readwrite');
-            const store = tx.objectStore('defects');
-            if (idVal) {
-                defectData.id = parseInt(idVal);
-                store.put(defectData);
-            } else {
-                store.add(defectData);
+
+            // 저장 버튼 시각적 피드백
+            const submitBtn = defectForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "저장 중...";
             }
-            tx.oncomplete = () => {
+
+            const idVal = document.getElementById('defect-id').value;
+            const defectFile = document.getElementById('defect-photo').files[0];
+
+            try {
+                let photoURL = pendingDefectPhoto;
+
+                // 새로운 사진이 선택된 경우 (파일로 온 경우)
+                if (defectFile) {
+                    const storageRef = storage.ref(`defect_photos/${Date.now()}_${defectFile.name}`);
+                    const snapshot = await storageRef.put(defectFile);
+                    photoURL = await snapshot.ref.getDownloadURL();
+                }
+
+                const defectData = {
+                    title: document.getElementById('defect-title').value,
+                    photo: photoURL,
+                    reason: document.getElementById('defect-reason').value,
+                    internal: document.getElementById('defect-internal').value,
+                    external: document.getElementById('defect-external').value
+                };
+
+                if (idVal) {
+                    await db.collection("defects").doc(idVal).update(defectData);
+                    alert("성공적으로 수정되었습니다.");
+                } else {
+                    await db.collection("defects").add(defectData);
+                    alert("신규 불량이 등록되었습니다.");
+                }
+
                 defectModal.style.display = 'none';
                 pendingDefectPhoto = null;
+                // 폼 초기화 추가
+                defectForm.reset();
+                if (defectPhotoPreview) defectPhotoPreview.style.display = 'none';
+
                 loadLocalDefects();
-            };
+            } catch (error) {
+                console.error("불량 데이터 저장 에러:", error);
+                if (error.code === 'permission-denied') {
+                    alert("저장 권한이 없습니다. 파이어베이스 설정을 확인해주세요.");
+                } else {
+                    alert("저장 중 오류가 발생했습니다: " + error.message);
+                }
+            } finally {
+                // 저장 버튼 비활성화 해제 (필요 시 추가)
+                const submitBtn = defectForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "저장하기";
+                }
+            }
         };
     }
+
+    // 모든 정의가 끝난 후 초기 데이터 로드 시작
+    initAppData();
 });
