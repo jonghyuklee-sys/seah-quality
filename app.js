@@ -56,8 +56,17 @@ document.addEventListener('DOMContentLoaded', function () {
     function initAppData() {
         if (typeof firebase === 'undefined') {
             console.error("Firebase SDK가 로드되지 않았습니다.");
+            alert("Firebase SDK를 로드할 수 없습니다. 인터넷 연결을 확인해주세요.");
             return;
         }
+
+        // 설정값 체크 (Placeholder 방지)
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+            console.warn("⚠️ Firebase 설정이 완료되지 않았습니다 (Placeholder 사용 중).");
+            alert("Firebase 설정(apiKey 등)이 완료되지 않았습니다. firebase-config.js 파일을 확인해주세요.");
+            return;
+        }
+
         loadLocalFiles();
         loadLocalComplaints();
         loadLocalDefects();
@@ -150,14 +159,23 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const photoFile = document.getElementById('voc-photo').files[0];
 
+            // 저장 버튼 시각적 피드백
+            const submitBtn = vocForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "저장 중...";
+
             try {
-                let photoURL = isEditMode ? localComplaints.find(v => v.id === currentVocId).photo : null;
+                console.log("🚀 VOC 저장 시작...");
+                let photoURL = isEditMode ? (localComplaints.find(v => v.id === currentVocId)?.photo || null) : null;
 
                 // 사진이 새로 업로드된 경우
                 if (photoFile) {
+                    console.log("📸 사진 업로드 중...");
                     const storageRef = storage.ref(`voc_photos/${Date.now()}_${photoFile.name}`);
                     const snapshot = await storageRef.put(photoFile);
                     photoURL = await snapshot.ref.getDownloadURL();
+                    console.log("✅ 사진 업로드 완료:", photoURL);
                 }
 
                 const vocData = {
@@ -182,20 +200,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
 
                 if (isEditMode) {
+                    console.log("📝 VOC 데이터 업데이트 중 (ID:", currentVocId, ")...");
                     await db.collection("complaints").doc(currentVocId).update(vocData);
                 } else {
+                    console.log("🆕 VOC 신규 데이터 등록 중...");
                     await db.collection("complaints").add(vocData);
                 }
 
+                console.log("✅ 데이터베이스 저장 성공!");
                 vocForm.reset();
+                const wasEdit = isEditMode;
                 isEditMode = false;
                 currentVocId = null;
-                vocForm.querySelector('button[type="submit"]').textContent = 'VOC 접수완료';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'VOC 접수완료';
+                }
                 loadLocalComplaints();
-                alert(isEditMode ? 'VOC 수정이 완료되었습니다.' : 'VOC 상세 접수가 완료되었습니다.');
+                alert(wasEdit ? 'VOC 수정이 완료되었습니다.' : 'VOC 상세 접수가 완료되었습니다.');
             } catch (error) {
                 console.error("VOC 저장 에러:", error);
-                alert("VOC 저장 중 오류가 발생했습니다.");
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'VOC 접수완료';
+                }
+                if (error.code === 'permission-denied') {
+                    alert("저장 권한이 없습니다. 파이어베이스 보안 규칙을 확인해주세요.");
+                } else {
+                    alert("VOC 저장 중 오류가 발생했습니다: " + error.message);
+                }
             }
         };
     }
@@ -681,6 +714,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
 
     async function loadLocalDefects() {
+        console.log("🔍 불량 데이터 불러오는 중...");
         try {
             const querySnapshot = await db.collection("defects").get();
             localDefects = [];
@@ -689,16 +723,23 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (localDefects.length === 0) {
-                // 초기 데이터 삽입
-                for (const d of defaultDefects) {
-                    await db.collection("defects").add(d);
-                }
-                loadLocalDefects();
-            } else {
-                renderDefectGrid();
+                console.log("ℹ️ 등록된 데이터가 없어 기본 데이터를 생성합니다...");
+                // 초기 데이터 삽입 (비동기 처리)
+                const promises = defaultDefects.map(d => db.collection("defects").add(d));
+                await Promise.all(promises);
+
+                // 삽입 후 한 번 더 가져오기 (재귀 피함)
+                const retrySnapshot = await db.collection("defects").get();
+                localDefects = [];
+                retrySnapshot.forEach((doc) => {
+                    localDefects.push({ id: doc.id, ...doc.data() });
+                });
             }
+
+            console.log("✅ 불량 데이터 로드 완료:", localDefects.length, "건");
+            renderDefectGrid();
         } catch (error) {
-            console.error("불량 데이터 로드 에러:", error);
+            console.error("❌ 불량 데이터 로드 에러:", error);
         }
     }
 
@@ -798,25 +839,36 @@ document.addEventListener('DOMContentLoaded', function () {
     if (defectForm) {
         defectForm.onsubmit = async (e) => {
             e.preventDefault();
-
-            // 저장 버튼 시각적 피드백
             const submitBtn = defectForm.querySelector('button[type="submit"]');
+            const idVal = document.getElementById('defect-id').value;
+            const defectFile = document.getElementById('defect-photo').files[0];
+
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.textContent = "저장 중...";
             }
 
-            const idVal = document.getElementById('defect-id').value;
-            const defectFile = document.getElementById('defect-photo').files[0];
-
             try {
+                console.log("🚀 불량 도감 저장 프로세스 시작...");
                 let photoURL = pendingDefectPhoto;
 
                 // 새로운 사진이 선택된 경우 (파일로 온 경우)
                 if (defectFile) {
-                    const storageRef = storage.ref(`defect_photos/${Date.now()}_${defectFile.name}`);
-                    const snapshot = await storageRef.put(defectFile);
-                    photoURL = await snapshot.ref.getDownloadURL();
+                    console.log("📸 사진 업로드 시도 중 (파일명:", defectFile.name, ")...");
+                    try {
+                        const storagePath = `defect_photos/${Date.now()}_${defectFile.name}`;
+                        const storageRef = storage.ref(storagePath);
+
+                        // 업로드 시작
+                        const uploadTask = await storageRef.put(defectFile);
+                        console.log("📤 업로드 완료, URL 추출 중...", uploadTask);
+
+                        photoURL = await uploadTask.ref.getDownloadURL();
+                        console.log("🔗 다운로드 URL 획득 성공:", photoURL);
+                    } catch (sError) {
+                        console.error("❌ 사진 업로드 단계 실패:", sError);
+                        throw new Error(`사진 업로드 중 오류가 발생했습니다. (사유: ${sError.message})`);
+                    }
                 }
 
                 const defectData = {
@@ -824,34 +876,37 @@ document.addEventListener('DOMContentLoaded', function () {
                     photo: photoURL,
                     reason: document.getElementById('defect-reason').value,
                     internal: document.getElementById('defect-internal').value,
-                    external: document.getElementById('defect-external').value
+                    external: document.getElementById('defect-external').value,
+                    updatedAt: new Date().toISOString()
                 };
 
+                console.log("💾 Firestore 데이터 기록 단계 진입...");
                 if (idVal) {
+                    console.log("📝 기존 데이터 업데이트 시도 (ID:", idVal, ")...");
                     await db.collection("defects").doc(idVal).update(defectData);
                     alert("성공적으로 수정되었습니다.");
                 } else {
-                    await db.collection("defects").add(defectData);
+                    console.log("🆕 신규 데이터 추가 시도...");
+                    const docRef = await db.collection("defects").add(defectData);
+                    console.log("✅ 신규 문서 생성 성공 (ID:", docRef.id, ")");
                     alert("신규 불량이 등록되었습니다.");
                 }
+                console.log("🎆 모든 저장 프로세스 완료!");
 
                 defectModal.style.display = 'none';
                 pendingDefectPhoto = null;
-                // 폼 초기화 추가
                 defectForm.reset();
                 if (defectPhotoPreview) defectPhotoPreview.style.display = 'none';
 
                 loadLocalDefects();
             } catch (error) {
-                console.error("불량 데이터 저장 에러:", error);
+                console.error("불량 저장 에러:", error);
+                let userMsg = "저장 실패: " + error.message;
                 if (error.code === 'permission-denied') {
-                    alert("저장 권한이 없습니다. 파이어베이스 설정을 확인해주세요.");
-                } else {
-                    alert("저장 중 오류가 발생했습니다: " + error.message);
+                    userMsg = "권한이 없습니다. Firestore Database의 [규칙] 탭에서 allow read, write: if true; 로 설정하고 [게시]를 눌렀는지 확인해주세요.";
                 }
+                alert(userMsg);
             } finally {
-                // 저장 버튼 비활성화 해제 (필요 시 추가)
-                const submitBtn = defectForm.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = "저장하기";

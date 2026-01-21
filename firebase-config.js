@@ -1,12 +1,12 @@
-// Firebase Configuration
-// TODO: 아래 설정을 실제 파이어베이스 프로젝트 설정값으로 교체해주세요.
+// Firebase Configuration (Project: seah-quality2)
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "seah-quality.firebaseapp.com",
-    projectId: "seah-quality",
-    storageBucket: "seah-quality.firebasestorage.app",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAUW1DVz6ZKVNguNFNWyQMG9qk_THWeDx0",
+    authDomain: "seah-quality2.firebaseapp.com",
+    projectId: "seah-quality2",
+    storageBucket: "seah-quality2.firebasestorage.app",
+    messagingSenderId: "11833740311",
+    appId: "1:11833740311:web:ef97f550b18d3d43a12052",
+    measurementId: "G-XB385Y44BC"
 };
 
 // Initialize Firebase
@@ -15,4 +15,4 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-console.log("🔥 Firebase initialized successfully.");
+console.log("🔥 New Firebase (seah-quality2) initialized successfully.");
