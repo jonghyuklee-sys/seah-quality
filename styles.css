@@ -13,6 +13,7 @@
     --bg-sidebar: #0f172a;
     --bg-card: #ffffff;
     --border: #e2e8f0;
+    --border-light: #f1f5f9;
     --text-main: #1e293b;
     --text-muted: #64748b;
     --text-light: #94a3b8;
@@ -39,6 +40,13 @@
     padding: 0;
 }
 
+input,
+select,
+textarea,
+button {
+    font-family: inherit;
+}
+
 html {
     overflow-x: hidden;
     width: 100%;
@@ -59,8 +67,16 @@ body {
     display: none !important;
 }
 
+/* 관리자 모드일 때만 표시 */
 body.admin-mode .admin-only {
     display: block !important;
+}
+
+/* 관리자 모드이면서 가로 배치가 필요한 경우 */
+body.admin-mode .admin-only.admin-flex {
+    display: flex !important;
+    gap: 8px;
+    align-items: center;
 }
 
 /* 인라인 블록 등 다른 디스플레이 형태 대응 */
@@ -70,6 +86,8 @@ body.admin-mode span.admin-only {
 
 body.admin-mode button.admin-only {
     display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Layout Structure */
@@ -253,6 +271,8 @@ body.admin-mode button.admin-only {
 
 .page-header p {
     color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
 }
 
 /* Info Cards / Stats */
@@ -271,6 +291,8 @@ body.admin-mode button.admin-only {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    align-items: center;
+    text-align: center;
 }
 
 .stat-label {
@@ -339,7 +361,8 @@ body.admin-mode button.admin-only {
 }
 
 .form-field select,
-.form-field input {
+.form-field input,
+.form-field textarea {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid var(--border);
@@ -352,8 +375,14 @@ body.admin-mode button.admin-only {
     transition: all 0.2s;
 }
 
+.form-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
 .form-field select:focus,
-.form-field input:focus {
+.form-field input:focus,
+.form-field textarea:focus {
     border-color: var(--primary-light);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
@@ -503,8 +532,9 @@ body.admin-mode button.admin-only {
 }
 
 .data-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-light);
+    color: #475569;
 }
 
 .data-table tr:hover {
@@ -512,13 +542,14 @@ body.admin-mode button.admin-only {
 }
 
 .text-bold {
-    font-weight: 600;
-    color: var(--text-main);
+    font-weight: 700;
+    color: var(--primary-dark);
 }
 
 .text-muted-cell {
     color: var(--text-muted);
     font-size: 13px;
+    font-family: var(--font-mono);
 }
 
 /* Coating Grid */
