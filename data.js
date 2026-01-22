@@ -160,12 +160,12 @@ const steelData = {
     ZM: {
         KS: {
             isPrepainted: false, standard: 'KS D 3030', grades: ['SGMCC', 'SGMCD1', 'SGMCD2', 'SGMCD3', 'SGMC340', 'SGMC400', 'SGMC440', 'SGMC490', 'SGMC570'],
-            coatingOptions: ['K06', 'K08', 'K10', 'K12', 'K14', 'K18', 'K20', 'K22', 'K25', 'K27'],
+            coatingOptions: ['ZM60', 'ZM80', 'ZM100', 'ZM120', 'ZM140', 'ZM180', 'ZM200', 'ZM220', 'ZM250', 'ZM275'],
             properties: { SGMCC: { ts: '270↑' }, SGMC440: { ys: '335↑', ts: '440↑', el: '18↑' } }
         },
         JIS: {
             isPrepainted: false, standard: 'JIS G 3323', grades: ['SMMCC', 'SMMCD1', 'SMMCD2', 'SMMCD3', 'SMMC340', 'SMMC400', 'SMMC440', 'SMMC490', 'SMMC570'],
-            coatingOptions: ['K06', 'K08', 'K10', 'K12', 'K14', 'K18', 'K20', 'K22', 'K25', 'K27', 'K35', 'K45'],
+            coatingOptions: ['ZM60', 'ZM80', 'ZM100', 'ZM120', 'ZM140', 'ZM180', 'ZM200', 'ZM220', 'ZM275', 'ZM350', 'ZM450'],
             properties: { SMMCC: { ts: '270↑' } }
         },
         ASTM: {
@@ -243,12 +243,12 @@ const steelData = {
     PPZM: {
         KS: {
             isPrepainted: true, standard: 'KS D 3034', grades: ['CGMCC', 'CGMCD1', 'CGMCD2', 'CGMCD3', 'CGMC340', 'CGMC400', 'CGMC440', 'CGMC490', 'CGMC570'],
-            coatingOptions: ['K06', 'K08', 'K10', 'K12', 'K14', 'K18', 'K20', 'K22', 'K25', 'K27'],
+            coatingOptions: ['ZM60', 'ZM80', 'ZM100', 'ZM120', 'ZM140', 'ZM180', 'ZM200', 'ZM220', 'ZM250', 'ZM275'],
             properties: { CGMCC: { ts: '270↑' }, CGMC440: { ys: '335↑', ts: '440↑', el: '18↑' } }
         },
         JIS: {
             isPrepainted: true, standard: 'JIS G 3318', grades: ['CGMCC', 'CGMCD1', 'CGMCD2', 'CGMCD3', 'CGMC340', 'CGMC400', 'CGMC440', 'CGMC490', 'CGMC570'],
-            coatingOptions: ['K06', 'K10', 'K12', 'K18', 'K27'],
+            coatingOptions: ['ZM60', 'ZM100', 'ZM120', 'ZM180', 'ZM275'],
             properties: { CGMCC: { ts: '270↑' } }
         },
         ASTM: {
