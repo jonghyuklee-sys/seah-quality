@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const steelTypeSelect = document.getElementById('steel-type');
     const standardTypeSelect = document.getElementById('standard-type');
+    const specificStandardSelect = document.getElementById('specific-standard');
     const gradeTypeSelect = document.getElementById('grade-type');
     const coatingWeightSelect = document.getElementById('coating-weight');
     const thicknessInput = document.getElementById('spec-thickness');
@@ -12,6 +13,105 @@ document.addEventListener('DOMContentLoaded', function () {
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    // [관리자 모드 초기화]
+    let isAdmin = localStorage.getItem('isAdmin') === 'true';
+    const adminLoginBtn = document.getElementById('admin-login-btn');
+    const adminModal = document.getElementById('admin-modal');
+    const adminPasswordInput = document.getElementById('admin-password');
+    const confirmAdminLoginBtn = document.getElementById('confirm-admin-login');
+    const cancelAdminLoginBtn = document.getElementById('cancel-admin-login');
+    const closeAdminModalBtn = document.getElementById('close-admin-modal');
+    const loginStatusMsg = document.getElementById('admin-login-status');
+    const displayUserName = document.getElementById('display-user-name');
+    const displayUserRole = document.getElementById('display-user-role');
+    const userAvatar = document.getElementById('user-avatar');
+
+    function updateAdminUI() {
+        if (isAdmin) {
+            document.body.classList.add('admin-mode');
+            if (adminLoginBtn) {
+                adminLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> 로그아웃';
+                adminLoginBtn.classList.replace('btn-secondary', 'btn-danger');
+            }
+            if (displayUserName) displayUserName.textContent = '품질관리자';
+            if (displayUserRole) displayUserRole.textContent = 'Admin Mode';
+            if (userAvatar) {
+                userAvatar.textContent = 'QM';
+                userAvatar.style.background = '#1e3a8a';
+                userAvatar.style.color = '#fff';
+            }
+        } else {
+            document.body.classList.remove('admin-mode');
+            if (adminLoginBtn) {
+                adminLoginBtn.innerHTML = '<i class="fas fa-lock"></i> 관리자 로그인';
+                adminLoginBtn.classList.replace('btn-danger', 'btn-secondary');
+            }
+            if (displayUserName) displayUserName.textContent = '방문객';
+            if (displayUserRole) displayUserRole.textContent = 'Guest';
+            if (userAvatar) {
+                userAvatar.textContent = 'G';
+                userAvatar.style.background = '#e2e8f0';
+                userAvatar.style.color = '#64748b';
+            }
+        }
+        // 사이드바 메뉴 가시성 업데이트 (admin-only 클래스 처리)
+        // CSS에서 이미 처리하지만, Nav Link 중복 방지를 위해 필요시 추가 처리 가능
+    }
+
+    // 초기 UI 업데이트
+    updateAdminUI();
+
+    // 로그인 버튼 클릭
+    if (adminLoginBtn) {
+        adminLoginBtn.onclick = () => {
+            if (isAdmin) {
+                // 로그아웃
+                if (confirm('관리자 모드를 종료하시겠습니까?')) {
+                    isAdmin = false;
+                    localStorage.setItem('isAdmin', 'false');
+                    updateAdminUI();
+                    location.hash = '#search-view'; // 관리자 전용 페이지에서 튕겨내기
+                }
+            } else {
+                // 로그인 모달 열기
+                adminModal.style.display = 'flex';
+                adminPasswordInput.value = '';
+                adminPasswordInput.focus();
+                loginStatusMsg.style.display = 'none';
+            }
+        };
+    }
+
+    // 모달 닫기
+    const closeAdminModal = () => {
+        adminModal.style.display = 'none';
+        adminPasswordInput.value = '';
+    };
+    if (closeAdminModalBtn) closeAdminModalBtn.onclick = closeAdminModal;
+    if (cancelAdminLoginBtn) cancelAdminLoginBtn.onclick = closeAdminModal;
+
+    // 비밀번호 확인
+    if (confirmAdminLoginBtn) {
+        confirmAdminLoginBtn.onclick = () => {
+            if (adminPasswordInput.value === '0000') {
+                isAdmin = true;
+                localStorage.setItem('isAdmin', 'true');
+                updateAdminUI();
+                closeAdminModal();
+                alert('관리자 모드로 전환되었습니다.');
+            } else {
+                loginStatusMsg.style.display = 'block';
+                adminPasswordInput.value = '';
+                adminPasswordInput.focus();
+            }
+        };
+    }
+
+    // 엔터키 지원
+    adminPasswordInput.onkeydown = (e) => {
+        if (e.key === 'Enter') confirmAdminLoginBtn.click();
+    };
 
     // 모바일 메뉴 토글
     if (mobileMenuBtn) {
@@ -92,11 +192,40 @@ document.addEventListener('DOMContentLoaded', function () {
     // [3. 인식 엔진]
     function recognizeFullSpec(fileName, text = "") {
         const pool = (fileName + " " + text).toUpperCase().replace(/[\s\-_]/g, '');
-        const specPatterns = [{ reg: /3506|D3506/, key: "KS D 3506", ref: "KS" }, { reg: /3520|D3520/, key: "KS D 3520", ref: "KS" }, { reg: /3302|G3302/, key: "JIS G 3302", ref: "JIS" }, { reg: /A653/, key: "ASTM A653", ref: "ASTM" }];
-        let detectedSpec = { name: "미분류", ref: "기타" };
+        const specPatterns = [
+            // KS 규격
+            { reg: /3506|D3506/, key: "KS D 3506", ref: "KS" },
+            { reg: /3770|D3770/, key: "KS D 3770", ref: "KS" },
+            { reg: /6701|D6701/, key: "KS D 6701", ref: "KS" },
+            { reg: /3030|D3030/, key: "KS D 3030", ref: "KS" },
+            { reg: /3520|D3520/, key: "KS D 3520", ref: "KS" },
+            { reg: /3862|D3862/, key: "KS D 3862", ref: "KS" },
+            { reg: /6711|D6711/, key: "KS D 6711", ref: "KS" },
+            { reg: /3034|D3034/, key: "KS D 3034", ref: "KS" },
+            // JIS 규격
+            { reg: /3302|G3302/, key: "JIS G 3302", ref: "JIS" },
+            { reg: /3321|G3321/, key: "JIS G 3321", ref: "JIS" },
+            { reg: /4000|H4000/, key: "JIS H 4000", ref: "JIS" },
+            { reg: /3323|G3323/, key: "JIS G 3323", ref: "JIS" },
+            { reg: /3312|G3312/, key: "JIS G 3312", ref: "JIS" },
+            { reg: /3322|G3322/, key: "JIS G 3322", ref: "JIS" },
+            { reg: /4001|H4001/, key: "JIS H 4001", ref: "JIS" },
+            // ASTM/EN 및 기타
+            { reg: /A653/, key: "ASTM A653", ref: "ASTM" },
+            { reg: /A792/, key: "ASTM A792", ref: "ASTM" },
+            { reg: /B209/, key: "ASTM B209", ref: "ASTM" },
+            { reg: /A1046/, key: "ASTM A1046", ref: "ASTM" },
+            { reg: /A755/, key: "ASTM A755", ref: "ASTM" },
+            { reg: /10346/, key: "EN 10346", ref: "EN" },
+            { reg: /10169/, key: "EN 10169", ref: "EN" },
+            { reg: /485/, key: "EN 485", ref: "EN" }
+        ];
+        let detectedSpec = { name: "", ref: "기타" };
         for (const s of specPatterns) { if (s.reg.test(pool)) { detectedSpec = { name: s.key, ref: s.ref }; break; } }
-        const gradeRegex = /(SGC[0-9]{3}|SGCC|DX51D|CS[A-C])/i; const gradeMatch = (fileName + " " + text).match(gradeRegex);
-        return { spec: detectedSpec, grade: gradeMatch ? gradeMatch[0].toUpperCase() : "미지정" };
+        // 전 규격(KS, JIS, ASTM, EN) 냉연/도금 제품군 재질 정규식 완벽 보완
+        const gradeRegex = /(SGCC|SGCD[1-3]|SGCD|SGC[0-9]{3}|DX5[1-4]D\+?[A-Z]{0,2}|S[0-9]{3}GD\+?[A-Z]{0,2}|CS\s?Type\s?[A-C]|FS\s?Type\s?[A-B]|SS\s?Grade\s?[0-9]{2,3}|SGLCC|SGLCD|SGLC[0-9]{3}|SDCC|SDCD[1-3]|SDC[0-9]{3}|CGCC|CGCD[1-3]|CGCD|CGCH|CGC[0-9]{3}|CGLCC|CGLCD|CGLC[0-9]{3}|CDCC|CDC[0-9]{3}|SMMCC|SMMCD|SMM[0-9]{3}|CMMCC|CMM[0-9]{3}|3003-H[0-9]{2}|3105-H[0-9]{2}|3003|3105|1100|5052|AW-[0-9]{4}|A[0-9]{4}P)/i;
+        const gradeMatch = (fileName + " " + text).match(gradeRegex);
+        return { spec: detectedSpec, grade: gradeMatch ? gradeMatch[0].toUpperCase() : "" };
     }
 
     // [4. 규격 파일 관리]
@@ -140,16 +269,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     function renderFileList() {
-        if (!registeredFileList) return; registeredFileList.innerHTML = localFiles.length === 0 ? '<div style="text-align:center; padding:20px; color:#94a3b8;">파일 없음</div>' : '';
+        if (!registeredFileList) return;
+        registeredFileList.innerHTML = localFiles.length === 0 ? '<div style="text-align:center; padding:20px; color:#94a3b8;">파일 없음</div>' : '';
+
         localFiles.forEach(file => {
-            const div = document.createElement('div'); div.className = 'file-list-item-new';
-            div.innerHTML = `<div class="file-info-header" style="cursor:pointer;"><div class="file-icon">📄</div><div class="file-meta"><span class="file-name-link">${file.name}</span><div class="status-tags"><span class="status-badge badge-blue">${file.detectedSpec}</span><span class="status-badge badge-orange">${file.detectedGrade}</span></div></div></div><button class="btn-icon delete-file">✕</button>`;
+            const div = document.createElement('div');
+            div.className = 'file-list-item-new';
+
+            // 배지 생성 (값이 있는 경우에만)
+            const specBadge = file.detectedSpec ? `<span class="status-badge badge-blue">${file.detectedSpec}</span>` : '';
+            const gradeBadge = file.detectedGrade ? `<span class="status-badge badge-orange">${file.detectedGrade}</span>` : '';
+
+            div.innerHTML = `
+            <div class="file-info-header" style="cursor:pointer;">
+                <div class="file-icon">📄</div>
+                <div class="file-meta">
+                    <span class="file-name-link">${file.name}</span>
+                    <div class="status-tags">
+                        ${specBadge}
+                        ${gradeBadge}
+                    </div>
+                </div>
+            </div>
+            <button class="btn-icon delete-file admin-only">✕</button>`;
+
             div.querySelector('.file-info-header').onclick = () => { window.open(file.content); };
-            div.querySelector('.delete-file').onclick = () => {
-                if (confirm('삭제하시겠습니까?')) {
-                    db.collection("specs").doc(file.id).delete().then(loadLocalFiles);
-                }
-            };
+            const delBtn = div.querySelector('.delete-file');
+            if (delBtn) {
+                delBtn.onclick = () => {
+                    if (confirm('삭제하시겠습니까?')) {
+                        db.collection("specs").doc(file.id).delete().then(loadLocalFiles);
+                    }
+                };
+            }
             registeredFileList.appendChild(div);
         });
     }
@@ -349,13 +501,13 @@ document.addEventListener('DOMContentLoaded', function () {
             tr.onclick = (e) => { if (e.target.tagName !== 'BUTTON') openVocModal(voc); };
             const isDone = voc.status === '완료';
             tr.innerHTML = `
-                <td style="padding:12px;"><span class="voc-status" style="background:#f1f5f9; color:#475569;">${voc.category}</span></td>
-                <td style="padding:12px; font-size:12px; color:#64748b;">${voc.receiptDate}</td>
-                <td style="padding:12px; font-weight:600; color:#1e293b;">${voc.customer}</td>
-                <td style="padding:12px; font-size:12px; color:#64748b; font-weight:700;">${voc.line}</td>
-                <td style="padding:12px; font-size:13px; color:#475569;">${voc.title}</td>
-                <td style="padding:12px;"><span class="voc-status ${isDone ? 'status-done' : 'status-pending'}">${voc.status}</span></td>
-                <td style="padding:12px; text-align:center;"><button class="btn-icon" style="background:#f1f5f9; color:#64748b; width:24px; height:24px;" onclick="deleteVoc(event, '${voc.id}')">✕</button></td>
+                <td style="padding:12px; text-align:center;"><span class="voc-status" style="background:#f1f5f9; color:#475569;">${voc.category}</span></td>
+                <td style="padding:12px; font-size:12px; color:#64748b; text-align:center;">${voc.receiptDate}</td>
+                <td style="padding:12px; font-weight:600; color:#1e293b; text-align:center;">${voc.customer}</td>
+                <td style="padding:12px; font-size:12px; color:#64748b; font-weight:700; text-align:center;">${voc.line}</td>
+                <td style="padding:12px; font-size:13px; color:#475569; text-align:center;">${voc.title}</td>
+                <td style="padding:12px; text-align:center;"><span class="voc-status ${isDone ? 'status-done' : 'status-pending'}">${voc.status}</span></td>
+                <td style="padding:12px; text-align:center;"><button class="btn-icon admin-only" style="background:#fee2e2; color:#dc2626; width:28px; height:28px; border:none; border-radius:6px; cursor:pointer; font-size:14px;" onclick="deleteVoc(event, '${voc.id}')">🗑️</button></td>
             `;
             vocListBody.appendChild(tr);
         });
@@ -364,134 +516,300 @@ document.addEventListener('DOMContentLoaded', function () {
     window.deleteVoc = (e, id) => { e.stopPropagation(); if (confirm('이 VOC 내역을 완전히 삭제하시겠습니까?')) db.collection("complaints").doc(id).delete().then(loadLocalComplaints); };
 
     function openVocModal(voc) {
-        currentVocId = voc.id; vocModal.style.display = 'flex';
-        const isDone = voc.status === '완료';
+        currentVocId = voc.id;
+        vocModal.style.display = 'flex';
 
-        vocModalInfo.innerHTML = `
-            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; font-size:13px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #e2e8f0;">
-                <div><strong style="color:#64748b;">구분:</strong> ${voc.category} (${voc.market})</div>
-                <div><strong style="color:#64748b;">접수일:</strong> ${voc.receiptDate}</div>
-                <div><strong style="color:#64748b;">고객사:</strong> ${voc.customer}</div>
-                <div><strong style="color:#64748b;">담당자:</strong> ${voc.manager}</div>
-                <div><strong style="color:#64748b;">SPEC:</strong> ${voc.spec}</div>
-                <div><strong style="color:#64748b;">색상:</strong> ${voc.color || '-'}</div>
-                <div><strong style="color:#64748b;">배치번호:</strong> ${voc.batch || '-'}</div>
-                <div><strong style="color:#64748b;">생산라인:</strong> ${voc.line} (${voc.prodDate || '-'})</div>
-                <div><strong style="color:#64748b;">납품수량:</strong> ${voc.deliveryQty || '-'}</div>
-                <div><strong style="color:#64748b;">불만수량:</strong> ${voc.complaintQty || '-'}</div>
-            </div>
-            <div style="margin-bottom:15px;"><div style="font-weight:700; margin-bottom:8px; color:#1e293b;">📌 불만명: ${voc.title}</div></div>
-            ${voc.photo ? `<div style="margin-bottom:15px;"><img src="${voc.photo}" style="width:100%; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;" onclick="window.open(this.src)"></div>` : ''}
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button class="btn-secondary" style="flex:1; font-size:12px;" onclick="startEditSelectedVoc()">🖋️ 정보 수정</button>
-            </div>
-            ${voc.replyData ? `
-                <div style="background:#eff6ff; padding:15px; border-radius:8px; border:1px solid #bfdbfe; font-size:13px;">
-                    <div style="font-weight:700; margin-bottom:12px; color:#1e3a8a; border-bottom:1px solid #bfdbfe; padding-bottom:8px;">✅ 품질팀 조치 결과 (${voc.repliedAt})</div>
-                    <div style="margin-bottom:8px;"><strong style="color:#1e40af;">[담당자]</strong> ${voc.replyData.manager} / <strong style="color:#1e40af;">[손실비용]</strong> ${voc.replyData.cost}</div>
-                    <div style="margin-bottom:8px;"><strong style="color:#1e40af;">[근본원인]</strong><br>${voc.replyData.cause}</div>
-                    <div style="margin-bottom:8px;"><strong style="color:#1e40af;">[개선대책]</strong><br>${voc.replyData.countermeasure}</div>
-                    <div style="margin-bottom:8px;"><strong style="color:#1e40af;">[유효성평가]</strong><br>${voc.replyData.evaluation}</div>
-                    ${voc.replyData.notes ? `<div><strong style="color:#1e40af;">[특이사항]</strong><br>${voc.replyData.notes}</div>` : ''}
-                </div>
-            ` : (isDone && voc.reply ? `<div style="background:#eff6ff; padding:15px; border-radius:8px; border:1px solid #bfdbfe;"><div style="font-weight:700; margin-bottom:8px; color:#1e3a8a;">✅ 조치 결과 (${voc.repliedAt})</div><div style="font-size:14px; color:#1e40af; line-height:1.6;">${voc.reply}</div></div>` : '')}
-        `;
+        // 1. 접수 정보 필드 채우기 (모달 내 편집 필드)
+        document.getElementById('modal-edit-category').value = voc.category || '클레임';
+        document.getElementById('modal-edit-market').value = voc.market || '내수';
+        document.getElementById('modal-edit-receiptDate').value = voc.receiptDate || '';
+        document.getElementById('modal-edit-customer').value = voc.customer || '';
+        document.getElementById('modal-edit-manager').value = voc.manager || '';
+        document.getElementById('modal-edit-spec').value = voc.spec || '';
+        document.getElementById('modal-edit-line').value = voc.line || 'CGL';
+        document.getElementById('modal-edit-prodDate').value = voc.prodDate || '';
+        document.getElementById('modal-edit-title').value = voc.title || '';
 
-        document.getElementById('modal-voc-action-box').style.display = isDone ? 'none' : 'block';
-        if (!isDone) {
+        // 사진 처리
+        const photoContainer = document.getElementById('modal-edit-photo-container');
+        const photoPreview = document.getElementById('modal-edit-photo-preview');
+        if (voc.photo) {
+            photoContainer.style.display = 'block';
+            photoPreview.src = voc.photo;
+        } else {
+            photoContainer.style.display = 'none';
+        }
+
+        // 2. 품질팀 조치 결과 필드 채우기
+        if (voc.replyData) {
+            document.getElementById('modal-reply-manager').value = voc.replyData.manager || '';
+            document.getElementById('modal-reply-cost').value = voc.replyData.cost || '';
+            document.getElementById('modal-reply-cause').value = voc.replyData.cause || '';
+            document.getElementById('modal-reply-countermeasure').value = voc.replyData.countermeasure || '';
+            document.getElementById('modal-reply-evaluation').value = voc.replyData.evaluation || '';
+            document.getElementById('modal-reply-status').value = voc.status || '완료';
+        } else {
             document.getElementById('modal-reply-manager').value = '';
             document.getElementById('modal-reply-cost').value = '';
             document.getElementById('modal-reply-cause').value = '';
             document.getElementById('modal-reply-countermeasure').value = '';
             document.getElementById('modal-reply-evaluation').value = '';
-            document.getElementById('modal-reply-notes').value = '';
-            document.getElementById('modal-reply-status').value = '완료';
+            document.getElementById('modal-reply-status').value = voc.status || '접수';
         }
+
+        // [관리자 권한 제어]
+        if (vocModalSaveBtn) {
+            vocModalSaveBtn.style.display = isAdmin ? 'block' : 'none';
+        }
+        // 모든 입력 필드 활성/비활성화 처리
+        const inputs = vocModal.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.disabled = !isAdmin;
+        });
     }
-
-    window.startEditSelectedVoc = () => {
-        const voc = localComplaints.find(v => v.id === currentVocId);
-        if (!voc) return;
-        document.getElementById('voc-category').value = voc.category;
-        document.getElementById('voc-market').value = voc.market;
-        document.getElementById('voc-receipt-date').value = voc.receiptDate;
-        document.getElementById('voc-customer').value = voc.customer;
-        document.getElementById('voc-manager').value = voc.manager;
-        document.getElementById('voc-spec').value = voc.spec;
-        document.getElementById('voc-color').value = voc.color;
-        document.getElementById('voc-batch').value = voc.batch;
-        document.getElementById('voc-line').value = voc.line;
-        document.getElementById('voc-prod-date').value = voc.prodDate;
-        document.getElementById('voc-delivery-qty').value = voc.deliveryQty;
-        document.getElementById('voc-complaint-qty').value = voc.complaintQty;
-        document.getElementById('voc-title').value = voc.title;
-        document.getElementById('voc-desc').value = voc.desc;
-
-        isEditMode = true;
-        vocForm.querySelector('button[type="submit"]').textContent = '수정 완료하기';
-        vocModal.style.display = 'none';
-        vocForm.scrollIntoView({ behavior: 'smooth' });
-    };
 
     if (vocModalSaveBtn) {
         vocModalSaveBtn.onclick = async () => {
-            const replyData = {
-                manager: document.getElementById('modal-reply-manager').value,
-                cost: document.getElementById('modal-reply-cost').value,
-                cause: document.getElementById('modal-reply-cause').value,
-                countermeasure: document.getElementById('modal-reply-countermeasure').value,
-                evaluation: document.getElementById('modal-reply-evaluation').value,
-                notes: document.getElementById('modal-reply-notes').value
-            };
-            const status = document.getElementById('modal-reply-status').value;
+            const saveBtn = document.getElementById('modal-voc-save-btn');
+            const originalText = saveBtn.textContent;
+            saveBtn.disabled = true;
+            saveBtn.textContent = "변경 내용 저장 중...";
 
-            if (!replyData.cause || !replyData.countermeasure) return alert('원인과 개선 대책은 필수 입력 항목입니다.');
+            // 1. 접수 정보 데이터 수집
+            const updatedVocData = {
+                category: document.getElementById('modal-edit-category').value,
+                market: document.getElementById('modal-edit-market').value,
+                receiptDate: document.getElementById('modal-edit-receiptDate').value,
+                customer: document.getElementById('modal-edit-customer').value,
+                manager: document.getElementById('modal-edit-manager').value,
+                spec: document.getElementById('modal-edit-spec').value,
+                line: document.getElementById('modal-edit-line').value,
+                prodDate: document.getElementById('modal-edit-prodDate').value,
+                title: document.getElementById('modal-edit-title').value,
+
+                // 2. 품질팀 조치 결과 데이터 수집
+                status: document.getElementById('modal-reply-status').value,
+                replyData: {
+                    manager: document.getElementById('modal-reply-manager').value,
+                    cost: document.getElementById('modal-reply-cost').value,
+                    cause: document.getElementById('modal-reply-cause').value,
+                    countermeasure: document.getElementById('modal-reply-countermeasure').value,
+                    evaluation: document.getElementById('modal-reply-evaluation').value
+                },
+                repliedAt: new Date().toLocaleString()
+            };
 
             try {
-                await db.collection("complaints").doc(currentVocId).update({
-                    replyData: replyData,
-                    status: status,
-                    repliedAt: new Date().toLocaleString()
-                });
+                await db.collection("complaints").doc(currentVocId).update(updatedVocData);
+                alert("모든 정보가 성공적으로 업데이트되었습니다.");
                 vocModal.style.display = 'none';
                 loadLocalComplaints();
             } catch (error) {
-                console.error("조치 결과 저장 에러:", error);
-                alert("저장 중 오류가 발생했습니다.");
+                console.error("VOC 통합 저장 에러:", error);
+                alert("저장 중 오류가 발생했습니다: " + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
             }
         };
     }
 
     // [6. 조회 엔진]
-    function updateOptions() {
-        const steel = steelTypeSelect.value, std = standardTypeSelect.value; const data = (steel && std) ? steelData[steel]?.[std] : null;
-        if (data) {
-            gradeTypeSelect.disabled = false; gradeTypeSelect.innerHTML = '<option value="">재질 선택</option>' + data.grades.map(g => `<option value="${g}">${g}</option>`).join('');
-            coatingWeightSelect.disabled = false; coatingWeightSelect.innerHTML = '<option value="">도금 선택</option>' + (data.coatingOptions || []).map(c => `<option value="${c}">${c}</option>`).join('');
-        } else { gradeTypeSelect.disabled = true; coatingWeightSelect.disabled = true; }
+    const productLabels = {
+        'GI': 'GI (용융아연도금)', 'GL': 'GL (갈바륨)', 'AL': 'AL (알루미늄도금)', 'ZM': 'ZM (삼원계 도금)',
+        'PPGI': 'PPGI (컬러아연도금)', 'PPGL': 'PPGL (컬러갈바륨)', 'PPAL': 'PPAL (컬러알루미늄)', 'PPZM': 'PPZM (컬러삼원계)'
+    };
+
+    function updateSpecificStandards() {
+        const stdCategory = standardTypeSelect.value;
+        if (!stdCategory) {
+            specificStandardSelect.innerHTML = '<option value="">규격을 먼저 선택하세요</option>';
+            specificStandardSelect.disabled = true;
+            resetSteelTypeSelect();
+            updateOptions();
+            return;
+        }
+
+        specificStandardSelect.disabled = false;
+        const stdMap = {}; // code -> [steelTypes]
+        for (const [steel, stas] of Object.entries(steelData)) {
+            if (stas[stdCategory]) {
+                const code = stas[stdCategory].standard;
+                if (!stdMap[code]) stdMap[code] = [];
+                stdMap[code].push(steel);
+            }
+        }
+
+        // 가중치 기반 정렬 (사용자 지정 제품 순서 우선)
+        const order = ['GI', 'GL', 'AL', 'ZM', 'PPGI', 'PPGL', 'PPAL', 'PPZM'];
+        const sortedCodes = Object.keys(stdMap).sort((a, b) => {
+            const minA = Math.min(...stdMap[a].map(s => order.indexOf(s)));
+            const minB = Math.min(...stdMap[b].map(s => order.indexOf(s)));
+            if (minA !== minB) return minA - minB;
+            return a.localeCompare(b);
+        });
+
+        specificStandardSelect.innerHTML = '<option value="">상세 규격 선택</option>' +
+            sortedCodes.map(code => {
+                const displaySteel = stdMap[code].join(', ');
+                return `<option value="${code}" data-steels='${JSON.stringify(stdMap[code])}'>${code} (${displaySteel})</option>`;
+            }).join('');
+
+        resetSteelTypeSelect();
+        updateOptions();
     }
-    if (steelTypeSelect) steelTypeSelect.onchange = updateOptions;
-    if (standardTypeSelect) standardTypeSelect.onchange = updateOptions;
-    if (searchBtn) {
-        searchBtn.onclick = function () {
-            const s = steelTypeSelect.value, st = standardTypeSelect.value, g = gradeTypeSelect.value;
-            if (!s || !st || !g) return alert('모두 선택해주세요.');
-            if (!steelData[s]?.[st]) { showInquiryPopup(); return; }
-            displayResults(s, st, g);
+
+    function resetSteelTypeSelect() {
+        steelTypeSelect.innerHTML = '<option value="">제품군 자동 선택</option>';
+        steelTypeSelect.disabled = true;
+    }
+
+    function updateOptions() {
+        const steel = steelTypeSelect.value, std = standardTypeSelect.value;
+        const data = (steel && std) ? steelData[steel]?.[std] : null;
+        if (data) {
+            gradeTypeSelect.disabled = false;
+            gradeTypeSelect.innerHTML = '<option value="">재질 선택</option>' + data.grades.map(g => `<option value="${g}">${g}</option>`).join('');
+            coatingWeightSelect.disabled = false;
+            coatingWeightSelect.innerHTML = '<option value="">도금 선택</option>' + (data.coatingOptions || []).map(c => `<option value="${c}">${c}</option>`).join('');
+        } else {
+            gradeTypeSelect.disabled = true;
+            gradeTypeSelect.innerHTML = '<option value="">재질 선택</option>';
+            coatingWeightSelect.disabled = true;
+            coatingWeightSelect.innerHTML = '<option value="">도금 선택</option>';
+        }
+    }
+
+    if (standardTypeSelect) standardTypeSelect.onchange = updateSpecificStandards;
+
+    if (specificStandardSelect) {
+        specificStandardSelect.onchange = function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const steelsStr = selectedOption.getAttribute('data-steels');
+            if (steelsStr) {
+                const steels = JSON.parse(steelsStr);
+                steelTypeSelect.disabled = false;
+
+                // 제품군 select 업데이트 (해당 규격이 지원하는 제품만)
+                let html = '<option value="">제품군 선택</option>';
+                const order = ['GI', 'GL', 'AL', 'ZM', 'PPGI', 'PPGL', 'PPAL', 'PPZM'];
+                const sortedSteels = steels.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+
+                html += sortedSteels.map(s => `<option value="${s}">${productLabels[s] || s}</option>`).join('');
+                steelTypeSelect.innerHTML = html;
+
+                if (steels.length === 1) {
+                    steelTypeSelect.value = steels[0];
+                } else {
+                    steelTypeSelect.value = "";
+                }
+                updateOptions();
+            } else {
+                resetSteelTypeSelect();
+                updateOptions();
+            }
         };
     }
 
-    function displayResults(steelType, standardRef, grade) {
-        const stdData = steelData[steelType][standardRef]; const stdProps = stdData.properties[grade];
-        const matchedFile = localFiles.filter(f => f.detectedRef === standardRef && (f.detectedGrade.includes(grade) || grade.includes(f.detectedGrade))).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
-        resultsCard.style.display = 'block'; resultsCardWasVisible = true;
+    if (steelTypeSelect) {
+        steelTypeSelect.onchange = updateOptions;
+    }
+
+    if (searchBtn) {
+        searchBtn.onclick = function () {
+            const s = steelTypeSelect.value;
+            const st = standardTypeSelect.value;
+            const specCode = specificStandardSelect.value;
+            const g = gradeTypeSelect.value;
+
+            if (!s || !st || !specCode || !g) {
+                return alert('모든 필드(규격, 상세 규격, 제품군, 재질)를 선택해주세요.');
+            }
+            if (!steelData[s]?.[st]) {
+                showInquiryPopup();
+                return;
+            }
+            displayResults(s, st, specCode, g);
+        };
+    }
+
+    function displayResults(steelType, standardRef, specificStandard, grade) {
+        const stdData = steelData[steelType][standardRef];
+        const stdProps = stdData.properties[grade] || { ys: '-', ts: '-', el: '-', bend: '-' };
+
+        // 상세 규격 코드와 재질이 모두 일치하는 파일 검색
+        const matchedFile = localFiles.filter(f =>
+            f.detectedSpec === specificStandard &&
+            (f.detectedGrade.includes(grade) || grade.includes(f.detectedGrade))
+        ).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
+
+        resultsCard.style.display = 'block';
+        resultsCardWasVisible = true;
+
         const t = thicknessInput.value || '0.00', w = widthInput.value || '000', c = coatingWeightSelect.value || '-';
         document.getElementById('results-title').textContent = `${t}T x ${w}W x ${grade} (${c}) 분석 결과`;
-        const tolResult = ToleranceEngine.calculate(stdData.standard, t, w);
-        document.getElementById('results-badges').innerHTML = `<span class="badge badge-blue">${steelType}</span>${matchedFile ? `<span class="badge badge-green">🧠 규격서 연동됨</span>` : `<span class="badge badge-orange">⚠️ 표준 데이터</span>`}`;
-        document.getElementById('mechanical-tbody').innerHTML = `<tr><td class="text-bold">항복강도</td><td>YP</td><td>${stdProps.ys}</td><td>MPa</td><td>-</td></tr><tr><td class="text-bold">인장강도</td><td>TS</td><td>${stdProps.ts}</td><td>MPa</td><td>-</td></tr><tr><td class="text-bold">연신율</td><td>El</td><td>${stdProps.el}</td><td>%</td><td>-</td></tr><tr><td class="text-bold">굽힘성</td><td>Bnd</td><td>${stdProps.bend}</td><td>t</td><td>-</td></tr>`;
-        document.getElementById('val-thickness').textContent = tolResult.thickness; document.getElementById('val-flatness').textContent = tolResult.flatness;
-        document.getElementById('coating-cards').innerHTML = `<div class="info-box"><span class="label">도금 종류</span><span class="value">${stdData.coating.type}</span></div><div class="info-box"><span class="label">지정 도금량</span><span class="value">${c}</span></div><div class="info-box"><span class="label">적용 규격</span><span class="value">${stdData.standard.split(' ')[0]}</span></div>`;
+
+        const tolResult = ToleranceEngine.calculate(specificStandard, t, w);
+
+        // 배지 업데이트 및 연동 파일 정보 표시
+        let badgeHtml = `<span class="badge badge-blue">${steelType}</span>`;
+        if (matchedFile) {
+            badgeHtml += `<span class="badge badge-green">🧠 규격서 연동됨</span>`;
+            badgeHtml += `<span style="margin-left:10px; font-size:13px; color:#059669;">
+                            <i class="fas fa-file-pdf"></i> 연동 파일: <a href="${matchedFile.content}" target="_blank" style="text-decoration:underline; font-weight:600; color:#059669;">${matchedFile.name}</a>
+                          </span>`;
+        } else {
+            badgeHtml += `<span class="badge badge-orange">⚠️ 표준 데이터</span>`;
+        }
+        document.getElementById('results-badges').innerHTML = badgeHtml;
+
+        // 1. 기계적 성질 업데이트
+        document.getElementById('mechanical-tbody').innerHTML = `
+            <tr><td class="text-bold">항복강도</td><td>YP</td><td>${stdProps.ys || '-'}</td><td>MPa</td><td>-</td></tr>
+            <tr><td class="text-bold">인장강도</td><td>TS</td><td>${stdProps.ts || '-'}</td><td>MPa</td><td>-</td></tr>
+            <tr><td class="text-bold">연신율</td><td>El</td><td>${stdProps.el || '-'}</td><td>%</td><td>-</td></tr>
+            <tr><td class="text-bold">굽힘성</td><td>Bnd</td><td>${stdProps.bend || '-'}</td><td>t</td><td>-</td></tr>`;
+
+        // 2. 화학 성분 업데이트 (Grade별 정보 우선, 없으면 Standard 기본 정보 사용)
+        const chem = stdProps.chemical || stdData.chemical || {};
+        const chemOrder = ['C', 'Mn', 'P', 'S', 'Si', 'Al'];
+        document.getElementById('chemical-tbody').innerHTML = `
+            <tr>
+                <td class="text-bold">표준 성분</td>
+                ${chemOrder.map(el => `<td>${chem[el] || '-'}</td>`).join('')}
+            </tr>`;
+
+        // 3. 도장 제품 전용 정보 업데이트
+        const coatedSection = document.getElementById('coated-results');
+        const nonCoatedSection = document.getElementById('non-coated-results');
+
+        if (stdData.isPrepainted && stdData.prepainted) {
+            coatedSection.style.display = 'block';
+            const prepainted = stdData.prepainted;
+            let coatedHtml = '';
+            for (const [resin, specs] of Object.entries(prepainted.specs)) {
+                coatedHtml += `
+                    <tr>
+                        <td class="text-bold">${resin}</td>
+                        <td>${specs.bend || '-'}</td>
+                        <td>${specs.impact || '-'}</td>
+                        <td>${specs.salt || '-'}</td>
+                    </tr>`;
+            }
+            document.getElementById('coated-tbody').innerHTML = coatedHtml;
+        } else {
+            coatedSection.style.display = 'none';
+        }
+
+        // 4. 공차 및 기타 정보
+        document.getElementById('val-thickness').textContent = tolResult.thickness;
+        document.getElementById('val-flatness').textContent = tolResult.flatness;
+
+        document.getElementById('coating-cards').innerHTML = `
+            <div class="info-box"><span class="label">도금 종류</span><span class="value">${stdData.coating.type || '-'}</span></div>
+            <div class="info-box"><span class="label">지정 도금량</span><span class="value">${c}</span></div>
+            <div class="info-box"><span class="label">적용 규격</span><span class="value">${stdData.standard}</span></div>`;
+
         resultsCard.scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -703,14 +1021,134 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // 초기 기본 데이터
+    // 초기 기본 데이터 (이미지 기반 상세 데이터 총 18종)
     const defaultDefects = [
-        { title: '흑청/백청/적청', photo: null, reason: '습한 환경 또는 장기 보관으로 인한 소재 부식 발생', internal: '1. 제품 보관 환경 및 기간 확인\n2. 포장 상태(방수) 및 적재 방식 점검\n3. 운송 중 수분 접촉 가능성 및 크로메이트 처리 조건 확인', external: '1. 고객사 제품 보관 환경 및 운송 중 수분 노출 여부 확인\n2. 가공 공정 중 수분 접촉 가능성 조사' },
-        { title: '형상불량 (WAVE)', photo: null, reason: 'Center/Edge Wave (Roll Crown 부적절), 입하 Level 부적절, Edge Zn 빌드업', internal: '1. 텐션레벨러 및 롤 교정 상태 점검\n2. 도금/도장 공정 장력 및 롤 압력 설정 확인\n3. 제품 두께/폭 편차 및 기계적 성질 확인', external: '1. 고객사 가공 설비 정렬 상태 및 가공 조건 확인\n2. 생산 6개월 초과 시 시효경화 가능성 확인' },
-        { title: '스트레쳐 스트레인', photo: null, reason: '항복점 연신 현상, 어닐링 조건 또는 스킨 패스 압연량 부족 등', internal: '1. 원재료 화학 성분 및 기계적 특성(YP, TS) 확인\n2. CGL 어닐링 조건 및 스킨 패스 압연율 점검', external: '1. 가공 설비(프레스) 성형 조건 및 금형 상태 확인\n2. 가공 중 과도한 변형 발생 여부 확인' },
-        { title: '미도금 (Uncoated)', photo: null, reason: '전처리 불량, 도금액 조성 불균형, 도금조 내 이물 혼입 등', internal: '1. 전처리 온도/농도, 도금액 아연 농도 및 불순물 분석\n2. 도금조 슬러지 발생 여부 및 라인 스피드 점검', external: '1. 샘플 확보 (주로 제조 공정 내부 문제)' },
-        { title: '도금불량', photo: null, reason: '미제거 Rust, 도금층 두께 불균일, 벗겨짐, 요철, 크랙, 반점 등', internal: '1. 도금 두께 분포 데이터 및 도액 조성/온도 분석\n2. 도금조 롤/스키머 상태 및 크로메이트/오일링 조건 확인', external: '1. 고객 가공 시 도금층 손상 가능성(마찰) 확인\n2. 보관/운송 중 외부 요인에 의한 손상 조사' },
-        { title: '도막 박리', photo: null, reason: '전처리/화성처리 불량, 프라이머 도포/경화 불량, 부착력 부족 등', internal: '1. 전처리 온도/농도, 프라이머/탑코트 도포량 및 경화 조건 확인\n2. 도료 유효기간 및 하지층 부착성 평가 결과 점검', external: '1. 가공 중 과도한 변형/충격 여부 확인\n2. 보관/사용 환경(화학물질, 고온다습) 조사' }
+        {
+            title: '흑청/백청/적청',
+            photo: null,
+            reason: '습한 환경 또는 장기 보관으로 인한 소재 부식 발생',
+            internal: '1. 제품 보관 환경(온도, 습도, 통풍) 및 기간 확인\n2. 제품 포장 상태(방수 처리 여부) 및 적재 방식 점검\n3. 운송 중 수분 접촉 가능성 확인\n4. 도금층의 크로메이트 처리 조건 및 균일성 확인',
+            external: '1. 고객사의 제품 보관 환경 및 운송 과정 중 수분 노출 여부 확인\n2. 고객사의 가공 공정 중 수분 접촉 또는 보관 불량 가능성 조사'
+        },
+        {
+            title: '형상불량 (WAVE)',
+            photo: null,
+            reason: 'Roll Crown 부적절(CRM/HC), 입하 Level 부적절, 또는 Edge Zn Over coating에 의한 빌드업',
+            internal: '1. 제조 라인의 텐션레벨러 및 롤 교정 상태 점검\n2. 원재료 및 반제품 입고 시 형상 검사 기록 확인\n3. 도금/도장 공정 장력(연신율) 및 롤 압력 설정 확인\n4. 제품의 두께/폭 편차 및 기계적 성질 확인',
+            external: '1. 고객사 가공 설비(성형기 등) 정렬 및 가공 조건 확인\n2. 기계적성질 시효경화 가능성 확인 (생산 6개월 초과 시)'
+        },
+        {
+            title: '스트레쳐 스트레인',
+            photo: null,
+            reason: '항복점 연신 현상에 의해 가공 시 표면 줄무늬/굴곡 발생. 어닐링 조건 또는 스킨 패스 압연량 부족 등 특성 기인',
+            internal: '1. 원재료 화학 성분 및 기계적 특성(YP, TS) 확인\n2. CGL 어닐링 조건 및 스킨 패스 압연율 점검\n3. CGL 텐션레벨러 연신율 및 롤 압력 설정 확인',
+            external: '1. 고객사 가공 설비(프레스) 성형 조건 및 금형 상태 확인\n2. 가공 중 과도한 변형 발생 여부 확인'
+        },
+        {
+            title: '미도금 (Uncoated)',
+            photo: null,
+            reason: '전처리 불량, 도금액 조성 불균형, 도금조 내 이물 혼입, 또는 라인 속도 불균일 등으로 인해 발생',
+            internal: '1. 전처리 공정(탈지, 산세)의 온도, 농도, 시간 등 조건 확인\n2. 도금액 조성(아연 농도, 불순물 등) 분석\n3. 도금조 이물질 및 슬러지 발생 여부\n4. 도금 라인 스피드 및 강판 표면 청결도 점검',
+            external: '1. 샘플 확보 (주로 제조 공정 내부 문제)'
+        },
+        {
+            title: '도금불량',
+            photo: null,
+            reason: '미제거 Rust, 도금층 두께 불균일, 벗겨짐, 요철, 크랙, 반점 등 복합적인 원인',
+            internal: '1. 도금 두께 측정 데이터 및 분포 확인\n2. 도금액 조성, 온도, 불순물 주기적 분석\n3. 도금조 롤/스키머 상태 및 전처리 공정 안정성 점검\n4. 도금 후 처리(크로메이트, 오일링) 조건 확인',
+            external: '1. 고객 가공 시 도금층 손상 가능성(마찰/충격) 확인\n2. 보관/운송 중 외부 요인에 의한 손상 조사'
+        },
+        {
+            title: '도막 박리',
+            photo: null,
+            reason: '전처리 불량, 프라이머 도포 불량, 도장 경화 불량, 또는 하지층과의 부착력 부족 등이 원인',
+            internal: '1. 전처리 온도/농도, 프라이머/탑코트 도포량 및 경화 조건 점검\n2. 도료 보관 상태 및 유효기간 확인\n3. 하지층(도금층) 표면 상태 및 부착성 평가\n4. 제조 라인 청결도 점검',
+            external: '1. 가공 중 과도한 변형/충격 여부 확인\n2. 보관/사용 환경(화학물질, 고온다습) 조사'
+        },
+        {
+            title: '필름 불량',
+            photo: null,
+            reason: '보호필름 점착력 편차, 원단 문제로 인한 찢어짐, 온/습도에 의한 경시 변화 등 (6개월 이상 부착 시 보증 불가)',
+            internal: '1. 로트별 보호필름 점착력 확인\n2. 샘플 후기 점착력 테스트',
+            external: '1. 필름 부착 유지 기간 확인\n2. 코일 및 시트 보관 방법 확인\n3. 제품 가공 방법 확인'
+        },
+        {
+            title: '색차',
+            photo: null,
+            reason: '지정 색상과의 차이. 도료 배치 간 편차, 도포량 불균일, 경화 조건 불균일, 또는 측정 장비 교정 불량 등',
+            internal: '1. 도료 입고 시 색상/물성 확인\n2. 도장 라인 도포량 및 경화 조건(온도, 시간) 균일성 점검\n3. 색차계 교정 상태 및 제품별 데이터 분석',
+            external: '1. 고객사 색상 측정 장비/방법 및 조명 환경 확인\n2. 시내외 시각적 판단 기준 확인'
+        },
+        {
+            title: '블로킹',
+            photo: null,
+            reason: '코일 내 도장면끼리 달라붙는 현상. 경화 불량, 권취 압력 과다, 또는 고온/고습 보관 시 발생',
+            internal: '1. 도장 경화로 온도/시간 조건 확인\n2. 도료 점도 및 건조 특성 점검\n3. 코일 권취 시 장력/압력 설정 및 보관 창고 환경 점검',
+            external: '1. 고객사 제품 보관 환경(온도, 습도, 적재 방식) 확인\n2. 취급 중 발생 가능성 확인'
+        },
+        {
+            title: '엣지 끓음 및 파핑',
+            photo: null,
+            reason: '엣지 도료 고임/끓음 또는 도막 내 기포 터짐(작은 구멍). 전처리 불량, 점도 과다, 건조 속도 과다 등 원인',
+            internal: '1. 전처리 세척/건조 효율 점검\n2. 도금액/도료 점도 및 표면 장력 측정\n3. 코터 롤 엣지 부위 압력 및 건조로 온도 프로파일 확인',
+            external: '1. 샘플 확보 및 엣지 컷팅 후 사용 가능 여부 확인'
+        },
+        {
+            title: '덴트',
+            photo: null,
+            reason: '외부 충격으로 인한 함몰/찍힘 자국. 취급 부주의, 설비 충돌, 또는 낙하물 원인',
+            internal: '1. 라인 내 설비(롤, 가이드) 손상 여부 점검\n2. 권취/언코일링 과정 충격 가능성 확인\n3. 포장/상하차 취급 주의 사항 및 창고 적재 점검',
+            external: '1. 운송 중 고정 불량 또는 외부 충격 여부 확인\n2. 고객사 하역/보관/가공 중 부주의 여부'
+        },
+        {
+            title: '애쉬',
+            photo: null,
+            reason: 'CGL Snout 내 Ash(Ash Pit) 또는 CRM W/R Scratch(Pit Scratch)에 의해 발생',
+            internal: '1. 아연 드로스 발생량 제거 확인\n2. 도금욕 온도/성분 분석 및 Snout/Work Roll 점검',
+            external: '1. 샘플 확보 (주로 제조 공정 내부 문제)'
+        },
+        {
+            title: '덜마크',
+            photo: null,
+            reason: 'SPM 작업 중 이탈된 아연이 Work Roll 표면에 부착되어 전사되는 현상 (Top 위주)',
+            internal: '1. 스킨패스 및 도금 Work Roll 확인\n2. 탈지 정상 여부 점검',
+            external: '1. 샘플 확보 (주로 제조 공정 내부 문제)'
+        },
+        {
+            title: '합금층 마크',
+            photo: null,
+            reason: '합금층의 불균일한 성장 또는 표면 노출. 합금화로 제어 불량 또는 도금액 조성 불균형 원인',
+            internal: '1. 합금화로 온도 프로파일 및 유지 시간 확인\n2. 도금액 조성 및 합금층 성장 상태 분석',
+            external: '1. 샘플 확보 (주로 제조 공정 내부 문제)'
+        },
+        {
+            title: '채터링',
+            photo: null,
+            reason: '회전 부품 진동/마찰로 인한 반복적 흔적. 롤러 편심, 베어링 불량, 장력 제어 문제 등',
+            internal: '1. 라인 내 회전 부품 정렬 및 진동 점검\n2. 베어링 마모 및 장력 제어 시스템 안정성 확인',
+            external: '1. 고객사 언코일링 또는 가공 설비 진동 여부 확인'
+        },
+        {
+            title: '블로윙 마크',
+            photo: null,
+            reason: 'Strip 잠열에 의한 흘러내림 또는 에어 나이프 공기압/노즐 상태 불량으로 인한 줄무늬',
+            internal: '1. Strip 온도/두께/도금량 확인\n2. 에어 나이프 공기압, 유량 제어 및 노즐 청결/거리/각도 점검',
+            external: '1. 샘플 확보 (주로 제조 공정 내부 문제)'
+        },
+        {
+            title: '표면 불량',
+            photo: null,
+            reason: '스크래치, 이물 부착, 오염, 유분 잔류 등. 원재료 상태 또는 제조 공정 중 혼입 원인',
+            internal: '1. 원재료 입고 시 표면 검사 기록 확인\n2. 롤러/가이드 청결 점검 및 오염원(먼지, 오일 등) 추적\n3. 제품 검사 시스템(SDD) 성능 점검',
+            external: '1. 운송/하역 중 포장재 손상 확인\n2. 고객사 가공 중 스크래치/오염 접촉 여부 확인'
+        },
+        {
+            title: '권취 불량',
+            photo: null,
+            reason: '라인 재가동 시 텐션 헌팅, 지게차에 의한 내권부 뒤틀림, 또는 재사용 시 권취 텐션 풀림 등',
+            internal: '1. 코일 내권부 테이핑 및 지관 사용 여부 확인',
+            external: '1. 코일 사용 후 재사용 여부 확인'
+        }
     ];
 
     async function loadLocalDefects() {
@@ -722,16 +1160,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 localDefects.push({ id: doc.id, ...doc.data() });
             });
 
-            if (localDefects.length === 0) {
-                console.log("ℹ️ 등록된 데이터가 없어 기본 데이터를 생성합니다...");
-                // 초기 데이터 삽입 (비동기 처리)
-                const promises = defaultDefects.map(d => db.collection("defects").add(d));
+            // 누락된 기본 데이터 자동 추가 (중복 제외)
+            const existingTitles = localDefects.map(d => d.title);
+            const missingDefects = defaultDefects.filter(d => !existingTitles.includes(d.title));
+
+            if (missingDefects.length > 0) {
+                console.log(`ℹ️ ${missingDefects.length}개의 누락된 기본 데이터를 추가 중...`);
+                const promises = missingDefects.map(d => db.collection("defects").add(d));
                 await Promise.all(promises);
 
-                // 삽입 후 한 번 더 가져오기 (재귀 피함)
-                const retrySnapshot = await db.collection("defects").get();
+                // 추가 후 전체 목록 다시 로드
+                const finalSnapshot = await db.collection("defects").get();
                 localDefects = [];
-                retrySnapshot.forEach((doc) => {
+                finalSnapshot.forEach((doc) => {
                     localDefects.push({ id: doc.id, ...doc.data() });
                 });
             }
@@ -766,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div style="padding:16px;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
                         <h3 style="margin:0; font-size:15px; font-weight:700; color:#1e293b;">${defect.title}</h3>
-                        <div style="display:flex; gap:4px; flex-shrink:0;">
+                        <div style="display:flex; gap:4px; flex-shrink:0;" class="admin-only">
                             <button style="background:#e0f2fe; color:#0284c7; width:26px; height:26px; border:none; border-radius:6px; cursor:pointer; font-size:12px;" onclick="editDefect('${defect.id}')">✏️</button>
                             <button style="background:#fee2e2; color:#dc2626; width:26px; height:26px; border:none; border-radius:6px; cursor:pointer; font-size:12px;" onclick="deleteDefect('${defect.id}')">🗑️</button>
                         </div>
@@ -848,63 +1289,86 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitBtn.textContent = "저장 중...";
             }
 
+            // 타임아웃 설정 (30초 후 버튼 복구)
+            const timeoutId = setTimeout(() => {
+                if (submitBtn && submitBtn.disabled) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "저장하기";
+                    console.warn("⚠️ 저장 프로세스 타임아웃 (30초 경과)");
+                    alert("서버 응답이 너무 늦습니다. 인터넷 연결이나 Firebase 설정을 확인해주세요.");
+                }
+            }, 30000);
+
             try {
-                console.log("🚀 불량 도감 저장 프로세스 시작...");
+                console.log("🚀 [불량 도감] 저장 프로세스 시작...");
                 let photoURL = pendingDefectPhoto;
 
-                // 새로운 사진이 선택된 경우 (파일로 온 경우)
+                // 새로운 사진 파일이 선택된 경우 업로드 진행
                 if (defectFile) {
-                    console.log("📸 사진 업로드 시도 중 (파일명:", defectFile.name, ")...");
+                    console.log("📸 [1/2] 사진 업로드 시도 중:", defectFile.name);
                     try {
                         const storagePath = `defect_photos/${Date.now()}_${defectFile.name}`;
                         const storageRef = storage.ref(storagePath);
 
                         // 업로드 시작
-                        const uploadTask = await storageRef.put(defectFile);
-                        console.log("📤 업로드 완료, URL 추출 중...", uploadTask);
+                        const snapshot = await storageRef.put(defectFile);
+                        console.log("📤 [1/2] 업로드 완료 snapshot 획득");
 
-                        photoURL = await uploadTask.ref.getDownloadURL();
-                        console.log("🔗 다운로드 URL 획득 성공:", photoURL);
+                        photoURL = await snapshot.ref.getDownloadURL();
+                        console.log("🔗 [1/2] 다운로드 URL 획득 성공:", photoURL);
                     } catch (sError) {
                         console.error("❌ 사진 업로드 단계 실패:", sError);
-                        throw new Error(`사진 업로드 중 오류가 발생했습니다. (사유: ${sError.message})`);
+                        throw new Error(`사진 업로드 중 오류가 발생했습니다: ${sError.message}`);
                     }
+                } else {
+                    console.log("ℹ️ 새로운 사진 파일 없음, 기존 URL/Base64 사용");
                 }
 
                 const defectData = {
                     title: document.getElementById('defect-title').value,
-                    photo: photoURL,
+                    photo: photoURL || null,
                     reason: document.getElementById('defect-reason').value,
                     internal: document.getElementById('defect-internal').value,
                     external: document.getElementById('defect-external').value,
                     updatedAt: new Date().toISOString()
                 };
 
-                console.log("💾 Firestore 데이터 기록 단계 진입...");
+                console.log("💾 [2/2] Firestore 데이터 기록 단계 (ID:", idVal || "New", ")");
+
                 if (idVal) {
-                    console.log("📝 기존 데이터 업데이트 시도 (ID:", idVal, ")...");
+                    // 기존 데이터 수정
                     await db.collection("defects").doc(idVal).update(defectData);
+                    console.log("✅ [2/2] 기존 데이터 업데이트 성공");
                     alert("성공적으로 수정되었습니다.");
                 } else {
-                    console.log("🆕 신규 데이터 추가 시도...");
+                    // 신규 데이터 등록
                     const docRef = await db.collection("defects").add(defectData);
-                    console.log("✅ 신규 문서 생성 성공 (ID:", docRef.id, ")");
+                    console.log("✅ [2/2] 신규 데이터 등록 성공 (ID:", docRef.id, ")");
                     alert("신규 불량이 등록되었습니다.");
                 }
-                console.log("🎆 모든 저장 프로세스 완료!");
 
+                // 모달 닫기 및 초기화
+                clearTimeout(timeoutId);
                 defectModal.style.display = 'none';
                 pendingDefectPhoto = null;
                 defectForm.reset();
                 if (defectPhotoPreview) defectPhotoPreview.style.display = 'none';
 
-                loadLocalDefects();
+                // 목록 새로고침
+                await loadLocalDefects();
+                console.log("🎆 모든 저장 프로세스 완료 및 목록 갱신");
+
             } catch (error) {
-                console.error("불량 저장 에러:", error);
-                let userMsg = "저장 실패: " + error.message;
+                clearTimeout(timeoutId);
+                console.error("❌ 불량 저장 에러 상세:", error);
+                let userMsg = "저장 실패: " + (error.message || "알 수 없는 오류");
+
                 if (error.code === 'permission-denied') {
-                    userMsg = "권한이 없습니다. Firestore Database의 [규칙] 탭에서 allow read, write: if true; 로 설정하고 [게시]를 눌렀는지 확인해주세요.";
+                    userMsg = "권한이 없습니다 (permission-denied). Firebase Console에서 'Rules'를 점검해 주세요.";
+                } else if (error.code === 'storage/unauthorized') {
+                    userMsg = "Storage 권한이 없습니다. Firebase Storage 설정을 확인해 주세요.";
                 }
+
                 alert(userMsg);
             } finally {
                 if (submitBtn) {
