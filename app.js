@@ -250,11 +250,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function loadLocalFiles() {
+        if (!db) return;
         db.collection("specs").orderBy("uploadedAt", "desc").get().then(snap => {
             localFiles = [];
             snap.forEach(doc => localFiles.push({ id: doc.id, ...doc.data() }));
             renderFileList();
             updateSearchOptions();
+        }).catch(err => {
+            console.error("Error loading specs:", err);
+            if (registeredFileList) {
+                registeredFileList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger);">라이브러리 로드 실패: ${err.message}</div>`;
+            }
         });
     }
 
@@ -487,8 +493,26 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("🔍 불량 데이터 로드 및 중복 정리 중...");
         try {
             const snap = await db.collection("defects").get();
-            const allDefects = [];
+            let allDefects = [];
             snap.forEach(doc => allDefects.push({ id: doc.id, ...doc.data() }));
+
+            // 데이터가 하나도 없는 경우 초기 데이터(defaultDefects)를 Firestore에 등록
+            if (allDefects.length === 0) {
+                console.log("Empty encyclopedia found. Initializing with default data...");
+                const batch = db.batch();
+                defaultDefects.forEach(def => {
+                    const newDocRef = db.collection("defects").doc();
+                    batch.set(newDocRef, {
+                        ...def,
+                        createdAt: new Date().toISOString()
+                    });
+                });
+                await batch.commit();
+                // 다시 로드
+                const newSnap = await db.collection("defects").get();
+                allDefects = [];
+                newSnap.forEach(doc => allDefects.push({ id: doc.id, ...doc.data() }));
+            }
 
             // 중복 제거 로직 (사진이 있는 것을 우선순위로)
             const titleGroups = {};
@@ -503,14 +527,12 @@ document.addEventListener('DOMContentLoaded', function () {
             for (const title in titleGroups) {
                 const group = titleGroups[title];
                 if (group.length > 1) {
-                    // 사진이 있는 것을 앞으로 정렬
                     group.sort((a, b) => {
                         if (a.photo && !b.photo) return -1;
                         if (!a.photo && b.photo) return 1;
                         return 0;
                     });
                     finalDefects.push(group[0]);
-                    // 나머지 중복 문서 ID 보관
                     for (let i = 1; i < group.length; i++) {
                         idsToDelete.push(group[i].id);
                     }
@@ -519,7 +541,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            // 중복 데이터 실제 삭제 처리
             if (idsToDelete.length > 0 && isAdmin) {
                 console.log(`🧹 중복 데이터 ${idsToDelete.length}건 삭제 중...`);
                 const deletePromises = idsToDelete.map(id => db.collection("defects").doc(id).delete());
@@ -530,6 +551,7 @@ document.addEventListener('DOMContentLoaded', function () {
             renderDefectGrid();
         } catch (e) {
             console.error("Error loading defects:", e);
+            alert("불량 도감 로드 실패: " + e.message);
         }
     }
 
@@ -622,9 +644,63 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (confirm('이 불량 유형을 삭제하시겠습니까?')) {
-            db.collection("defects").doc(id).delete().then(loadLocalDefects);
+            db.collection("defects").doc(id).delete()
+                .then(loadLocalDefects)
+                .catch(err => alert("삭제 실패: " + err.message));
         }
     };
+
+    // --- [6.1 불량 유형 저장 로직 추가] ---
+    const defectForm = document.getElementById('defect-form');
+    if (defectForm) {
+        defectForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('defect-id').value;
+            const photoFile = document.getElementById('defect-photo').files[0];
+            let photoUrl = null;
+
+            // 로딩 표시
+            const submitBtn = defectForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '저장 중...';
+            submitBtn.disabled = true;
+
+            try {
+                if (photoFile) {
+                    const ref = storage.ref(`defects/${Date.now()}_${photoFile.name}`);
+                    await ref.put(photoFile);
+                    photoUrl = await ref.getDownloadURL();
+                }
+
+                const defectData = {
+                    title: document.getElementById('defect-title').value,
+                    reason: document.getElementById('defect-reason').value,
+                    internal: document.getElementById('defect-internal').value,
+                    external: document.getElementById('defect-external').value,
+                    updatedAt: new Date().toISOString()
+                };
+
+                if (photoUrl) defectData.photo = photoUrl;
+
+                if (id) {
+                    await db.collection("defects").doc(id).update(defectData);
+                } else {
+                    defectData.createdAt = new Date().toISOString();
+                    await db.collection("defects").add(defectData);
+                }
+
+                alert('저장되었습니다.');
+                defectModal.style.display = 'none';
+                loadLocalDefects();
+            } catch (err) {
+                alert('저장 오류: ' + err.message);
+                console.error(err);
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        };
+    }
 
     // --- [7. VOC 관리 & 대시보드] ---
     const vocListBody = document.getElementById('voc-list-body');
@@ -632,11 +708,21 @@ document.addEventListener('DOMContentLoaded', function () {
     let lineChart, catChart;
 
     function loadLocalComplaints() {
+        if (!db) {
+            console.error("Firebase DB not initialized.");
+            return;
+        }
         db.collection("complaints").orderBy("createdAt", "desc").get().then(snap => {
             localComplaints = [];
             snap.forEach(doc => localComplaints.push({ id: doc.id, ...doc.data() }));
             renderVocTable();
             updateDashboard();
+        }).catch(err => {
+            console.error("Error loading complaints:", err);
+            // 에러 시 사용자 알림 (권한 부족 등)
+            if (vocListBody) {
+                vocListBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--danger);">데이터를 불러오지 못했습니다: ${err.message}</td></tr>`;
+            }
         });
     }
 
