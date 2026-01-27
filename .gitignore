@@ -1,26 +1,9 @@
-# Python
+# Local environment
 venv/
-.venv/
-__pycache__/
-*.py[cod]
-*$py.class
+.env
+.DS_Store
 
-# IDEs
+# IDE and other files
 .vscode/
 .idea/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Private/Envs
-.env
-.env.local
-
-# Web
-node_modules/
-.next/
-out/
-build/
-dist/
-.vercel
+*.log
