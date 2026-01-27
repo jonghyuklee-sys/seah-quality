@@ -1,1075 +1,2757 @@
-// 세아씨엠 품질조회 및 고객불만관리(VOC) 통합 엔진
-document.addEventListener('DOMContentLoaded', function () {
-    // --- [1. 전역 상태 및 엘리먼트 참조] ---
-    const steelTypeSelect = document.getElementById('steel-type');
-    const standardTypeSelect = document.getElementById('standard-type');
-    const specificStandardSelect = document.getElementById('specific-standard');
-    const gradeTypeSelect = document.getElementById('grade-type');
-    const coatingWeightSelect = document.getElementById('coating-weight');
-    const thicknessInput = document.getElementById('spec-thickness');
-    const widthInput = document.getElementById('spec-width');
-    const searchBtn = document.getElementById('search-btn');
-    const resultsCard = document.getElementById('results-card');
-    const currentPageLabel = document.getElementById('current-page');
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const sidebar = document.querySelector('.sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
+// SeAH CM Condensation Monitor App - Rebuilt Version
+// 간결하고 명확한 구조로 재작성
 
-    let isAdmin = localStorage.getItem('isAdmin') === 'true';
-    let localFiles = [];
-    let localComplaints = [];
-    let localDefects = [];
-    let resultsCardWasVisible = false;
+// ========== 1. 상수 및 설정 ==========
+const CONFIG = {
+    B: 17.27,
+    C: 237.7
+};
 
-    // --- [2. 관리자 모드 로직] ---
-    const adminLoginBtn = document.getElementById('admin-login-btn');
-    const adminModal = document.getElementById('admin-modal');
-    const adminPasswordInput = document.getElementById('admin-password');
-    const confirmAdminLoginBtn = document.getElementById('confirm-admin-login');
-    const cancelAdminLoginBtn = document.getElementById('cancel-admin-login');
-    const loginStatusMsg = document.getElementById('admin-login-status');
-    const displayUserName = document.getElementById('display-user-name');
-    const displayUserRole = document.getElementById('display-user-role');
-    const userAvatar = document.getElementById('user-avatar');
+const WAREHOUSE_LOCATIONS = [
+    "1CCL 원자재동", "1CCL 제품창고",
+    "2CCL 원자재동", "2CCL 제품창고",
+    "3CCL 원자재동", "3CCL 제품창고",
+    "CGL 제품창고", "SSCL 제품창고"
+];
 
-    function updateAdminUI() {
-        if (isAdmin) {
-            document.body.classList.add('admin-mode');
-            if (adminLoginBtn) {
-                adminLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> 로그아웃';
-                adminLoginBtn.classList.replace('btn-secondary', 'btn-danger');
-            }
-            if (displayUserName) displayUserName.textContent = '품질관리자';
-            if (displayUserRole) displayUserRole.textContent = 'Admin Mode';
-            if (userAvatar) {
-                userAvatar.textContent = 'QM';
-                userAvatar.style.background = '#1e3a8a';
-                userAvatar.style.color = '#fff';
-            }
-        } else {
-            document.body.classList.remove('admin-mode');
-            if (adminLoginBtn) {
-                adminLoginBtn.innerHTML = '<i class="fas fa-lock"></i> 관리자 로그인';
-                adminLoginBtn.classList.replace('btn-danger', 'btn-secondary');
-            }
-            if (displayUserName) displayUserName.textContent = '방문객';
-            if (displayUserRole) displayUserRole.textContent = 'Guest';
-            if (userAvatar) {
-                userAvatar.textContent = 'G';
-                userAvatar.style.background = '#e2e8f0';
-                userAvatar.style.color = '#64748b';
-            }
-        }
-    }
-    updateAdminUI();
+// ========== 2. 전역 상태 ==========
+let monitoringLogs = [];
+let latestLocationStatus = {};
+let allReports = {};
+let lastResetDate = localStorage.getItem('seah_last_reset_date') || "";
+let currentCalendarDate = new Date();
+let isAdmin = sessionStorage.getItem('seah_is_admin') === 'true'; // 관리자 세션 유지
+let cachedForecast = null; // 전역 캐시 변수
+let historyCurrentPage = 1; // 결로 이력 현재 페이지
+const historyItemsPerPage = 10; // 결로 이력 페이지당 항목 수
 
-    if (adminLoginBtn) {
-        adminLoginBtn.onclick = () => {
-            if (isAdmin) {
-                if (confirm('관리자 모드를 종료하시겠습니까?')) {
-                    isAdmin = false;
-                    localStorage.setItem('isAdmin', 'false');
-                    updateAdminUI();
-                    showSection('search-view');
-                }
-            } else {
-                adminModal.style.display = 'flex';
-                adminPasswordInput.value = '';
-                adminPasswordInput.focus();
-                if (loginStatusMsg) loginStatusMsg.style.display = 'none';
-            }
-        };
-    }
+// 기상청 API 키 - Firebase에서만 관리 (보안 강화)
+let kmaShortApiKey = ""; // 단기예보 API 키
+let kmaMidApiKey = ""; // 중기예보 API 키
 
-    if (confirmAdminLoginBtn) {
-        confirmAdminLoginBtn.onclick = () => {
-            if (adminPasswordInput.value === '0000') {
-                isAdmin = true;
-                localStorage.setItem('isAdmin', 'true');
-                updateAdminUI();
-                adminModal.style.display = 'none';
-                alert('관리자 모드로 전환되었습니다.');
-            } else {
-                if (loginStatusMsg) loginStatusMsg.style.display = 'block';
-                adminPasswordInput.value = '';
-                adminPasswordInput.focus();
-            }
-        };
-    }
-    if (cancelAdminLoginBtn) cancelAdminLoginBtn.onclick = () => adminModal.style.display = 'none';
+// ========== 3. DOM 요소 참조 ==========
+const elements = {
+    // locationSelect: document.getElementById('location-select'), // Removed
+    // steelTempInput: document.getElementById('steel-temp-input'), // Removed
+    // tempInput: document.getElementById('temp-input'), // Removed
+    // humidityInput: document.getElementById('humidity-input'), // Removed
+    // outdoorHumidityInput: document.getElementById('outdoor-humidity-input'), // Removed
+    // calculateBtn: document.getElementById('calculate-btn'), // Removed
+    statusText: document.getElementById('status-text'),
+    dewPointVal: document.getElementById('dew-point-val'),
+    tempDiffVal: document.getElementById('temp-diff-val'),
+    riskReasonText: document.getElementById('risk-reason-text'),
+    logBody: document.getElementById('log-body'),
+    clearBtn: document.getElementById('clear-log-btn'),
+    outdoorTemp: document.getElementById('outdoor-temp'),
+    weatherAmRain: document.getElementById('weather-am-rain'),
+    weatherAmProb: document.getElementById('weather-am-prob'),
+    weatherPmRain: document.getElementById('weather-pm-rain'),
+    weatherPmProb: document.getElementById('weather-pm-prob'),
+    reportDate: document.getElementById('report-date'),
+    riskIndicator: document.getElementById('risk-indicator'),
+    locationStatusList: document.getElementById('location-status-list'),
+    slot0700: document.getElementById('slot-0700'),
+    slot1500: document.getElementById('slot-1500'),
+    reportTime: document.getElementById('report-time'),
+    currentTime: document.getElementById('current-time'),
+    outdoorHumidity: document.getElementById('outdoor-humidity')
+};
 
-    adminPasswordInput.onkeydown = (e) => {
-        if (e.key === 'Enter') confirmAdminLoginBtn.click();
+// ========== 4. 유틸리티 함수 ==========
+function getLocalDateString(d) {
+    const now = d || new Date();
+    const krOffset = 9 * 60 * 60 * 1000;
+    const krDate = new Date(now.getTime() + krOffset);
+    return krDate.toISOString().split('T')[0];
+}
+
+function calculateDewPoint(T, RH) {
+    const gamma = (CONFIG.B * T) / (CONFIG.C + T) + Math.log(RH / 100);
+    const dewPoint = (CONFIG.C * gamma) / (CONFIG.B - gamma);
+    return dewPoint.toFixed(1);
+}
+
+function getRiskLevel(tempDiff, humidity) {
+    // 습도가 높을수록(현장 상황 반영) 위험도 가중
+    const humidityWeight = humidity > 80 ? 1.0 : 0;
+    const adjustedDiff = tempDiff - humidityWeight;
+
+    if (adjustedDiff > 5) return {
+        label: '안전',
+        class: 'status-safe',
+        reason: '강판 온도가 이슬점보다 충분히 높아 안전한 상태입니다.'
     };
+    if (adjustedDiff > 2) return {
+        label: '주의',
+        class: 'status-caution',
+        reason: '강판 온도와 이슬점 차이가 좁혀지고 있거나 습도가 높습니다. 환기 및 온도 관리를 권장합니다.'
+    };
+    return {
+        label: '위험',
+        class: 'status-danger',
+        reason: '이슬점이 강판 온도에 근접했거나 습도가 매우 높습니다. 결로 발생 가능성이 크므로 즉시 조치가 필요합니다.'
+    };
+}
 
-    // --- [3. 통합 내비게이션 시스템] ---
-    const navLinks = document.querySelectorAll('.nav-link');
-    const pageSections = document.querySelectorAll('.page-section');
+function getRiskLevelTextClass(label) {
+    if (label === '안전') return 'status-safe';
+    if (label === '주의') return 'status-caution';
+    return 'status-danger';
+}
 
-    function showSection(targetId) {
-        pageSections.forEach(s => s.style.display = 'none');
-        const target = document.getElementById(targetId);
-        if (target) target.style.display = 'block';
+// ========== 5. 위치별 현황 렌더링 (핵심 기능) ==========
+function renderLocationSummary() {
+    console.log('=== renderLocationSummary 시작 ===');
+    console.log('latestLocationStatus:', latestLocationStatus);
 
-        navLinks.forEach(l => {
-            l.classList.remove('active');
-            if (l.getAttribute('href') === `#${targetId}`) l.classList.add('active');
-        });
+    if (!elements.locationStatusList) {
+        console.warn('locationStatusList 요소를 찾을 수 없습니다.');
+        return;
+    }
 
-        if (currentPageLabel) {
-            const activeLink = document.querySelector(`.nav-link[href="#${targetId}"]`);
-            if (activeLink) currentPageLabel.textContent = activeLink.textContent.replace(/[^\w\s가-힣]/g, '').trim();
+    // 모든 위치를 항상 표시
+    const todayStr = getLocalDateString();
+    const dayReports = allReports[todayStr] || {};
+
+    // 당일 리포트 중 가장 최신 슬롯(15:00 -> 07:00 순) 스냅샷 찾기
+    const latestSnapshotSlot = ['15:00', '07:00'].find(slot => dayReports[slot.replace(':', '')] || dayReports[slot]);
+    const snapshotData = latestSnapshotSlot ? (dayReports[latestSnapshotSlot.replace(':', '')] || dayReports[latestSnapshotSlot]).snapshot : null;
+
+    // 데이터 기준 시간 표시 (헤더 옆)
+    const syncTimeEl = document.getElementById('location-sync-time');
+    if (syncTimeEl) {
+        if (latestSnapshotSlot) {
+            syncTimeEl.textContent = `(${todayStr} ${latestSnapshotSlot} 점검 기준)`;
+            syncTimeEl.style.color = 'var(--seah-blue)'; // 공식 데이터는 강조
+        } else {
+            syncTimeEl.textContent = `(실시간 입력 기준)`;
+            syncTimeEl.style.color = '#666';
         }
-
-        if (resultsCard) {
-            if (targetId === 'search-view') {
-                if (resultsCardWasVisible) resultsCard.style.display = 'block';
-            } else {
-                resultsCardWasVisible = (resultsCard.style.display === 'block');
-                resultsCard.style.display = 'none';
-            }
-        }
-
-        sidebar.classList.remove('open');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    navLinks.forEach(link => {
-        link.onclick = (e) => {
-            e.preventDefault();
-            const id = link.getAttribute('href').substring(1);
-            showSection(id);
+    const html = WAREHOUSE_LOCATIONS.map(loc => {
+        // 1. 당일 리포트 스냅샷이 있으면 우선 사용, 없으면 실시간(latestLocationStatus), 마지막으로 기본값
+        const data = (snapshotData && snapshotData[loc]) || latestLocationStatus[loc] || {
+            steel: '-',
+            dp: '-',
+            riskLabel: '미측정',
+            riskClass: 'status-safe',
+            gate: '닫힘',
+            pack: '포장',
+            product: '양호',
+            time: '-'
         };
-    });
 
-    if (mobileMenuBtn) {
-        mobileMenuBtn.onclick = () => {
-            sidebar.classList.toggle('open');
-            if (sidebarOverlay) sidebarOverlay.classList.toggle('open');
-        };
-    }
+        const riskBgClass = data.riskClass.replace('status-', 'bg-');
+        const gateClass = data.gate === '열림' ? 'open' : '';
+        const packClass = data.pack === '미포장' ? 'unpacked' : '';
+        const prodClass = data.product === '결로 인지' ? 'detected' : 'good';
 
-    // --- [4. 규격서 라이브러리 엔진] ---
-    const registeredFileList = document.getElementById('registered-file-list');
-    const specFileInput = document.getElementById('spec-file');
+        // 관리자가 아니면 토글 버튼 비활성화 (보이지 않는 화살표 처리 등)
+        const toggleDisabled = isAdmin ? '' : 'disabled style="cursor: default;"';
+        const arrow = isAdmin ? ' ▾' : '';
 
-    async function extractTextFromPDF(dataUrl) {
-        try {
-            const pdf = await pdfjsLib.getDocument(dataUrl).promise;
-            let text = "";
-            for (let i = 1; i <= Math.min(pdf.numPages, 3); i++) {
-                const page = await pdf.getPage(i);
-                const content = await page.getTextContent();
-                text += content.items.map(item => item.str).join(' ');
-            }
-            return text;
-        } catch (e) { return ""; }
-    }
-
-    function analyzeSpec(fileName, text) {
-        const pool = (fileName + " " + text).toUpperCase();
-        const specs = [
-            { reg: /3506|D3506/, name: "KS D 3506", ref: "KS" },
-            { reg: /3770|D3770/, name: "KS D 3770", ref: "KS" },
-            { reg: /6701|D6701/, name: "KS D 6701", ref: "KS" },
-            { reg: /3030|D3030/, name: "KS D 3030", ref: "KS" },
-            { reg: /3520|D3520/, name: "KS D 3520", ref: "KS" },
-            { reg: /3862|D3862/, name: "KS D 3862", ref: "KS" },
-            { reg: /6711|D6711/, name: "KS D 6711", ref: "KS" },
-            { reg: /3034|D3034/, name: "KS D 3034", ref: "KS" },
-            { reg: /3512|D3512/, name: "KS D 3512", ref: "KS" },
-            { reg: /3501|D3501/, name: "KS D 3501", ref: "KS" },
-            { reg: /3302|G3302/, name: "JIS G 3302", ref: "JIS" },
-            { reg: /3321|G3321/, name: "JIS G 3321", ref: "JIS" },
-            { reg: /4000|H4000/, name: "JIS H 4000", ref: "JIS" },
-            { reg: /3323|G3323/, name: "JIS G 3323", ref: "JIS" },
-            { reg: /3312|G3312/, name: "JIS G 3312", ref: "JIS" },
-            { reg: /3322|G3322/, name: "JIS G 3322", ref: "JIS" },
-            { reg: /4001|H4001/, name: "JIS H 4001", ref: "JIS" },
-            { reg: /3141|G3141/, name: "JIS G 3141", ref: "JIS" },
-            { reg: /3131|G3131/, name: "JIS G 3131", ref: "JIS" },
-            { reg: /A653/, name: "ASTM A653", ref: "ASTM" },
-            { reg: /A792/, name: "ASTM A792", ref: "ASTM" },
-            { reg: /B209/, name: "ASTM B209", ref: "ASTM" },
-            { reg: /A1046/, name: "ASTM A1046", ref: "ASTM" },
-            { reg: /A755/, name: "ASTM A755", ref: "ASTM" },
-            { reg: /A1008/, name: "ASTM A1008", ref: "ASTM" },
-            { reg: /10346/, name: "EN 10346", ref: "EN" },
-            { reg: /10169/, name: "EN 10169", ref: "EN" },
-            { reg: /10130/, name: "EN 10130", ref: "EN" },
-            { reg: /485/, name: "EN 485", ref: "EN" }
-        ];
-        let found = { name: "기타", ref: "기타" };
-        for (const s of specs) { if (s.reg.test(pool)) { found = { name: s.name, ref: s.ref }; break; } }
-        const gradeRegex = /(SGCC|SGCD[1-3]|SGCD|SGC[0-9]{3}|DX5[1-4]D\+?[A-Z]{0,2}|S[0-9]{3}GD\+?[A-Z]{0,2}|CS\s?Type\s?[A-C]|FS\s?Type\s?[A-B]|SS\s?Grade\s?[0-9]{2,3}|SGLCC|SGLCD|SGLC[0-9]{3}|SDCC|SDCD[1-3]|SDC[0-9]{3}|CGCC|CGCD[1-3]|CGCD|CGCH|CGC[0-9]{3}|CGLCC|CGLCD|CGLC[0-9]{3}|CDCC|CDC[0-9]{3}|SMMCC|SMMCD|SMM[0-9]{3}|CMMCC|CMM[0-9]{3}|3003-H[0-9]{2}|3105-H[0-9]{2}|3003|3105|1100|5052|AW-[0-9]{4}|A[0-9]{4}P|SPCC|SPCD|SPCE|SPCF|SPCG|SCP[1-6]|DC0[1-7]|SPHC|SPHD|SPHE)/i;
-        const gradeMatch = (fileName + " " + text).match(gradeRegex);
-        return { spec: found, grade: gradeMatch ? gradeMatch[0].toUpperCase() : "" };
-    }
-
-    async function handleFileUpload(file) {
-        try {
-            const text = file.type === "application/pdf" ? await extractTextFromPDF(URL.createObjectURL(file)) : "";
-            const analysis = analyzeSpec(file.name, text);
-            const ref = storage.ref(`specs/${Date.now()}_${file.name}`);
-            await ref.put(file);
-            const url = await ref.getDownloadURL();
-            await db.collection("specs").add({
-                name: file.name, content: url, fullText: text,
-                detectedSpec: analysis.spec.name, detectedRef: analysis.spec.ref,
-                detectedGrade: analysis.grade, uploadedAt: new Date().toISOString()
-            });
-            loadLocalFiles();
-        } catch (e) { alert("업로드 실패: " + e.message); }
-    }
-
-    if (specFileInput) {
-        specFileInput.onchange = (e) => {
-            Array.from(e.target.files).forEach(handleFileUpload);
-            specFileInput.value = '';
-        };
-    }
-
-    const customFileUploadBtn = document.getElementById('custom-file-upload-btn');
-    if (customFileUploadBtn && specFileInput) {
-        customFileUploadBtn.onclick = () => specFileInput.click();
-    }
-
-    const dropZone = document.getElementById('drop-zone');
-    if (dropZone && specFileInput) {
-        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--primary)'; };
-        dropZone.ondragleave = () => { dropZone.style.borderColor = 'var(--border)'; };
-        dropZone.ondrop = (e) => {
-            e.preventDefault();
-            dropZone.style.borderColor = 'var(--border)';
-            if (e.dataTransfer.files.length > 0) {
-                Array.from(e.dataTransfer.files).forEach(handleFileUpload);
-            }
-        };
-        dropZone.onclick = () => specFileInput.click();
-    }
-
-    function loadLocalFiles() {
-        if (!db) return;
-        db.collection("specs").orderBy("uploadedAt", "desc").get().then(snap => {
-            localFiles = [];
-            snap.forEach(doc => localFiles.push({ id: doc.id, ...doc.data() }));
-            renderFileList();
-            updateSearchOptions();
-        }).catch(err => {
-            console.error("Error loading specs:", err);
-            if (registeredFileList) {
-                registeredFileList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger);">라이브러리 로드 실패: ${err.message}</div>`;
-            }
-        });
-    }
-
-    function renderFileList() {
-        if (!registeredFileList) return;
-        registeredFileList.innerHTML = localFiles.length === 0 ? '<div style="text-align:center; padding:20px; color:#94a3b8;">등록된 파일이 없습니다.</div>' : '';
-        localFiles.forEach(f => {
-            const div = document.createElement('div');
-            div.className = 'file-list-item-new';
-            div.innerHTML = `
-                <div class="file-info-header" style="cursor:pointer;" onclick="window.open('${f.content}')">
-                    <div class="file-icon">📄</div>
-                    <div class="file-meta">
-                        <span class="file-name-link">${f.name}</span>
-                        <div class="status-tags">
-                            <span class="status-badge badge-blue">${f.detectedSpec}</span>
-                            <span class="status-badge badge-orange">${f.detectedGrade || '-'}</span>
+        return `
+            <div class="status-item">
+                <div class="loc-card-top">
+                    <div class="loc-header-info">
+                        <div class="loc-title-row">
+                            <span class="loc-name">${loc}</span>
+                            <div class="loc-risk ${riskBgClass}">${data.riskLabel}</div>
+                        </div>
+                        <div class="loc-data-grid">
+                            <div class="data-group"><span class="label">소재:</span><strong>${data.steel}°C</strong></div>
+                            <div class="data-group"><span class="label">이슬:</span><strong>${data.dp}°C</strong></div>
+                            <div class="data-group"><span class="label">내온:</span><strong>${data.temp || '-'}°C</strong></div>
+                            <div class="data-group"><span class="label">내습:</span><strong>${data.humidity || '-'}%</strong></div>
+                        </div>
+                        <div class="loc-time-badge">🕒 ${data.time}</div>
+                    </div>
+                    <div class="loc-status-badges">
+                        <div class="badge-row">
+                            <button class="badge badge-product ${prodClass}" data-location="${loc}" data-field="product" ${toggleDisabled}>${data.product}${arrow}</button>
+                        </div>
+                        <div class="badge-row-sub">
+                            <button class="badge badge-gate ${gateClass}" data-location="${loc}" data-field="gate" ${toggleDisabled}>GATE:${data.gate}${arrow}</button>
+                            <button class="badge badge-pack ${packClass}" data-location="${loc}" data-field="pack" ${toggleDisabled}>${data.pack}${arrow}</button>
                         </div>
                     </div>
                 </div>
-                <button class="btn-icon delete-file admin-only" onclick="event.stopPropagation(); deleteFile('${f.id}')">✕</button>`;
-            registeredFileList.appendChild(div);
-        });
+                
+                <!-- 관리자용 직접 입력란 -->
+                <div class="admin-only loc-input-row">
+                    <div class="loc-input-group">
+                        <input type="number" step="0.1" class="loc-mini-input" id="input-steel-${loc}" placeholder="소재온도 입력">
+                    </div>
+                    <div class="loc-input-group">
+                        <input type="number" step="0.1" class="loc-mini-input" id="input-temp-${loc}" placeholder="내부온도 입력">
+                    </div>
+                    <div class="loc-input-group">
+                        <input type="number" step="1" class="loc-mini-input" id="input-hum-${loc}" placeholder="내부습도 입력">
+                    </div>
+                    <button class="btn-loc-analyze" onclick="analyzeLocation('${loc}')">저장</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.locationStatusList.innerHTML = html;
+    console.log('=== renderLocationSummary 완료 - ' + WAREHOUSE_LOCATIONS.length + '개 위치 렌더링됨 ===');
+}
+
+// ========== 5.5 개별 위치 분석 및 저장 ==========
+async function analyzeLocation(loc) {
+    const steelInput = document.getElementById(`input-steel-${loc}`);
+    const tempInput = document.getElementById(`input-temp-${loc}`);
+    const humInput = document.getElementById(`input-hum-${loc}`);
+
+    const st = parseFloat(steelInput.value);
+    const it = parseFloat(tempInput.value);
+    const h = parseFloat(humInput.value);
+
+    if (isNaN(st) || isNaN(it) || isNaN(h)) {
+        alert('모든 환경 데이터를 정확히 입력해주세요.');
+        return;
     }
 
-    // --- [4.1 규격서 전체 삭제 기능] ---
-    const clearAllFilesBtn = document.getElementById('clear-all-files-btn');
-    if (clearAllFilesBtn) {
-        clearAllFilesBtn.onclick = async () => {
-            if (!isAdmin) {
-                alert('관리자 권한이 필요합니다.');
-                return;
-            }
-            if (!confirm('라이브러리의 모든 등록된 규격 파일과 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
-
-            try {
-                const snap = await db.collection("specs").get();
-                if (snap.empty) {
-                    alert('삭제할 데이터가 없습니다.');
-                    return;
-                }
-
-                clearAllFilesBtn.textContent = '삭제 중...';
-                clearAllFilesBtn.disabled = true;
-
-                // 1. Storage 파일 삭제 (개별 파일 순회 삭제)
-                const storageDeletePromises = [];
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    if (data.content) {
-                        try {
-                            const fileRef = storage.refFromURL(data.content);
-                            storageDeletePromises.push(fileRef.delete().catch(e => console.warn("Storage delete failed:", e)));
-                        } catch (e) { }
-                    }
-                });
-
-                // 2. Firestore 문서 삭제
-                const batchPromises = [];
-                let batch = db.batch();
-                let count = 0;
-                snap.forEach(doc => {
-                    batch.delete(doc.ref);
-                    count++;
-                    if (count === 500) {
-                        batchPromises.push(batch.commit());
-                        batch = db.batch();
-                        count = 0;
-                    }
-                });
-                if (count > 0) batchPromises.push(batch.commit());
-
-                await Promise.all([...batchPromises, ...storageDeletePromises]);
-                alert('모든 규격 라이브러리가 초기화되었습니다.');
-                loadLocalFiles();
-            } catch (err) {
-                alert('삭제 중 오류 발생: ' + err.message);
-            } finally {
-                clearAllFilesBtn.textContent = '전체 삭제';
-                clearAllFilesBtn.disabled = false;
-            }
-        };
-    }
-
-    window.deleteFile = async (id) => {
-        if (!confirm('삭제하시겠습니까?')) return;
-        try {
-            const doc = await db.collection("specs").doc(id).get();
-            const data = doc.data();
-            if (data && data.content) {
-                try {
-                    const fileRef = storage.refFromURL(data.content);
-                    await fileRef.delete();
-                } catch (e) { console.warn("Storage file already deleted or error:", e); }
-            }
-            await db.collection("specs").doc(id).delete();
-            loadLocalFiles();
-        } catch (e) {
-            alert("삭제 실패: " + e.message);
-        }
-    };
-
-    // --- [5. 조회 엔진] ---
-    function updateSearchOptions() {
-        if (!standardTypeSelect || !specificStandardSelect) return;
-        const std = standardTypeSelect.value;
-        if (!std) {
-            specificStandardSelect.innerHTML = '<option value="">규격을 선택하세요</option>';
-            specificStandardSelect.disabled = true;
+    // 중복 데이터 입력 확인
+    if (latestLocationStatus[loc] && latestLocationStatus[loc].dateStr === getLocalDateString()) {
+        const lastTime = latestLocationStatus[loc].time;
+        if (!confirm(`'${loc}'의 데이터가 이미 입력되어 있습니다 (${lastTime}).\n새로운 값으로 수정하시겠습니까?`)) {
             return;
         }
-        const specs = [...new Set(localFiles.filter(f => f.detectedRef === std).map(f => f.detectedSpec))].sort();
-        specificStandardSelect.innerHTML = '<option value="">상세 규격 선택</option>' + specs.map(s => `<option value="${s}">${s}</option>`).join('');
-        specificStandardSelect.disabled = false;
     }
 
-    if (standardTypeSelect) standardTypeSelect.onchange = updateSearchOptions;
-    if (specificStandardSelect) {
-        specificStandardSelect.onchange = () => {
-            const spec = specificStandardSelect.value;
-            let grades = [];
-            for (const [key, val] of Object.entries(steelData)) {
-                if (val[standardTypeSelect.value] && val[standardTypeSelect.value].standard === spec) {
-                    grades = [...new Set([...grades, ...val[standardTypeSelect.value].grades])];
-                }
-            }
-            gradeTypeSelect.innerHTML = '<option value="">재질 선택</option>' + grades.sort().map(g => `<option value="${g}">${g}</option>`).join('');
-            gradeTypeSelect.disabled = false;
+    // 실외 온도/습도: 자동값 사용
+    let outdoorTemp = parseFloat(document.getElementById('outdoor-temp-input').value);
+    let outdoorHum = parseFloat(document.getElementById('outdoor-humidity-input').value);
 
-            // 제품군 자동 선택 및 고정 (Standard 기반)
-            let detectedSteelType = '';
-            for (const [sType, sObj] of Object.entries(steelData)) {
-                if (sObj[standardTypeSelect.value] && sObj[standardTypeSelect.value].standard === spec) {
-                    detectedSteelType = sType;
-                    break;
-                }
-            }
-
-            const productLabels = {
-                'CR': 'CR (냉연강판)', 'FH': 'FH (Full Hard)', 'PO': 'PO (산세강판)',
-                'GI': 'GI (용융아연도금)', 'GL': 'GL (갈바륨)', 'AL': 'AL (알루미늄도금)', 'ZM': 'ZM (삼원계 도금)',
-                'PPGI': 'PPGI (컬러아연도금)', 'PPGL': 'PPGL (컬러갈바륨)', 'PPAL': 'PPAL (컬러알루미늄)', 'PPZM': 'PPZM (컬러삼원계)'
-            };
-
-            steelTypeSelect.innerHTML = Object.keys(productLabels).map(s =>
-                `<option value="${s}" ${s === detectedSteelType ? 'selected' : ''}>${productLabels[s]}</option>`
-            ).join('');
-
-            if (detectedSteelType) {
-                steelTypeSelect.value = detectedSteelType;
-                steelTypeSelect.disabled = true; // 제품군 고정
-            } else {
-                steelTypeSelect.disabled = false;
-            }
-
-            // 도금량 정보 추가 (data.js의 coatingOptions 기반)
-            let coatings = [];
-            for (const [key, val] of Object.entries(steelData)) {
-                if (val[standardTypeSelect.value] && val[standardTypeSelect.value].standard === spec) {
-                    coatings = [...new Set([...coatings, ...(val[standardTypeSelect.value].coatingOptions || [])])];
-                }
-            }
-            coatingWeightSelect.innerHTML = '<option value="">도금 선택</option>' + coatings.sort().map(c => `<option value="${c}">${c}</option>`).join('');
-            coatingWeightSelect.disabled = false;
-        };
+    if (isNaN(outdoorTemp) || isNaN(outdoorHum)) {
+        const weather = await updateWeatherData();
+        if (isNaN(outdoorTemp)) outdoorTemp = weather.temp;
+        if (isNaN(outdoorHum)) outdoorHum = weather.humidity;
     }
 
-    if (searchBtn) {
-        searchBtn.onclick = () => {
-            const spec = specificStandardSelect.value;
-            const grade = gradeTypeSelect.value;
-            const steel = steelTypeSelect.value;
-            if (!spec || !grade || !steel) return alert('모든 항목을 선택해주세요.');
-            const file = localFiles.find(f => f.detectedSpec === spec);
-            if (!file) return alert('해당 규격서가 없습니다.');
+    updateUI(loc, st, it, h, outdoorTemp, outdoorHum);
 
-            const data = extractFromText(file.fullText, grade);
-            displayResults(file, data, steel, grade);
-        };
+    // 입력창 초기화
+    steelInput.value = '';
+    tempInput.value = '';
+    humInput.value = '';
+}
+
+// ========== 6. 위치 상태 업데이트 ==========
+function updateLocationStatus(location, steel, dp, risk, gate, pack, product) {
+    latestLocationStatus[location] = {
+        steel: steel,
+        dp: dp,
+        riskLabel: risk.label,
+        riskClass: risk.class,
+        gate: gate || '닫힘',
+        pack: pack || '포장',
+        product: product || '양호',
+        time: new Date().toLocaleTimeString(),
+        dateStr: getLocalDateString() // 오늘 날짜 저장 (중복 확인용)
+    };
+
+    // Firebase 동기화
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref(`locationStatus/${location}`).set(latestLocationStatus[location]);
     }
 
-    function extractFromText(text, grade) {
-        const idx = text.indexOf(grade);
-        const context = idx !== -1 ? text.substring(idx, idx + 800) : text;
-        const get = (re) => { const m = context.match(re); return m ? m[1].trim() : "문서 참조"; };
-        return {
-            ys: get(/(?:YS|YP|항복|Yield)[\s\:]*([0-9\~\-\s]+(?:이상이하|↑|↓)?)/i),
-            ts: get(/(?:TS|인장|Tensile)[\s\:]*([0-9\~\-\s]+(?:이상이하|↑|↓)?)/i),
-            el: get(/(?:EL|연신|Elongation)[\s\:]*([0-9\~\-\s]+(?:이상이하|↑|↓)?)/i),
-            tol: get(/(?:두께[\s]?허용|Thickness[\s]?Tol)[\s\:]*([\±\+\-0-9\.]+)/i)
-        };
+    // 로컬 스토리지 저장
+    localStorage.setItem('seah_location_status', JSON.stringify(latestLocationStatus));
+
+    // 위치별 현황 다시 렌더링
+    renderLocationSummary();
+
+    // 보고 상태 업데이트
+    updateTimedReportStatus();
+}
+
+// ========== 7. 위치 상태 토글 ==========
+function toggleLocationStatus(location, field) {
+    // 1. 현재 표시 중인 데이터 원천 파악 (스냅샷 vs 실시간)
+    const todayStr = getLocalDateString();
+    const dayReports = allReports[todayStr] || {};
+    const latestSnapshotSlot = ['15:00', '07:00'].find(slot => dayReports[slot.replace(':', '')] || dayReports[slot]);
+
+    // 현재 UI에 표시되고 있는 데이터 가져오기
+    let currentData = null;
+    let isSnapshot = false;
+    let snapshotSlot = null;
+
+    if (latestSnapshotSlot) {
+        snapshotSlot = latestSnapshotSlot.replace(':', '');
+        const snapshot = dayReports[snapshotSlot] || dayReports[latestSnapshotSlot];
+        if (snapshot && snapshot.snapshot && snapshot.snapshot[location]) {
+            currentData = snapshot.snapshot[location];
+            isSnapshot = true;
+        }
     }
 
-    function displayResults(file, data, steelType, gradeName) {
-        const t = thicknessInput.value || '0.00', w = widthInput.value || '000';
-        resultsCard.style.display = 'block';
-        resultsCardWasVisible = true;
-        document.getElementById('results-title').textContent = `${t}T x ${w}W x ${gradeName} (${steelType}) 결과`;
-        document.getElementById('results-badges').innerHTML = `
-            <span class="badge badge-blue">${steelType}</span>
-            <span class="badge badge-green">📄 문서 분석 완료</span>
-            <span style="margin-left:10px; font-size:12px;"><a href="${file.content}" target="_blank">📄 원본 보기</a></span>`;
-        document.getElementById('mechanical-tbody').innerHTML = `
-            <tr><td class="text-bold">항복강도</td><td>YP</td><td>${data.ys}</td><td>MPa</td></tr>
-            <tr><td class="text-bold">인장강도</td><td>TS</td><td>${data.ts}</td><td>MPa</td></tr>
-            <tr><td class="text-bold">연신율</td><td>El</td><td>${data.el}</td><td>%</td></tr>
-            <tr><td class="text-bold">두께 공차</td><td>Tol</td><td>${data.tol}</td><td>mm</td></tr>`;
-        document.getElementById('non-coated-results').style.display = 'block';
-        document.getElementById('val-thickness').textContent = data.tol;
-        document.getElementById('val-flatness').textContent = "12mm 이하";
-        resultsCard.scrollIntoView({ behavior: 'smooth' });
+    if (!currentData) {
+        currentData = latestLocationStatus[location];
     }
 
-    // --- [6. 불량 유형 도감] ---
-    const defectGrid = document.getElementById('defect-grid');
-    const defaultDefects = [
-        { title: '흑청/백청/적청', photo: null, reason: '습한 환경 또는 장기 보관으로 인한 소재 부식 발생', internal: '1. 제품 보관 환경 및 기간 확인\n2. 제품 포장 상태 점검\n3. 운송 중 수분 접촉 가능성 확인', external: '1. 고객사 보관 환경 조사' },
-        { title: '형상불량 (WAVE)', photo: null, reason: 'Roll Crown 부적절 또는 Edge 빌드업', internal: '1. 텐션레벨러 및 롤 교정 상태 점검\n2. 연신율 설정 확인', external: '1. 고객사 가공 설비 정렬 확인' },
-        { title: '스트레쳐 스트레인', photo: null, reason: '항복점 연신 현상에 의한 표면 줄무늬', internal: '1. YP, TS 기계적 특성 확인\n2. 스킨 패스 압연율 점검', external: '1. 프레스 성형 조건 확인' },
-        { title: '미도금 (Uncoated)', photo: null, reason: '전처리 불량, 도금액 조성 불균형 등', internal: '1. 전처리 온도/농도 분석\n2. 도금액 조성 점검', external: '샘플 확보 필요' },
-        { title: '도막 박리', photo: null, reason: '전처리 불량, 도장 경화 불량 등', internal: '1. 건조로 온도 프로파일 확인\n2. 하지층 부착력 테스트', external: '가공 시 충격 여부 확인' },
-        { title: '필름 불량', photo: null, reason: '보호필름 점착력 편차 등', internal: '로트별 점착력 확인', external: '필름 유지 기간 확인' },
-        { title: '색차', photo: null, reason: '도료 배치 간 편차, 도포량 불균일 등', internal: '색차계 교정 상태 확인', external: '조명 환경 확인' },
-        { title: '블로킹', photo: null, reason: '코일 내 도장면 응집 현상', internal: '경화 강도 및 권취 장력 확인', external: '보관 창고 온습도 확인' },
-        { title: '덴트', photo: null, reason: '외부 충격에 의한 함몰', internal: '라인 롤러 손상 확인', external: '운송 중 고정 상태 확인' }
+    if (!currentData) {
+        alert('토글할 데이터가 없습니다. 먼저 실시간 분석을 수행하거나 점검 기록을 등록해주세요.');
+        return;
+    }
+
+    // 2. 상태 토글
+    if (field === 'gate') {
+        currentData.gate = currentData.gate === '열림' ? '닫힘' : '열림';
+    } else if (field === 'pack') {
+        currentData.pack = currentData.pack === '포장' ? '미포장' : '포장';
+    } else if (field === 'product') {
+        currentData.product = currentData.product === '양호' ? '결로 인지' : '양호';
+    }
+
+    // 3. 데이터 저장
+    // 3-1. 실시간 상태 업데이트 (Master)
+    updateLocationStatus(location, currentData.steel, (currentData.dp || currentData.dewPoint), { label: currentData.riskLabel, class: currentData.riskClass }, currentData.gate, currentData.pack, currentData.product);
+
+    // 3-2. 만약 스냅샷을 보고 있었다면, 해당 스냅샷(보고서)도 업데이트하여 UI 동기화
+    if (isSnapshot && snapshotSlot && typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref(`reports/${todayStr}/${snapshotSlot}/snapshot/${location}`).update({
+            gate: currentData.gate,
+            pack: currentData.pack,
+            product: currentData.product
+        });
+    }
+}
+
+// ========== 7.5 관리자 인증 로직 ==========
+function openPwdModal() {
+    document.getElementById('pwd-modal').style.display = 'block';
+    document.getElementById('admin-pwd-input').focus();
+}
+
+function closePwdModal() {
+    document.getElementById('pwd-modal').style.display = 'none';
+    document.getElementById('admin-pwd-input').value = '';
+}
+
+function loginAdmin() {
+    const pwdInput = document.getElementById('admin-pwd-input').value;
+    // 관리자 암호 설정 (예: 0000)
+    if (pwdInput === '0000') {
+        isAdmin = true;
+        sessionStorage.setItem('seah_is_admin', 'true');
+        applyAdminUI();
+        closePwdModal();
+        alert('관리자 모드로 전환되었습니다.');
+    } else {
+        alert('암호가 틀렸습니다.');
+        document.getElementById('admin-pwd-input').value = '';
+    }
+}
+
+function logoutAdmin() {
+    if (confirm('로그아웃 하시겠습니까?')) {
+        isAdmin = false;
+        sessionStorage.removeItem('seah_is_admin');
+        applyAdminUI();
+        alert('로그아웃 되었습니다.');
+    }
+}
+
+function applyAdminUI() {
+    if (isAdmin) {
+        document.body.classList.add('is-admin');
+    } else {
+        document.body.classList.remove('is-admin');
+    }
+    // 관리자 상태에 따라 리렌더링이 필요한 부분들
+    renderLocationSummary();
+    updateTimedReportStatus();
+
+    // 입력 필드들 비활성화/활성화 제어
+    const inputs = [
+        // 'location-select', 'steel-temp-input', 'temp-input', // Removed
+        // 'humidity-input', 'outdoor-temp-input', 'outdoor-humidity-input', // Removed
+        'report-date', 'report-time',
+        'status-inspection-date'
     ];
 
-    async function loadLocalDefects() {
-        if (!defectGrid) return;
-        console.log("🔍 불량 데이터 로드 및 중복 정리 중...");
-        try {
-            const snap = await db.collection("defects").get();
-            let allDefects = [];
-            snap.forEach(doc => allDefects.push({ id: doc.id, ...doc.data() }));
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !isAdmin;
+    });
+}
 
-            // 데이터가 하나도 없는 경우 초기 데이터(defaultDefects)를 Firestore에 등록
-            if (allDefects.length === 0) {
-                console.log("Empty encyclopedia found. Initializing with default data...");
-                const batch = db.batch();
-                defaultDefects.forEach(def => {
-                    const newDocRef = db.collection("defects").doc();
-                    batch.set(newDocRef, {
-                        ...def,
-                        createdAt: new Date().toISOString()
+// ========== 8. UI 업데이트 ==========
+function updateUI(location, steelTemp, indoorTemp, humidity, outdoorTemp, outdoorHum) {
+    const dp = calculateDewPoint(indoorTemp, humidity);
+    const diff = (steelTemp - dp).toFixed(1);
+    const risk = getRiskLevel(diff, humidity);
+
+    // Null 체크와 함께 UI 업데이트
+    if (elements.dewPointVal) elements.dewPointVal.textContent = `${dp}°C`;
+    if (elements.tempDiffVal) elements.tempDiffVal.textContent = `${diff}°C`;
+    if (elements.riskReasonText) elements.riskReasonText.textContent = risk.reason;
+    if (elements.statusText) {
+        elements.statusText.textContent = risk.label;
+        elements.statusText.className = 'status-value ' + risk.class;
+    }
+    if (elements.riskIndicator) {
+        elements.riskIndicator.style.borderLeftColor = `var(--${risk.class})`;
+    }
+
+    // 로그 저장
+    saveLog(location, steelTemp, indoorTemp, humidity, outdoorTemp, outdoorHum, dp, risk.label);
+
+    // 위치 상태 업데이트
+    const existing = latestLocationStatus[location] || { gate: '닫힘', pack: '포장', product: '양호' };
+    updateLocationStatus(location, steelTemp, dp, risk, existing.gate, existing.pack, existing.product);
+}
+
+// ========== 9. 로그 관리 ==========
+function saveLog(location, steelTemp, indoorTemp, humidity, outdoorTemp, outdoorHum, dp, riskLabel) {
+    const selDate = elements.reportDate.value;
+    const selTime = elements.reportTime.value;
+    const targetTime = selTime === '실시간' ? new Date().toLocaleTimeString() : selTime;
+
+    const logEntry = {
+        time: `${selDate} ${targetTime}`,
+        location: location,
+        steel: `${steelTemp}°C`,
+        indoor: `${indoorTemp}°C / ${humidity}%`,
+        outdoor: `${outdoorTemp}°C / ${outdoorHum}%`,
+        outdoorTemp: outdoorTemp,
+        outdoorHum: outdoorHum,
+        dp: `${dp}°C`,
+        risk: riskLabel,
+        timestamp: Date.now()
+    };
+
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref('logs').push(logEntry);
+    } else {
+        monitoringLogs.unshift(logEntry);
+        localStorage.setItem('seah_logs', JSON.stringify(monitoringLogs));
+        renderLogs();
+    }
+}
+
+function renderLogs() {
+    if (!elements.logBody) return;
+
+    const displayLogs = monitoringLogs.slice(0, 5);
+    elements.logBody.innerHTML = displayLogs.map(log => {
+        const outT = log.outdoorTemp !== undefined ? log.outdoorTemp : (log.outdoor ? parseFloat(log.outdoor) : '-');
+        const outH = log.outdoorHum !== undefined ? log.outdoorHum : (log.outdoor && log.outdoor.includes('/') ? log.outdoor.split('/')[1]?.replace('%', '').trim() : '-');
+        const inT = log.temp !== undefined ? log.temp : (log.indoor ? parseFloat(log.indoor) : '-');
+        const inH = log.humidity !== undefined ? log.humidity : (log.indoor && log.indoor.includes('/') ? log.indoor.split('/')[1]?.replace('%', '').trim() : '-');
+        const stl = log.steel !== undefined ? (typeof log.steel === 'string' ? log.steel.replace('°C', '') : log.steel) : '-';
+        const dpVal = log.dp !== undefined ? (typeof log.dp === 'string' ? log.dp.replace('°C', '') : log.dp) : '-';
+        const diff = log.tempDiff !== undefined ? log.tempDiff : (stl !== '-' && dpVal !== '-' ? (parseFloat(stl) - parseFloat(dpVal)).toFixed(1) : '-');
+
+        return `
+            <tr>
+                <td>${log.time}</td>
+                <td>${log.location}</td>
+                <td>${outT}</td>
+                <td>${outH}</td>
+                <td>${inT}</td>
+                <td>${inH}</td>
+                <td>${dpVal}</td>
+                <td>${stl}</td>
+                <td>${diff}</td>
+                <td><span class="risk-badge ${getRiskLevelTextClass(log.risk)}">${log.risk}</span></td>
+            </tr>
+        `;
+    }).join('');
+
+    updateTimedReportStatus();
+}
+
+// ========== 10. 날씨 API 유틸리티 (CORS 및 SSL 대응) ==========
+/**
+ * 기상청 API는 브라우저에서 직접 호출 시 CORS 에러가 발생하므로,
+ * 배포 환경(Vercel 등)에서는 vercel.json에 설정된 proxy를 거쳐 요청합니다.
+ */
+async function requestKma(url) {
+    if (!url) return null;
+
+    let target = url;
+
+    // 배포 환경(Vercel) 확인: hostname이 vercel.app인 경우 로컬 프록시 경로 사용
+    const isVercel = window.location.hostname.includes('vercel.app');
+
+    if (isVercel) {
+        // vercel.json의 rewrite 설정을 이용해 CORS 우회
+        target = url.replace('https://apis.data.go.kr/', '/proxy/kma/')
+            .replace('http://apis.data.go.kr/', '/proxy/kma/');
+    }
+
+    try {
+        const response = await fetch(target);
+
+        // 응답 상태 확인
+        if (!response.ok) {
+            console.error(`KMA API Fetch Failed: ${response.status} ${response.statusText}`);
+            // Vercel 프록시 실패 시 AllOrigins로 폴백 시도 (최후의 수단)
+            if (isVercel && !url.includes('allorigins')) {
+                const fallbackUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url.replace('http://', 'https://'))}`;
+                const res = await fetch(fallbackUrl);
+                const json = await res.json();
+                return typeof json.contents === 'string' ? JSON.parse(json.contents) : json.contents;
+            }
+            return null;
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (e) {
+        console.error('KMA Request Error:', e);
+
+        // 네트워크 에러 시 AllOrigins로 폴백
+        if (!url.includes('allorigins')) {
+            try {
+                const fallbackUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url.replace('http://', 'https://'))}`;
+                const res = await fetch(fallbackUrl);
+                const json = await res.json();
+                return typeof json.contents === 'string' ? JSON.parse(json.contents) : json.contents;
+            } catch (e2) {
+                console.error('Fallback Proxy Failed:', e2);
+            }
+        }
+        return null;
+    }
+}
+
+// SVG Icons
+const WEATHER_ICONS = {
+    sunny: `<svg viewBox="0 0 64 64" width="80" height="80"><circle cx="32" cy="32" r="14" fill="#ffb300"/><g stroke="#ffb300" stroke-width="4"><path d="M32 6v8M32 50v8M6 32h8M50 32h8M14 14l6 6M44 44l6 6M14 50l6-6M44 20l6-6"/></g></svg>`,
+    cloudy: `<svg viewBox="0 0 64 64" width="80" height="80"><path d="M46 26c0-6.6-5.4-12-12-12-5.4 0-10 3.6-11.4 8.6C21.5 22.2 20.3 22 19 22c-5 0-9 4-9 9 0 .6.1 1.2.2 1.8C6.6 34.6 4 38.5 4 43c0 6.1 4.9 11 11 11h32c6.6 0 12-5.4 12-12 0-6.1-4.7-11.1-10.7-11.9-.3-2.3-1.1-4.4-2.3-6.1z" fill="#90a4ae"/></svg>`,
+    rain: `<svg viewBox="0 0 64 64" width="80" height="80"><path d="M48 28c0-6.6-5.4-12-12-12-5.4 0-10 3.6-11.4 8.6C23.5 24.2 22.3 24 21 24c-5 0-9 4-9 9 0 .6.1 1.2.2 1.8C8.6 36.6 6 40.5 6 45c0 6.1 4.9 11 11 11h34c6.6 0 12-5.4 12-12 0-6.1-4.7-11.1-10.7-11.9-.3-2.3-1.1-4.4-2.3-6.1z" fill="#546e7a"/><path d="M22 62a2 2 0 0 1-1.8-1.2l-2-5a2 2 0 1 1 3.7-1.5l2 5A2 2 0 0 1 22 62zm10 0a2 2 0 0 1-1.8-1.2l-2-5a2 2 0 1 1 3.7-1.5l2 5A2 2 0 0 1 32 62zm10 0a2 2 0 0 1-1.8-1.2l-2-5a2 2 0 1 1 3.7-1.5l2 5A2 2 0 0 1 42 62z" fill="#42a5f5"/></svg>`,
+    snow: `<svg viewBox="0 0 64 64" width="80" height="80"><path d="M46 26c0-6.6-5.4-12-12-12-5.4 0-10 3.6-11.4 8.6C21.5 22.2 20.3 22 19 22c-5 0-9 4-9 9 0 .6.1 1.2.2 1.8C6.6 34.6 4 38.5 4 43c0 6.1 4.9 11 11 11h32c6.6 0 12-5.4 12-12 0-6.1-4.7-11.1-10.7-11.9-.3-2.3-1.1-4.4-2.3-6.1z" fill="#cfd8dc"/><g stroke="#81d4fa" stroke-width="2"><path d="M22 58h4M30 58h4M38 58h4M22 58l2 2M30 58l2 2M38 58l2 2M22 58l-2 2M30 58l-2 2M38 58l-2 2"/></g></svg>`
+};
+
+function updateWeatherIcon(pty, sky) {
+    const container = document.getElementById('weather-icon-container');
+    if (!container) return;
+
+    let icon = WEATHER_ICONS.sunny; // Default
+    const ptyVal = parseInt(pty || 0);
+    const skyVal = parseInt(sky || 1);
+
+    if (ptyVal > 0) {
+        if (ptyVal === 3 || ptyVal === 7) {
+            icon = WEATHER_ICONS.snow;
+        } else {
+            icon = WEATHER_ICONS.rain;
+        }
+    } else {
+        if (skyVal >= 3) {
+            icon = WEATHER_ICONS.cloudy;
+        } else {
+            icon = WEATHER_ICONS.sunny;
+        }
+    }
+    container.innerHTML = icon;
+}
+
+// ========== 10. 실시간 날씨 연동 (Dashboard) ==========
+async function updateWeatherData() {
+    console.log('=== 실시간 날씨 업데이트 시작 ===');
+    const API_KEY = kmaShortApiKey;
+    const nx = 56, ny = 92;
+
+    if (!API_KEY || API_KEY.length < 10) {
+        if (elements.outdoorTemp) elements.outdoorTemp.textContent = '--°C';
+        return null;
+    }
+
+    try {
+        const now = new Date();
+        const todayStr = getLocalDateString().replace(/-/g, '');
+
+        // 1. 초단기실황 (현재 기온/하늘/강수)
+        let ncstHour = now.getHours();
+        let ncstDate = todayStr;
+        if (now.getMinutes() < 45) ncstHour--;
+        if (ncstHour < 0) {
+            ncstHour = 23;
+            const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+            ncstDate = getLocalDateString(yesterday).replace(/-/g, '');
+        }
+        const ncstBaseTime = String(ncstHour).padStart(2, '0') + '00';
+        const serviceKey = encodeURIComponent(API_KEY);
+        const baseUrl = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0';
+        const ncstUrl = `${baseUrl}/getUltraSrtNcst?serviceKey=${serviceKey}&dataType=JSON&base_date=${ncstDate}&base_time=${ncstBaseTime}&nx=${nx}&ny=${ny}`;
+
+        // 2. 단기예보
+        const baseTimes = [23, 20, 17, 14, 11, 8, 5, 2];
+        let fcstBaseTime = 2, fcstBaseDate = todayStr;
+        if (now.getHours() < 2 || (now.getHours() === 2 && now.getMinutes() < 15)) {
+            const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+            fcstBaseDate = getLocalDateString(yesterday).replace(/-/g, '');
+            fcstBaseTime = 23;
+        } else {
+            for (const t of baseTimes) {
+                if (now.getHours() > t || (now.getHours() === t && now.getMinutes() > 15)) {
+                    fcstBaseTime = t; break;
+                }
+            }
+        }
+        const fcstUrl = `${baseUrl}/getVilageFcst?serviceKey=${serviceKey}&dataType=JSON&base_date=${fcstBaseDate}&base_time=${String(fcstBaseTime).padStart(2, '0')}00&nx=${nx}&ny=${ny}&numOfRows=500`;
+
+        const [ncstRes, fcstRes] = await Promise.all([requestKma(ncstUrl), requestKma(fcstUrl)]);
+
+        let currentTemp = 0;
+        // Parse NCST
+        if (ncstRes?.response?.header?.resultCode === '00') {
+            const items = ncstRes.response.body.items.item;
+            const tempItem = items.find(i => i.category === 'T1H');
+            const ptyItem = items.find(i => i.category === 'PTY');
+            // SKY 정보는 초단기실황에 없을 수도 있음 (초단기예보에는 있음), 실황은 PTY 위주
+            // 하지만 초단기실황에는 SKY가 없고 PTY, T1H, RN1, REH, UUU, VVV, VEC, WSD 만 줌.
+            // 따라서 SKY는 단기예보의 가장 최신 시간대 데이터를 쓰거나 '초단기예보'를 불러야 함. 
+            // 여기선 편의상 PTY가 0이면 '맑음' 가정하되 fcst에서 가져옴.
+
+            if (tempItem) {
+                currentTemp = parseFloat(tempItem.obsrValue);
+                if (elements.outdoorTemp) elements.outdoorTemp.textContent = `${currentTemp}°C`;
+                const outdoorInput = document.getElementById('outdoor-temp-input');
+                if (outdoorInput && document.activeElement !== outdoorInput) outdoorInput.value = currentTemp;
+            }
+
+            const rehItem = items.find(i => i.category === 'REH');
+            if (rehItem) {
+                const currentHum = parseFloat(rehItem.obsrValue);
+                if (elements.outdoorHumidity) elements.outdoorHumidity.textContent = `습도: ${currentHum}%`;
+                const outdoorHumInput = document.getElementById('outdoor-humidity-input');
+                if (outdoorHumInput && document.activeElement !== outdoorHumInput) outdoorHumInput.value = currentHum;
+            }
+
+            // Icon Update Logic
+            if (ptyItem) {
+                // SKY는 fcstRes에서 현재 시간과 가장 가까운 것을 찾아야 함
+                // 여기서는 간단히 pty가 있으면 비/눈, 없으면 맑음(혹은 구름 정보 없음) 처리하되,
+                // fcstRes가 있다면 거기서 SKY를 가져와 보완.
+                let skyVal = 1;
+                if (fcstRes?.response?.header?.resultCode === '00') {
+                    const fItems = fcstRes.response.body.items.item;
+                    // 현재 시간 이후 첫 SKY 값 찾기
+                    const nowTimeStr = String(now.getHours()).padStart(2, '0') + '00';
+                    const skyItem = fItems.find(i => i.category === 'SKY' && i.fcstDate === todayStr && i.fcstTime >= nowTimeStr);
+                    if (skyItem) skyVal = skyItem.fcstValue;
+                }
+                updateWeatherIcon(ptyItem.obsrValue, skyVal);
+            }
+        }
+
+        // Parse FCST (AM/PM Pop & Rain)
+        if (fcstRes?.response?.header?.resultCode === '00') {
+            const items = fcstRes.response.body.items.item.filter(i => i.fcstDate === todayStr);
+            const pops = items.filter(i => i.category === 'POP');
+            const pcps = items.filter(i => i.category === 'PCP');
+
+            const getStat = (arr, start, end, mode = 'max') => {
+                const slice = arr.filter(i => {
+                    const t = parseInt(i.fcstTime);
+                    return t >= start && t < end;
+                });
+                if (slice.length === 0) return 0;
+                const vals = slice.map(i => {
+                    const v = i.fcstValue;
+                    if (v === '강수없음') return 0;
+                    return parseFloat(v) || 0;
+                });
+                return mode === 'max' ? Math.max(...vals) : vals[0];
+            };
+
+            const amPop = getStat(pops, 600, 1200);
+            const pmPop = getStat(pops, 1200, 2400);
+            const amPcp = getStat(pcps, 600, 1200);
+            const pmPcp = getStat(pcps, 1200, 2400);
+
+            if (elements.weatherAmProb) elements.weatherAmProb.textContent = `${amPop}%`;
+            if (elements.weatherPmProb) elements.weatherPmProb.textContent = `${pmPop}%`;
+
+            const formatPcp = (val) => {
+                if (val === 0) return '0mm';
+                if (val < 1.0) return '1mm 미만';
+                if (val >= 50.0) return '50mm 이상';
+                return `${Math.round(val)}mm`;
+            };
+
+            if (elements.weatherAmRain) elements.weatherAmRain.textContent = formatPcp(amPcp);
+            if (elements.weatherPmRain) elements.weatherPmRain.textContent = formatPcp(pmPcp);
+        }
+
+        const rehItem = ncstRes?.response?.header?.resultCode === '00'
+            ? ncstRes.response.body.items.item.find(i => i.category === 'REH')
+            : null;
+        const currentHum = rehItem ? parseFloat(rehItem.obsrValue) : 0;
+
+        // [추가] 실황 습도 데이터를 시간별 습도 기록(hourlyForecasts)에 실시간으로 반영
+        if (currentHum > 0 && typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            // [수정] 저장은 동절기(11월~3월)만 수행 (인덱스: 10, 11, 0, 1, 2)
+            const currentMonth = now.getMonth();
+            const isWinterSeason = (currentMonth >= 10 || currentMonth <= 2);
+
+            if (isWinterSeason) {
+                const dateStr = getLocalDateString();
+                const hourStr = String(now.getHours()).padStart(2, '0') + ':00';
+                const ref = firebase.database().ref(`hourlyForecasts/${dateStr}`);
+
+                try {
+                    // 트랜잭션과 유사하게 최신 데이터를 가져와서 병합
+                    const snapshot = await ref.once('value');
+                    const existing = snapshot.val() || { data: [] };
+                    let existingData = existing.data || [];
+
+                    // 1시간 단위로 정규화된 24시간 틀 유지
+                    const targetHours = [
+                        '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
+                        '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+                        '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
+                        '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
+                    ];
+
+                    let isUpdated = false;
+                    const newData = targetHours.map(h => {
+                        // 현재 시간의 경우 실측 데이터를 우선 반영
+                        if (h === hourStr) {
+                            isUpdated = true;
+                            return { time: h, humidity: Math.round(currentHum), isObserved: true };
+                        }
+                        // 기존 데이터가 있다면 유지
+                        const match = existingData.find(d => d.time === h);
+                        return match || null;
+                    }).filter(d => d !== null);
+
+                    // 만약 기존 데이터가 아예 없었다면 현재 시간 데이터라도 생성
+                    if (newData.length === 0 && isUpdated) {
+                        newData.push({ time: hourStr, humidity: Math.round(currentHum), isObserved: true });
+                    }
+
+                    await ref.update({
+                        data: newData,
+                        updatedAt: Date.now(),
+                        lastObservedTime: hourStr,
+                        isWinter: true
+                    });
+                    console.log(`📡 동절기 실황 습도(${currentHum}%)를 기록(${hourStr})했습니다.`);
+                } catch (e) {
+                    console.warn('실황 습도 Firebase 저장 실패:', e);
+                }
+            } else {
+                console.log('☀️ 현재는 하절기(4월~10월)이므로 습도 데이터를 저장하지 않습니다.');
+            }
+        }
+
+        return { temp: currentTemp, humidity: currentHum };
+    } catch (e) {
+        console.error('Weather Sync Error:', e);
+        return { temp: 0, humidity: 0 };
+    }
+}
+
+// ========== 11. 보고서 관리 ==========
+async function submitTimedReport(timeSlot) {
+    const selDate = document.getElementById('status-inspection-date')?.value || elements.reportDate.value;
+    const selTime = elements.reportTime.value;
+    const outdoor = await updateWeatherData();
+
+    const targetSlot = timeSlot || (selTime === '실시간' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : selTime);
+    const targetDate = selDate;
+
+    const targetLogs = monitoringLogs.filter(log => log.time.startsWith(targetDate));
+    const snapshot = {};
+
+    WAREHOUSE_LOCATIONS.forEach(l => {
+        const locLogs = targetLogs.filter(log => log.location === l);
+        // monitoringLogs는 최신 로그가 배열의 앞(unshift)으로 들어가므로
+        // 필터링된 locLogs에서도 index 0이 "가장 최근" 데이터가 된다.
+        const latestLog = locLogs.length > 0 ? locLogs[0] : null;
+
+        if (latestLog) {
+            snapshot[l] = {
+                steel: latestLog.steel.replace('°C', ''),
+                dp: latestLog.dp.replace('°C', ''),
+                temp: latestLog.temp || (latestLog.indoor ? latestLog.indoor.split('°C')[0] : '-'),
+                humidity: latestLog.humidity || (latestLog.indoor ? latestLog.indoor.split('/ ')[1]?.replace('%', '') : '-'),
+                tempDiff: latestLog.tempDiff || (latestLog.steel && latestLog.dp ? (parseFloat(latestLog.steel) - parseFloat(latestLog.dp)).toFixed(1) : '-'),
+                riskLabel: latestLog.risk,
+                riskClass: getRiskLevelTextClass(latestLog.risk),
+                gate: latestLocationStatus[l]?.gate || '닫힘',
+                pack: latestLocationStatus[l]?.pack || '포장',
+                product: latestLocationStatus[l]?.product || '양호',
+                time: latestLog.time.split(' ')[1]
+            };
+        } else {
+            if (targetDate === getLocalDateString()) {
+                snapshot[l] = latestLocationStatus[l] || {
+                    steel: '-', dp: '-', temp: '-', humidity: '-', tempDiff: '-', riskLabel: '미측정', riskClass: 'status-safe',
+                    gate: '닫힘', pack: '포장', product: '양호', time: '-'
+                };
+            } else {
+                snapshot[l] = {
+                    steel: '-', dp: '-', temp: '-', humidity: '-', tempDiff: '-', riskLabel: '미측정', riskClass: 'status-safe',
+                    gate: '닫힘', pack: '포장', product: '양호', time: '-'
+                };
+            }
+        }
+    });
+
+    const reportData = {
+        time: `${targetDate} ${targetSlot}`,
+        slot: targetSlot,
+        location: "전체 창고 (스냅샷)",
+        snapshot: snapshot,
+        outdoor: outdoor,
+        reporter: "관리자",
+        timestamp: Date.now()
+    };
+
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        firebase.database().ref(`reports/${targetDate}/${targetSlot.replace(':', '')}`).set(reportData);
+        updateTimedReportStatus();
+        renderHistory();
+        alert(`${targetDate} ${targetSlot} 보고가 완료되었습니다.`);
+    } else {
+        if (!allReports[targetDate]) allReports[targetDate] = {};
+        allReports[targetDate][targetSlot] = reportData;
+        localStorage.setItem('seah_all_reports', JSON.stringify(allReports));
+
+        updateTimedReportStatus();
+        renderHistory();
+        alert(`${targetDate} ${targetSlot} 보고가 기록되었습니다.`);
+    }
+}
+
+function updateTimedReportStatus() {
+    const selectedDate = document.getElementById('status-inspection-date')?.value || document.getElementById('report-date').value;
+    const dayReports = allReports[selectedDate] || {};
+
+    const times = ['07:00', '15:00'];
+    times.forEach(time => {
+        const slotKey = time.replace(':', '');
+        const slotId = `slot-${slotKey}`;
+        const slot = document.getElementById(slotId);
+        if (!slot) return;
+
+        const editBtn = document.getElementById(`edit-btn-${slotKey}`);
+        const viewBtn = document.getElementById(`view-btn-${time.replace(':', '')}`);
+        const statusText = slot.querySelector('.slot-status');
+
+        if (dayReports[slotKey]) {
+            // 이미 해당 시간대 보고가 존재하는 경우
+            slot.classList.add('completed');
+            statusText.innerText = '등록 완료';
+
+            if (editBtn) {
+                editBtn.innerText = '수정';
+                editBtn.className = 'btn-mini btn-primary-mini';
+
+                // 관리자가 아니면 수정 버튼 숨김
+                if (!isAdmin) {
+                    editBtn.style.display = 'none';
+                } else {
+                    editBtn.style.display = 'inline-block';
+                }
+
+                editBtn.disabled = !isAdmin;
+                editBtn.onclick = () => {
+                    if (confirm(`${selectedDate} ${time} 점검 보고서를 최신 데이터로 수정(재기록)하시겠습니까?`)) {
+                        document.getElementById('report-date').value = selectedDate;
+                        document.getElementById('report-time').value = time;
+                        submitTimedReport(time);
+                    }
+                };
+            }
+
+            if (viewBtn) {
+                viewBtn.innerText = '조회';
+                viewBtn.className = 'btn-mini btn-secondary-mini';
+                viewBtn.disabled = false;
+                viewBtn.onclick = () => viewReportDetails(time, selectedDate);
+            }
+        } else {
+            // 아직 보고가 없는 경우
+            slot.classList.remove('completed');
+            statusText.innerText = '미등록';
+
+            if (editBtn) {
+                editBtn.innerText = '기록';
+                editBtn.className = 'btn-mini btn-primary-mini';
+                // 관리자가 아니면 숨김 처리 (CSS로 처리되지만 안전하게 비활성화)
+                if (!isAdmin) {
+                    editBtn.style.display = 'none';
+                } else {
+                    editBtn.style.display = 'inline-block';
+                }
+
+                editBtn.disabled = !isAdmin;
+                editBtn.onclick = () => {
+                    if (confirm(`${selectedDate} ${time} 점검 보고서를 현재 최신 데이터로 기록하시겠습니까?`)) {
+                        document.getElementById('report-date').value = selectedDate;
+                        document.getElementById('report-time').value = time;
+                        submitTimedReport(time);
+                    }
+                };
+            }
+
+            if (viewBtn) {
+                viewBtn.innerText = '조회';
+                viewBtn.className = 'btn-mini btn-secondary-mini';
+                viewBtn.disabled = true;
+                viewBtn.onclick = null;
+            }
+        }
+    });
+}
+
+function viewReportDetails(time, manualDate = null) {
+    const todayStr = getLocalDateString();
+    const targetDate = manualDate || todayStr;
+    const dayData = allReports[targetDate];
+
+    if (!dayData || Object.keys(dayData).length === 0) {
+        alert('해당 날짜의 기록을 찾을 수 없습니다.');
+        return;
+    }
+
+    document.getElementById('modal-title').textContent = `${targetDate} 점검 상세 기록 (전체)`;
+    const tbody = document.getElementById('modal-table-body');
+
+    const slots = Object.keys(dayData).sort();
+    let tableRows = '';
+
+    slots.forEach(slot => {
+        const data = dayData[slot];
+        if (!data || !data.snapshot) return;
+
+        const outT = typeof data.outdoor === 'object' ? data.outdoor.temp : (typeof data.outdoor === 'string' ? parseFloat(data.outdoor) : '-');
+        const outH = typeof data.outdoor === 'object' ? data.outdoor.humidity : (typeof data.outdoor === 'string' && data.outdoor.includes('/') ? data.outdoor.split('/')[1]?.replace('%', '').trim() : '-');
+        const outdoorStr = `${outT}°C / ${outH}%`;
+
+        tableRows += `
+            <tr class="slot-header-row">
+                <td colspan="13" style="background: #f1f4f8; font-weight: bold; text-align: left; padding-left: 15px;">
+                    📅 ${slot} 보고 (실외: ${outdoorStr})
+                </td>
+            </tr>
+        `;
+
+        Object.entries(data.snapshot).forEach(([loc, info]) => {
+            tableRows += `
+                <tr>
+                    <td>${loc}</td>
+                    <td>${formatSnapshotTime(info.time, slot)}</td>
+                    <td>${outT}</td>
+                    <td>${outH}</td>
+                    <td>${info.temp || '-'}</td>
+                    <td>${info.humidity || '-'}</td>
+                    <td>${info.dp || '-'}</td>
+                    <td>${info.steel || '-'}</td>
+                    <td>${info.tempDiff || '-'}</td>
+                    <td>${info.gate}</td>
+                    <td>${info.pack}</td>
+                    <td style="color: ${info.product === '결로 인지' ? 'red' : 'green'}; font-weight: bold;">${info.product}</td>
+                    <td>
+                        <span class="risk-badge ${getRiskLevelTextClass(info.riskLabel)}">
+                            ${info.riskLabel}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+
+    if (tableRows === '') {
+        alert('상세 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+    tbody.innerHTML = tableRows;
+    document.getElementById('report-modal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('report-modal').style.display = 'none';
+}
+
+function viewAllLogs() {
+    const fullLogBody = document.getElementById('full-log-body');
+    fullLogBody.innerHTML = monitoringLogs.map(log => {
+        const outT = log.outdoorTemp !== undefined ? log.outdoorTemp : (log.outdoor ? parseFloat(log.outdoor) : '-');
+        const outH = log.outdoorHum !== undefined ? log.outdoorHum : (log.outdoor && log.outdoor.includes('/') ? log.outdoor.split('/')[1]?.replace('%', '').trim() : '-');
+        const inT = log.temp !== undefined ? log.temp : (log.indoor ? parseFloat(log.indoor) : '-');
+        const inH = log.humidity !== undefined ? log.humidity : (log.indoor && log.indoor.includes('/') ? log.indoor.split('/')[1]?.replace('%', '').trim() : '-');
+        const stl = log.steel !== undefined ? (typeof log.steel === 'string' ? log.steel.replace('°C', '') : log.steel) : '-';
+        const dpVal = log.dp !== undefined ? (typeof log.dp === 'string' ? log.dp.replace('°C', '') : log.dp) : '-';
+        const diff = log.tempDiff !== undefined ? log.tempDiff : (stl !== '-' && dpVal !== '-' ? (parseFloat(stl) - parseFloat(dpVal)).toFixed(1) : '-');
+
+        return `
+            <tr>
+                <td>${log.time}</td>
+                <td>${log.location}</td>
+                <td>${outT}</td>
+                <td>${outH}</td>
+                <td>${inT}</td>
+                <td>${inH}</td>
+                <td>${dpVal}</td>
+                <td>${stl}</td>
+                <td>${diff}</td>
+                <td><span class="risk-badge ${getRiskLevelTextClass(log.risk)}">${log.risk}</span></td>
+            </tr>
+        `;
+    }).join('');
+    document.getElementById('log-modal').style.display = 'block';
+}
+
+function closeLogModal() {
+    document.getElementById('log-modal').style.display = 'none';
+}
+
+// ========== 12. 캘린더 ==========
+function changeMonth(delta) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const container = document.getElementById('calendar-container');
+    const headerTitle = document.getElementById('calendar-month-year');
+    if (!container || !headerTitle) return;
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    headerTitle.textContent = `${year}년 ${month + 1}월`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = getLocalDateString();
+
+    let html = `
+        <div class="calendar-grid">
+            <div class="calendar-day-header">일</div>
+            <div class="calendar-day-header">월</div>
+            <div class="calendar-day-header">화</div>
+            <div class="calendar-day-header">수</div>
+            <div class="calendar-day-header">목</div>
+            <div class="calendar-day-header">금</div>
+            <div class="calendar-day-header">토</div>
+    `;
+
+    for (let i = 0; i < firstDay; i++) {
+        html += '<div class="calendar-day empty"></div>';
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isToday = dateStr === today ? 'today' : '';
+        const dayRecords = allReports[dateStr] || {};
+        const recordSlots = Object.keys(dayRecords).sort();
+
+        let badgesHtml = '';
+        recordSlots.forEach(slot => {
+            const slotShort = slot.replace(':', '');
+            const displayTime = slot === '07:00' ? '7시' : (slot === '15:00' ? '15시' : slot);
+            badgesHtml += `<div class="mini-badge b-${slotShort}" onclick="event.stopPropagation(); viewReportDetails('${slot}', '${dateStr}')">${displayTime}</div>`;
+        });
+
+        html += `
+            <div class="calendar-day ${isToday}" onclick="${recordSlots.length > 0 ? `viewReportDetails(null, '${dateStr}')` : ''}">
+                <div class="day-number">${d}</div>
+                <div class="day-records">
+                    ${badgesHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderHistory() {
+    renderCalendar();
+}
+
+// ========== 13. 뷰 관리 ==========
+function toggleView(view) {
+    const dashboardView = document.getElementById('dashboard-view');
+    const forecastView = document.getElementById('forecast-view');
+    const historyView = document.getElementById('history-view');
+
+    const navDashboard = document.getElementById('nav-dashboard');
+    const navForecast = document.getElementById('nav-forecast');
+    const navHistory = document.getElementById('nav-history');
+
+    // 뷰 초기화
+    if (dashboardView) dashboardView.classList.remove('active');
+    if (forecastView) forecastView.classList.remove('active');
+    if (historyView) historyView.classList.remove('active');
+
+    if (navDashboard) navDashboard.classList.remove('active');
+    if (navForecast) navForecast.classList.remove('active');
+    if (navHistory) navHistory.classList.remove('active');
+
+    // 선택된 뷰 활성화
+    if (view === 'dashboard') {
+        if (dashboardView) dashboardView.classList.add('active');
+        if (navDashboard) navDashboard.classList.add('active');
+    } else if (view === 'forecast') {
+        if (forecastView) forecastView.classList.add('active');
+        if (navForecast) navForecast.classList.add('active');
+        updateWeeklyForecast();
+        updateHourlyHumidity(); // 시간별 습도 예보도 업데이트
+    } else if (view === 'history') {
+        if (historyView) historyView.classList.add('active');
+        if (navHistory) navHistory.classList.add('active');
+        updateCondensationHistory();
+    }
+}
+
+function updateCondensationHistory() {
+    const tbody = document.getElementById('history-log-body');
+    const msg = document.getElementById('history-message');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    if (msg) {
+        msg.textContent = '데이터를 분석 중입니다...';
+        msg.style.display = 'block';
+    }
+
+    setTimeout(() => {
+        const historyData = [];
+
+        // 1. 모니터링 로그(monitoringLogs)에서 '수동 입력(manual_history)'된 항목만 추출
+        // (단순 위험 수치 도달 건은 관리자가 실제 발생여부를 확인한 것이 아니므로 제외)
+        if (monitoringLogs && monitoringLogs.length > 0) {
+            monitoringLogs.forEach(log => {
+                if (log && typeof log === 'object' && log.source === 'manual_history') {
+                    historyData.push({
+                        id: log.fbKey || log.timestamp || new Date(log.time).getTime(),
+                        dateStr: log.time,
+                        location: log.location,
+                        outTemp: log.outdoorTemp !== undefined ? log.outdoorTemp : (log.outdoor ? parseFloat(log.outdoor) : '-'),
+                        outHumid: log.outdoorHum !== undefined ? log.outdoorHum : (log.outdoor && typeof log.outdoor === 'string' && log.outdoor.includes('/') ? log.outdoor.split('/')[1].replace('%', '').trim() : '-'),
+                        inTemp: log.temp,
+                        inHumid: log.humidity,
+                        dewPoint: log.dp,
+                        steelTemp: log.steel,
+                        diff: log.tempDiff !== undefined ? log.tempDiff : '-',
+                        reason: log.riskReason || '관리자 등록 이력'
+                    });
+                }
+            });
+        }
+
+        if (allReports) {
+            Object.keys(allReports).forEach(date => {
+                const dayReport = allReports[date];
+                if (dayReport && typeof dayReport === 'object') {
+                    Object.keys(dayReport).forEach(slotKey => {
+                        const report = dayReport[slotKey];
+                        if (report && report.snapshot) {
+                            Object.keys(report.snapshot).forEach(loc => {
+                                const snap = report.snapshot[loc];
+                                if (snap && snap.product === '결로 인지') {
+                                    historyData.push({
+                                        id: `snap-${date}-${slotKey}-${loc}`,
+                                        dateStr: `${date} ${report.slot || '00:00'}`,
+                                        location: loc,
+                                        outTemp: (report.outdoor && typeof report.outdoor === 'object') ? report.outdoor.temp : (typeof report.outdoor === 'string' ? parseFloat(report.outdoor) : '-'),
+                                        outHumid: (report.outdoor && typeof report.outdoor === 'object') ? report.outdoor.humidity : (typeof report.outdoor === 'string' && report.outdoor.includes('/') ? report.outdoor.split('/')[1].replace('%', '').trim() : '-'),
+                                        inTemp: snap.temp || '-',
+                                        inHumid: snap.humidity || '-',
+                                        dewPoint: snap.dp || '-',
+                                        steelTemp: snap.steel || '-',
+                                        diff: snap.tempDiff || '-',
+                                        reason: '관리자 육안 식별(결로 인지)'
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // 날짜 내림차순 정렬
+        historyData.sort((a, b) => {
+            const dateA = new Date((a.dateStr || '').replace(' ', 'T'));
+            const dateB = new Date((b.dateStr || '').replace(' ', 'T'));
+            return (dateB.getTime() || 0) - (dateA.getTime() || 0);
+        });
+
+        // 렌더링
+        if (historyData.length === 0) {
+            if (msg) msg.textContent = '저장된 결로 발생 이력이 없습니다.';
+            const paginationContainer = document.getElementById('history-pagination');
+            if (paginationContainer) paginationContainer.innerHTML = '';
+        } else {
+            if (msg) msg.style.display = 'none';
+
+            // 페이지네이션 처리
+            const totalPages = Math.ceil(historyData.length / historyItemsPerPage);
+            if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
+            if (historyCurrentPage < 1) historyCurrentPage = 1;
+
+            const startIndex = (historyCurrentPage - 1) * historyItemsPerPage;
+            const paginatedData = historyData.slice(startIndex, startIndex + historyItemsPerPage);
+
+            tbody.innerHTML = paginatedData.map(item => {
+                const isAdminUI = isAdmin ? `
+                    <td class="admin-only">
+                        <div class="action-btns">
+                            <button onclick="editPastRecord('${item.id}')" class="btn-mini btn-edit">수정</button>
+                            <button onclick="deletePastRecord('${item.id}')" class="btn-mini btn-delete">삭제</button>
+                        </div>
+                    </td>
+                ` : '<td class="admin-only">-</td>';
+
+                return `
+                    <tr>
+                        <td>${item.dateStr}</td>
+                        <td>${item.location}</td>
+                        <td>${item.outTemp}</td>
+                        <td>${item.outHumid}</td>
+                        <td>${item.inTemp}</td>
+                        <td>${item.inHumid}</td>
+                        <td>${item.dewPoint}</td>
+                        <td>${item.steelTemp}</td>
+                        <td>${item.diff}</td>
+                        <td><span class="status-danger" style="padding: 2px 5px; border-radius: 4px;">${item.reason}</span></td>
+                        ${isAdminUI}
+                    </tr>
+                `;
+            }).join('');
+
+            renderHistoryPagination(totalPages);
+        }
+
+        // 상단 분석 카드 업데이트 호출
+        updateCondensationAnalysis(historyData);
+    }, 500);
+}
+
+/**
+ * 결로 이력 페이지네이션 컨트롤을 렌더링합니다.
+ */
+function renderHistoryPagination(totalPages) {
+    const container = document.getElementById('history-pagination');
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    // 이전 페이지
+    html += `<button onclick="changeHistoryPage(${historyCurrentPage - 1})" ${historyCurrentPage === 1 ? 'disabled' : ''} class="btn-pagination">&lt;</button>`;
+
+    // 페이지 번호
+    for (let i = 1; i <= totalPages; i++) {
+        // 너무 많은 페이지가 생길 경우를 대비해 현재 페이지 주변만 표시하는 로직을 추가할 수 있지만, 
+        // 우선은 모든 페이지 번호를 표시합니다.
+        html += `<button onclick="changeHistoryPage(${i})" class="btn-pagination ${i === historyCurrentPage ? 'active' : ''}">${i}</button>`;
+    }
+
+    // 다음 페이지
+    html += `<button onclick="changeHistoryPage(${historyCurrentPage + 1})" ${historyCurrentPage === totalPages ? 'disabled' : ''} class="btn-pagination">&gt;</button>`;
+
+    container.innerHTML = html;
+}
+
+/**
+ * 결로 이력 페이지를 변경합니다.
+ */
+function changeHistoryPage(page) {
+    historyCurrentPage = page;
+    updateCondensationHistory();
+}
+
+/**
+ * 결로 발생 이력 데이터를 분석하여 상단 통계 카드를 업데이트합니다.
+ * @param {Array} data - 결로 이력 데이터 배열
+ */
+function updateCondensationAnalysis(data) {
+    const totalCountEl = document.getElementById('stat-total-count');
+    const outdoorTempEl = document.getElementById('stat-avg-outdoor-temp');
+    const outdoorHumEl = document.getElementById('stat-avg-outdoor-hum');
+    const avgDiffEl = document.getElementById('stat-avg-diff');
+
+    if (!totalCountEl || data.length === 0) {
+        if (totalCountEl) totalCountEl.textContent = '0 건';
+        if (outdoorTempEl) outdoorTempEl.textContent = '- °C';
+        if (outdoorHumEl) outdoorHumEl.textContent = '- %';
+        if (avgDiffEl) avgDiffEl.textContent = '- °C';
+        return;
+    }
+
+    let outTempSum = 0, outHumSum = 0, diffSum = 0;
+    let outTempCount = 0, outHumCount = 0, diffCount = 0;
+
+    data.forEach(item => {
+        const ot = parseFloat(item.outTemp);
+        const oh = parseFloat(item.outHumid);
+        const df = parseFloat(item.diff);
+
+        if (!isNaN(ot)) { outTempSum += ot; outTempCount++; }
+        if (!isNaN(oh)) { outHumSum += oh; outHumCount++; }
+        if (!isNaN(df)) { diffSum += df; diffCount++; }
+    });
+
+    if (totalCountEl) totalCountEl.textContent = `${data.length} 건`;
+    if (outdoorTempEl) outdoorTempEl.textContent = outTempCount > 0 ? `${(outTempSum / outTempCount).toFixed(1)} °C` : '- °C';
+    if (outdoorHumEl) outdoorHumEl.textContent = outHumCount > 0 ? `${(outHumSum / outHumCount).toFixed(1)} %` : '- %';
+    if (avgDiffEl) avgDiffEl.textContent = diffCount > 0 ? `${(diffSum / diffCount).toFixed(1)} °C` : '- °C';
+}
+
+/**
+ * 알고리즘에서 사용할 수 있도록 결로 이력 데이터를 간단한 배열 형태로 반환합니다.
+ */
+function getCondensationHistoryForAlgorithm() {
+    const historyData = [];
+    if (monitoringLogs) {
+        monitoringLogs.forEach(log => {
+            if (log && log.source === 'manual_history') {
+                historyData.push({
+                    outTemp: log.outdoorTemp,
+                    outHumid: log.outdoorHum
+                });
+            }
+        });
+    }
+    if (allReports) {
+        Object.keys(allReports).forEach(date => {
+            const day = allReports[date];
+            if (day && typeof day === 'object') {
+                Object.keys(day).forEach(slot => {
+                    const r = day[slot];
+                    if (r && r.snapshot) {
+                        const hasCondensation = Object.values(r.snapshot).some(s => s.product === '결로 인지');
+                        if (hasCondensation && r.outdoor) {
+                            historyData.push({
+                                outTemp: typeof r.outdoor === 'object' ? r.outdoor.temp : parseFloat(r.outdoor),
+                                outHumid: typeof r.outdoor === 'object' ? r.outdoor.humidity : (r.outdoor.includes('/') ? parseFloat(r.outdoor.split('/')[1]) : 0)
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+    return historyData;
+}
+
+function formatSnapshotTime(time, slot) {
+    if (!time || time === '-') return slot;
+    return time;
+}
+
+// 배풍기/열풍기 가동 판단 및 결로 위험도 평가 함수 (최신 V2 로직 사용)
+function determineFanHeaterOperation(minTemp, maxTemp, amRainProb, pmRainProb, humidity) {
+    return determineFanHeaterOperationV2(minTemp, maxTemp, amRainProb, pmRainProb, humidity);
+}
+
+
+// ========== 14. 이벤트 리스너 ==========
+function setupEventListeners() {
+    // 계산하기 버튼 - 개별 분석으로 이전됨
+
+
+    // 로그 삭제 버튼
+    if (elements.clearBtn) {
+        elements.clearBtn.addEventListener('click', () => {
+            if (confirm('모든 로그 기록을 삭제하시겠습니까?')) {
+                monitoringLogs = [];
+                localStorage.removeItem('seah_logs');
+                renderLogs();
+            }
+        });
+    }
+
+    // 위치별 상태 토글
+    if (elements.locationStatusList) {
+        elements.locationStatusList.addEventListener('click', (e) => {
+            const button = e.target.closest('button[data-location][data-field]');
+            if (button) {
+                const location = button.getAttribute('data-location');
+                const field = button.getAttribute('data-field');
+                toggleLocationStatus(location, field);
+            }
+        });
+    }
+
+    // 관리자 암호 입력 Enter 키 이벤트
+    const adminPwdInput = document.getElementById('admin-pwd-input');
+    if (adminPwdInput) {
+        adminPwdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginAdmin();
+            }
+        });
+    }
+
+    // 날짜 변경 이벤트
+    const globalDateInput = document.getElementById('report-date');
+    const statusDateInput = document.getElementById('status-inspection-date');
+
+    if (statusDateInput && globalDateInput) {
+        statusDateInput.value = globalDateInput.value;
+        statusDateInput.addEventListener('change', (e) => {
+            globalDateInput.value = e.target.value;
+            updateTimedReportStatus();
+        });
+    }
+
+    if (globalDateInput) {
+        globalDateInput.addEventListener('change', (e) => {
+            if (statusDateInput) statusDateInput.value = e.target.value;
+            updateTimedReportStatus();
+        });
+    }
+
+    // 모달 닫기
+    window.onclick = function (event) {
+        const modal = document.getElementById('report-modal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+
+    // 시간별 습도 날짜 선택 이벤트
+    const hourlyDateInput = document.getElementById('hourly-forecast-date');
+    if (hourlyDateInput) {
+        hourlyDateInput.addEventListener('change', (e) => {
+            updateHourlyHumidity(e.target.value);
+        });
+    }
+}
+
+// ========== 15. 초기화 ==========
+function init() {
+    console.log('=== 앱 초기화 시작 ===');
+
+    // 날짜 설정
+    const todayStr = getLocalDateString();
+    if (elements.reportDate) {
+        elements.reportDate.value = todayStr;
+    }
+    const hourlyDateInput = document.getElementById('hourly-forecast-date');
+    if (hourlyDateInput) {
+        hourlyDateInput.value = todayStr;
+    }
+
+    // 시계 업데이트
+    if (elements.currentTime) {
+        setInterval(() => {
+            elements.currentTime.textContent = new Date().toLocaleString();
+        }, 1000);
+    }
+
+    // 날씨 업데이트 (1시간마다)
+    setInterval(() => {
+        updateWeatherData();
+    }, 3600000);
+
+    // 초기 날씨 및 예보 데이터 로드
+    updateWeatherData();
+    updateWeeklyForecast();
+    updateHourlyHumidity();
+
+    // 시간대별 초기값 설정
+    if (elements.reportTime) {
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 10) {
+            elements.reportTime.value = '07:00';
+        } else if (hour >= 14 && hour < 18) {
+            elements.reportTime.value = '15:00';
+        } else {
+            elements.reportTime.value = '실시간';
+        }
+    }
+
+    // 데이터 로드 (Firebase 또는 로컬스토리지)
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        const db = firebase.database();
+
+        db.ref('logs').on('value', snapshot => {
+            const data = snapshot.val();
+            if (data) {
+                monitoringLogs = Object.entries(data).map(([key, val]) => ({
+                    ...val,
+                    fbKey: key
+                })).reverse();
+                renderLogs();
+                if (document.getElementById('history-view').classList.contains('active')) {
+                    updateCondensationHistory();
+                }
+            }
+        });
+
+        db.ref(`reports/${todayStr}`).on('value', snapshot => {
+            updateTimedReportStatus();
+        });
+
+        db.ref('locationStatus').on('value', snapshot => {
+            latestLocationStatus = snapshot.val() || {};
+            renderLocationSummary();
+        });
+
+        db.ref('reports').on('value', snapshot => {
+            allReports = snapshot.val() || {};
+            renderHistory();
+            updateTimedReportStatus();
+            renderLocationSummary();
+            // [추가] 보고서 데이터 로드 시 이력 분석도 갱신
+            if (document.getElementById('history-view').classList.contains('active')) {
+                updateCondensationHistory();
+            }
+        });
+
+        // 기상청 API 키 설정 가져오기 (단기예보 + 중기예보)
+        db.ref('settings/kma_short_api_key').on('value', snapshot => {
+            const val = snapshot.val();
+            if (val) {
+                console.log('Firebase에서 단기예보 API 키를 성공적으로 로드했습니다.');
+                kmaShortApiKey = val;
+                // 키가 업데이트되면 모든 날씨 관련 정보 다시 불러오기
+                updateWeatherData();
+                updateWeeklyForecast();
+                updateHourlyHumidity();
+            } else {
+                console.warn('Firebase에 단기예보 API 키가 설정되지 않았습니다. settings/kma_short_api_key 경로에 키를 추가해주세요.');
+            }
+        });
+
+        db.ref('settings/kma_mid_api_key').on('value', snapshot => {
+            const val = snapshot.val();
+            if (val) {
+                console.log('Firebase에서 중기예보 API 키를 성공적으로 로드했습니다.');
+                kmaMidApiKey = val;
+                updateWeeklyForecast(); // 중기예보 키 로드 시 주간 예보 갱신
+            } else {
+                console.warn('Firebase에 중기예보 API 키가 설정되지 않았습니다. settings/kma_mid_api_key 경로에 키를 추가해주세요.');
+            }
+        });
+    } else {
+        // 로컬스토리지에서 로드
+        monitoringLogs = JSON.parse(localStorage.getItem('seah_logs')) || [];
+        allReports = JSON.parse(localStorage.getItem('seah_all_reports')) || {};
+        latestLocationStatus = JSON.parse(localStorage.getItem('seah_location_status')) || {};
+
+        renderLogs();
+        renderLocationSummary();
+        renderHistory();
+        updateTimedReportStatus();
+    }
+
+    // 관리자 UI 적용
+    applyAdminUI();
+
+    // 이벤트 리스너 설정
+    setupEventListeners();
+
+    // 초기 뷰 설정
+    toggleView('dashboard');
+
+    console.log('=== 앱 초기화 완료 ===');
+
+    // ========== 자동 업데이트 스케줄러 ==========
+    // 1. 실시간 날씨 및 대시보드 시계: 1분마다 업데이트 (시계용), 날씨는 30분마다
+    let minuteCount = 0;
+    setInterval(() => {
+        minuteCount++;
+        // 현재 시각 업데이트 (대시보드 상단)
+        updateCurrentTime();
+
+        // 360분(6시간)마다 모든 기상 정보(실시간, 주간예보, 시간별습도) 업데이트
+        // 기상청 데이터가 대략 3시간 주기로 갱신되므로, 6시간 주기는 비용 절감과 데이터 정확도 사이의 최적점입니다.
+        if (minuteCount % 360 === 0) {
+            console.log('⏰ 기상 데이터 자동 갱신 (날씨/예보/습도) - 6시간 주기');
+            updateWeatherData();
+            updateWeeklyForecast();
+            updateHourlyHumidity();
+        }
+    }, 60 * 1000); // 1분 주기로 실행
+}
+
+// ========== 16. 주간 예보 (D+1 ~ D+7) ==========
+// 기상청 API 호출 도우미: 응답 코드에 따라 이전 base_time 시도
+async function fetchWithBaseTimeSearch(baseUrl, getParams, initialBaseTime, serviceKey) {
+    const baseTimes = [23, 20, 17, 14, 11, 8, 5, 2];
+    let currentIdx = baseTimes.indexOf(parseInt(initialBaseTime));
+    if (currentIdx === -1) currentIdx = 0;
+
+    for (let i = currentIdx; i < baseTimes.length; i++) {
+        const bt = String(baseTimes[i]).padStart(2, '0') + '00';
+        const targetBaseUrl = baseUrl.replace('http://', 'https://');
+        const url = `${targetBaseUrl}?serviceKey=${serviceKey}&${getParams(bt)}`;
+        console.log(`기상청 API 시도 중: ${bt}...`);
+
+        try {
+            const res = await requestKma(url);
+            if (res?.response?.header?.resultCode === '00') {
+                return res;
+            }
+            console.warn(`기상청 API(${bt}) 결과 코드: ${res?.response?.header?.resultCode}`);
+        } catch (e) {
+            console.error(`기상청 API(${bt}) 호출 에러:`, e);
+        }
+    }
+    return null;
+}
+
+// 주간 예보 강제 새로고침 함수
+async function refreshWeeklyForecast() {
+    console.log('🔄 사용자가 주간 예보 새로고침 요청');
+
+    // 캐시 초기화
+    cachedForecast = null;
+
+    // Firebase 캐시도 삭제
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        try {
+            await firebase.database().ref('cachedForecast').remove();
+            console.log('🗑️ Firebase 캐시 삭제 완료');
+        } catch (e) {
+            console.warn('Firebase 캐시 삭제 실패:', e);
+        }
+    }
+
+    // 새로운 데이터 가져오기
+    await updateWeeklyForecast();
+    await updateHourlyHumidity(); // 시간별 습도도 새로고침
+}
+
+async function updateWeeklyForecast() {
+    const todayStr = getLocalDateString().replace(/-/g, '');
+    const grid = document.getElementById('weekly-forecast-grid');
+
+    // UI 로딩 표시 (그리드가 있을 때만)
+    if (grid) {
+        grid.innerHTML = '<p class="text-center" style="grid-column: span 7;">7일 예보 데이터를 확인 중입니다...</p>';
+    }
+
+    try {
+        // 단기예보와 중기예보 키 확인
+        const SHORT_API_KEY = kmaShortApiKey;
+        const MID_API_KEY = kmaMidApiKey;
+        // API 키 검증 먼저 수행
+        if (!SHORT_API_KEY || SHORT_API_KEY.length < 10) {
+            console.error('❌ 단기예보 API 키가 설정되지 않았습니다.');
+            if (grid) {
+                grid.innerHTML = `
+                    <p class="text-center" style="grid-column: span 7; color: #ff4444; padding: 20px;">
+                        ⚠️ 기상청 API 키가 설정되지 않았습니다.<br><br>
+                        <strong>Firebase Console</strong>에서 다음 경로에 API 키를 추가해주세요:<br>
+                        <code style="background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">
+                            settings/kma_short_api_key
+                        </code><br><br>
+                        자세한 내용은 <strong>FIREBASE_API_SETUP.md</strong> 파일을 참고하세요.
+                    </p>
+                `;
+            }
+            return;
+        }
+
+        if (!MID_API_KEY || MID_API_KEY.length < 10) {
+            console.warn('⚠️ 중기예보 API 키가 설정되지 않았습니다. 단기예보 데이터만 사용합니다.');
+        }
+
+        console.log('✅ API 키 확인 완료');
+        console.log(`📅 오늘 날짜: ${todayStr}`);
+
+        // 1. 전역 메모리 캐시 확인 (가장 빠름)
+        if (cachedForecast) {
+            console.log('📦 메모리 캐시 사용 (즉시 로드)');
+            displayWeeklyForecast(cachedForecast);
+            updateManagementGuide(cachedForecast);
+            return;
+        }
+
+        // 2. Firebase 캐시 확인
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            const db = firebase.database();
+            const snapshot = await db.ref('cachedForecast').once('value');
+            const data = snapshot.val();
+
+            if (data && data.date === todayStr) {
+                // 습도 정보가 포함된 최신 형식의 캐시인지 확인
+                const isUpdatedCache = data.forecast && data.forecast.length > 0 && ('humidity' in data.forecast[0]);
+
+                if (isUpdatedCache) {
+                    console.log('📦 Firebase 캐시 사용 (오늘 날짜 및 습도 정보 포함)');
+                    console.log(`   캐시 생성 시각: ${new Date(data.timestamp).toLocaleString()}`);
+                    cachedForecast = data.forecast;
+                    displayWeeklyForecast(cachedForecast);
+                    updateManagementGuide(cachedForecast);
+                    return;
+                } else {
+                    console.log('🔄 캐시 데이터가 구형(습도 정보 없음)이므로 새로고침을 시도합니다.');
+                }
+            } else if (data) {
+                console.log(`🔄 캐시 날짜 불일치 (캐시: ${data.date}, 오늘: ${todayStr}) - 새로운 데이터 가져오기`);
+            }
+        }
+
+        // 3. 캐시가 없거나 날짜가 지난 경우 API 호출
+        console.log('🌐 기상청 API 호출 시작...');
+        grid.innerHTML = '<p class="text-center" style="grid-column: span 7;">기상청 최신 데이터를 가져오는 중입니다 (최대 10초 소요)...</p>';
+
+        const freshForecast = await fetchIntegratedWeeklyForecast(SHORT_API_KEY, MID_API_KEY);
+
+        if (freshForecast && freshForecast.length > 0) {
+            console.log(`✅ 예보 데이터 ${freshForecast.length}일치 로드 완료`);
+            cachedForecast = freshForecast;
+
+            // 4. Firebase에 캐시 저장
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                await firebase.database().ref('cachedForecast').set({
+                    date: todayStr,
+                    forecast: freshForecast,
+                    timestamp: Date.now()
+                });
+                console.log('💾 Firebase에 캐시 저장 완료');
+            }
+
+            displayWeeklyForecast(freshForecast);
+            updateManagementGuide(freshForecast);
+        } else {
+            console.error('❌ 예보 데이터를 가져오지 못했습니다.');
+            grid.innerHTML = '<p class="text-center" style="grid-column: span 7; color: #ff4444;">예보 데이터를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.</p>';
+        }
+    } catch (e) {
+        console.error('❌ Forecast Update Failed:', e);
+        grid.innerHTML = `
+            <p class="text-center" style="grid-column: span 7; color: #ff4444;">
+                데이터 로드 실패<br>
+                <small>${e.message || '알 수 없는 오류'}</small><br><br>
+                API 키 및 네트워크 연결을 확인해주세요.
+            </p>
+        `;
+    }
+}
+
+async function fetchIntegratedWeeklyForecast(shortApiKey, midApiKey) {
+    // 세아씨엠 위치: 전라북도 군산시 자유로 241 (소룡동)
+    // 기상청 격자 좌표: nx=56, ny=92
+    const nx = 56, ny = 92; // 군산 세아씨엠 (소룡동)
+    const regIdTa = '11F20503'; // 군산 - 중기기온예보
+    const regIdLand = '11F20000'; // 전북 - 중기육상예보
+    const todayStr = getLocalDateString().replace(/-/g, '');
+    const now = new Date();
+
+    // API 키 검증
+    if (!shortApiKey || shortApiKey.length < 10) {
+        console.error('단기예보 API 키가 설정되지 않았습니다.');
+        return generateMockWeeklyForecast();
+    }
+    if (!midApiKey || midApiKey.length < 10) {
+        console.warn('중기예보 API 키가 설정되지 않았습니다. 단기예보 데이터만 사용합니다.');
+    }
+
+    const encodedShortKey = encodeURIComponent(shortApiKey);
+    const encodedMidKey = midApiKey ? encodeURIComponent(midApiKey) : null;
+
+    console.log('=== 주간 예보 API 호출 시작 ===');
+    console.log('위치: 군산 세아씨엠 (소룡동)');
+    console.log(`격자 좌표: nx=${nx}, ny=${ny}`);
+    console.log(`기준 날짜: ${todayStr}`);
+    console.log(`현재 시각: ${now.toLocaleString()}`);
+
+    // 1. 단기예보 D+1 ~ D+5 (발표시간에 따라 D+4 또는 D+5)
+    const baseTimes = [23, 20, 17, 14, 11, 8, 5, 2];
+    let fcstBaseTime = 2, fcstBaseDate = todayStr;
+    if (now.getHours() < 2 || (now.getHours() === 2 && now.getMinutes() < 15)) {
+        const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+        fcstBaseDate = yesterday.toISOString().split('T')[0].replace(/-/g, '');
+        fcstBaseTime = 23;
+    } else {
+        for (const t of baseTimes) {
+            if (now.getHours() > t || (now.getHours() === t && now.getMinutes() > 15)) {
+                fcstBaseTime = t; break;
+            }
+        }
+    }
+    // 1. 단기예보 D+1 ~ D+3
+    const getShortParams = (bt) => `dataType=JSON&base_date=${fcstBaseDate}&base_time=${bt}&nx=${nx}&ny=${ny}&numOfRows=1200`;
+    const shortRes = await fetchWithBaseTimeSearch(
+        'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst',
+        getShortParams,
+        fcstBaseTime,
+        encodedShortKey
+    );
+
+    // 2. 중기예보 D+4 ~ D+10 (발표시간 06:00, 18:00)
+    // 중기예보는 발표 시각이 고정되어 있으므로 검색 로직 대신 정확한 시각 시도
+    let midTaRes = null, midLandRes = null;
+
+    if (encodedMidKey) {
+        let midTmFc = now.getHours() < 18 ? `${todayStr}0600` : `${todayStr}1800`;
+        let midTaUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${encodedMidKey}&dataType=JSON&regId=${regIdTa}&tmFc=${midTmFc}`;
+        let midLandUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${encodedMidKey}&dataType=JSON&regId=${regIdLand}&tmFc=${midTmFc}`;
+
+        const midFetch = async (url) => {
+            return await requestKma(url);
+        };
+
+        [midTaRes, midLandRes] = await Promise.all([
+            midFetch(midTaUrl),
+            midFetch(midLandUrl)
+        ]);
+
+        // 06:00 데이터가 아직 없을 경우 어제 18:00 데이터 시도
+        if (midTaRes?.response?.header?.resultCode !== '00' && now.getHours() < 18) {
+            const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+            const yestStr = getLocalDateString(yesterday).replace(/-/g, '');
+            midTmFc = `${yestStr}1800`;
+            midTaUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${encodedMidKey}&dataType=JSON&regId=${regIdTa}&tmFc=${midTmFc}`;
+            midLandUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${encodedMidKey}&dataType=JSON&regId=${regIdLand}&tmFc=${midTmFc}`;
+
+            [midTaRes, midLandRes] = await Promise.all([
+                midFetch(midTaUrl),
+                midFetch(midLandUrl)
+            ]);
+        }
+    } else {
+        console.warn('중기예보 API 키가 없어 중기예보 데이터를 가져오지 않습니다.');
+    }
+
+    const result = [];
+
+    // 기준 날짜 설정 (오늘과 내일)
+    // todayStr은 이미 함수 상단에서 getLocalDateString()으로 구함
+    const todayObj = new Date(todayStr.substring(0, 4), parseInt(todayStr.substring(4, 6)) - 1, todayStr.substring(6, 8));
+    const tomorrow = new Date(todayObj);
+    tomorrow.setDate(todayObj.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0].replace(/-/g, '');
+
+    console.log(`기상청 API 연동 기준일: 오늘=${todayStr}, 내일(D+1)=${tomorrowStr}`);
+
+    // [단기 데이터 매핑] D+1 ~ D+3
+    const shortMap = {};
+    if (shortRes?.response?.header?.resultCode === '00') {
+        shortRes.response.body.items.item.forEach(item => {
+            const dateStr = item.fcstDate;
+            const d = new Date(dateStr.substring(0, 4), parseInt(dateStr.substring(4, 6)) - 1, dateStr.substring(6, 8));
+
+            // D+1 (내일)부터의 데이터만 사용 (오늘 데이터 제외가 원칙)
+            if (dateStr < tomorrowStr) return;
+
+            if (!shortMap[dateStr]) {
+                shortMap[dateStr] = { date: d, dateStr: dateStr, temps: [], pops: [], pty: [], sky: [], hums: [] };
+            }
+            if (item.category === 'TMP') shortMap[dateStr].temps.push(parseFloat(item.fcstValue));
+            if (item.category === 'POP') shortMap[dateStr].pops.push(parseInt(item.fcstValue));
+            if (item.category === 'PTY') shortMap[dateStr].pty.push(parseInt(item.fcstValue));
+            if (item.category === 'SKY') shortMap[dateStr].sky.push(parseInt(item.fcstValue));
+            if (item.category === 'REH') {
+                const val = parseFloat(item.fcstValue);
+                if (!isNaN(val)) shortMap[dateStr].hums.push(val);
+            }
+        });
+    }
+
+    // 단기 데이터로 result 채우기
+    Object.keys(shortMap).sort().forEach(dateStr => {
+        const day = shortMap[dateStr];
+        // 온도 데이터가 충분치 않으면 스킵
+        if (day.temps.length === 0) return;
+
+        const min = Math.min(...day.temps);
+        const max = Math.max(...day.temps);
+        const avgHum = day.hums.length > 0 ? Math.round(day.hums.reduce((a, b) => a + b, 0) / day.hums.length) : null;
+        const amPop = day.pops.length > 0 ? (day.pops.length > 8 ? Math.max(...day.pops.slice(6, 12)) : Math.max(...day.pops)) : 0;
+        const pmPop = day.pops.length > 0 ? (day.pops.length > 12 ? Math.max(...day.pops.slice(12, 18)) : Math.max(...day.pops)) : 0;
+        // 기온 추이 분석을 위해 이전 날짜의 최저기온 전달
+        const prevMin = result.length > 0 ? result[result.length - 1].minTemp : min;
+
+        // 빅데이터 연동을 위한 전역 데이터 가공
+        const historyData = getCondensationHistoryForAlgorithm();
+        const op = determineFanHeaterOperationV2(min, max, amPop, pmPop, avgHum, prevMin, historyData);
+
+        result.push({
+            date: day.date,
+            dateStr: dateStr,
+            minTemp: min,
+            maxTemp: max,
+            humidity: avgHum,
+            amRainProb: amPop,
+            pmRainProb: pmPop,
+            weatherType: mapDetailedWeather(day.sky, day.pty),
+            locationName: "군산 세아씨엠(단기)",
+            ...op
+        });
+    });
+
+    console.log(`단기예보 연동 결과: ${result.length}일치 (${result.map(r => r.dateStr).join(', ')})`);
+
+    // [중기 데이터 보완] D+3 ~ D+7 (단기예보 이후부터 채움)
+    if (midTaRes?.response?.header?.resultCode === '00' && midLandRes?.response?.header?.resultCode === '00') {
+        const ta = midTaRes.response.body.items.item[0];
+        const land = midLandRes.response.body.items.item[0];
+
+        // 마지막으로 채워진 날짜 확인
+        let lastDateObj = result.length > 0 ? new Date(result[result.length - 1].date) : new Date(todayObj);
+
+        // 7일치를 채울 때까지 반복
+        while (result.length < 7) {
+            // 다음 날짜 계산
+            const nextDate = new Date(lastDateObj);
+            nextDate.setDate(lastDateObj.getDate() + 1);
+            lastDateObj = nextDate; // 갱신
+
+            const nextDateStr = nextDate.toISOString().split('T')[0].replace(/-/g, '');
+
+            // 오늘로부터 며칠 후인지 계산 (D+N) - 시간 정보 제거 후 안전하게 계산
+            const d1 = new Date(nextDate); d1.setHours(0, 0, 0, 0);
+            const d2 = new Date(todayObj); d2.setHours(0, 0, 0, 0);
+            const diffDays = Math.round((d1 - d2) / (1000 * 60 * 60 * 24));
+
+            // 중기예보는 3일 후 ~ 10일 후 데이터 제공
+            if (diffDays >= 3 && diffDays <= 10) {
+                try {
+                    let min = parseFloat(ta[`taMin${diffDays}`]);
+                    let max = parseFloat(ta[`taMax${diffDays}`]);
+
+                    // 기온 데이터가 유효하지 않으면 N/A 처리
+                    if (isNaN(min) || isNaN(max)) {
+                        console.warn(`중기예보 데이터 누락 (D+${diffDays}): ${nextDateStr} - N/A 처리`);
+                        min = null;
+                        max = null;
+                    }
+
+                    // 3~7일후는 오전/오후 구분, 8~10일후는 하루 단위
+                    let amPop = 0, pmPop = 0, wfStr = '';
+                    if (diffDays <= 7) {
+                        amPop = land[`rnSt${diffDays}Am`] !== undefined ? land[`rnSt${diffDays}Am`] : (land[`rnSt${diffDays}`] || 0);
+                        pmPop = land[`rnSt${diffDays}Pm`] !== undefined ? land[`rnSt${diffDays}Pm`] : (land[`rnSt${diffDays}`] || 0);
+                        wfStr = land[`wf${diffDays}Am`] || land[`wf${diffDays}`] || '';
+                    } else {
+                        // 8일 이후는 오전/오후 통합
+                        amPop = land[`rnSt${diffDays}`] || 0;
+                        pmPop = land[`rnSt${diffDays}`] || 0;
+                        wfStr = land[`wf${diffDays}`] || '';
+                    }
+
+                    // 기온 추이 분석용 이전날 최저기온
+                    const prevMinForMid = result.length > 0 ? result[result.length - 1].minTemp : (min || 0);
+
+                    const op = (min === null || max === null)
+                        ? { fan: false, heater: false, risk: '정보없음', reason: '데이터 부족' }
+                        : determineFanHeaterOperationV2(min, max, amPop, pmPop, 60, prevMinForMid);
+
+                    result.push({
+                        date: nextDate,
+                        dateStr: nextDateStr,
+                        minTemp: min,
+                        maxTemp: max,
+                        humidity: null, // 중기예보는 습도 정보 미제공
+                        amRainProb: amPop,
+                        pmRainProb: pmPop,
+                        weatherType: mapMidStatus(wfStr),
+                        locationName: "군산 세아씨엠(중기)",
+                        ...op
+                    });
+                } catch (err) {
+                    console.error(`중기예보 매핑 중 에러 (D+${diffDays}):`, err);
+                }
+            } else {
+                console.log(`범위 밖 날짜 혹은 데이터 없음 (D+${diffDays}): ${nextDateStr}`);
+                // 10일을 넘어가면 더 이상 데이터 없음
+                if (diffDays > 10) break;
+            }
+        }
+    }
+
+    // 결과가 7일이 안될 경우 Mock 데이터로 보정 (최후의 수단)
+    if (result.length < 7) {
+        console.warn(`예보 데이터 부족 (${result.length}일). 부족분 Mock 데이터 생성.`);
+        let lastDate = result.length > 0 ? new Date(result[result.length - 1].date) : new Date(tomorrow);
+        while (result.length < 7) {
+            lastDate.setDate(lastDate.getDate() + 1);
+            const d = new Date(lastDate);
+            const min = Math.floor(Math.random() * 5);
+            const max = min + 7;
+            const op = determineFanHeaterOperationV2(min, max, 20, 20, 60);
+            result.push({
+                date: d,
+                dateStr: d.toISOString().split('T')[0].replace(/-/g, ''),
+                minTemp: min,
+                maxTemp: max,
+                amRainProb: 20,
+                pmRainProb: 20,
+                humidity: 60,
+                weatherType: 'sunny',
+                ...op
+            });
+        }
+    }
+
+    // 최종 결과 로깅
+    console.log('=== 주간 예보 최종 결과 ===');
+    console.log(`총 ${result.length}일치 예보 데이터`);
+
+    // date 객체가 직렬화 중 유실될 수 있으므로 정규화 처리
+    const normalizedResult = result.slice(0, 7).map(day => ({
+        ...day,
+        date: day.date instanceof Date ? day.date.getTime() : day.date
+    }));
+
+    normalizedResult.forEach((day, idx) => {
+        const d = new Date(day.date);
+        console.log(`D+${idx + 1}: ${day.dateStr} (${d.toLocaleDateString()}) - 최저 ${day.minTemp}°C / 최고 ${day.maxTemp}°C`);
+    });
+
+    return normalizedResult;
+}
+
+function mapDetailedWeather(skyArr, ptyArr) {
+    if (!ptyArr || ptyArr.length === 0) return 'sunny';
+
+    // 비/눈 우선 순위 (눈 > 비 > 구름)
+    if (ptyArr.includes(3) || ptyArr.includes(7)) return 'snow';
+    if (ptyArr.some(p => [1, 2, 4, 5, 6].includes(p))) return 'rain-light';
+
+    const sky = skyArr && skyArr.length > 0 ? skyArr[Math.floor(skyArr.length / 2)] : 1;
+    if (sky === 1) return 'sunny';
+    if (sky === 3) return 'cloudy';
+    if (sky === 4) return 'cloudy-heavy';
+    return 'sunny';
+}
+
+function mapMidStatus(wf) {
+    if (!wf) return 'sunny';
+    if (wf.includes('눈') || wf.includes('진눈깨비')) return 'snow';
+    if (wf.includes('비')) return 'rain-light';
+    if (wf.includes('흐림')) return 'cloudy-heavy';
+    if (wf.includes('구름많음')) return 'cloudy';
+    return 'sunny';
+}
+
+function generateMockWeeklyForecast() {
+    const forecast = [];
+    const base = new Date(); base.setHours(0, 0, 0, 0); base.setDate(base.getDate() + 1);
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(base); d.setDate(base.getDate() + i);
+        const min = Math.floor(Math.random() * 8) - 4;
+        const max = min + Math.floor(Math.random() * 8) + 5;
+        const op = determineFanHeaterOperation(min, max, 20, 20);
+        forecast.push({
+            date: d,
+            minTemp: min,
+            maxTemp: max,
+            amRainProb: 20,
+            pmRainProb: 20,
+            humidity: 60 + Math.floor(Math.random() * 20),
+            weatherType: 'sunny',
+            ...determineFanHeaterOperationV2(min, max, 20, 20, 60),
+        });
+    }
+    return forecast;
+}
+
+function displayWeeklyForecast(forecast) {
+    const grid = document.getElementById('weekly-forecast-grid');
+    if (!grid) return;
+
+    grid.innerHTML = forecast.slice(0, 7).map(day => {
+        const d = new Date(day.date);
+        const dateStr = `${d.getMonth() + 1}/${d.getDate()}(${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]})`;
+
+        // 리스크 등급에 따른 클래스 매핑
+        let riskClass = 'status-safe';
+        if (day.risk === '주의') riskClass = 'status-caution';
+        else if (day.risk === '위험') riskClass = 'status-danger';
+
+        return `
+            <div class="forecast-day-card">
+                <h4>${dateStr}</h4>
+                <div class="forecast-icon icon-${day.weatherType}"></div>
+                <div class="forecast-temp">
+                    <span class="temp-min">${typeof day.minTemp === 'number' ? day.minTemp.toFixed(1) + '°' : 'N/A'}</span>
+                    <span class="temp-max">${typeof day.maxTemp === 'number' ? day.maxTemp.toFixed(1) + '°' : 'N/A'}</span>
+                </div>
+                <div class="forecast-rain">
+                    <div class="rain-item"><span class="rain-label">오전</span><span class="rain-prob">${typeof day.amRainProb === 'number' ? day.amRainProb + '%' : '-'}</span></div>
+                    <div class="rain-item"><span class="rain-label">오후</span><span class="rain-prob">${typeof day.pmRainProb === 'number' ? day.pmRainProb + '%' : '-'}</span></div>
+                </div>
+                <div class="forecast-humidity">
+                    <span class="hum-label">평균습도</span>
+                    <span class="hum-val">${(day.humidity !== undefined && day.humidity !== null) ? day.humidity + '%' : '--%'}</span>
+                </div>
+                <div class="equipment-status">
+                    <button class="equipment-btn ${day.fan ? 'active' : ''}" title="${day.reason}" disabled>배풍기</button>
+                    <button class="equipment-btn ${day.heater ? 'active active-heater' : ''}" title="${day.reason}" disabled>열풍기</button>
+                </div>
+                <div class="forecast-risk ${riskClass}">${day.risk}</div>
+                <div class="forecast-reason">${day.reason || ''}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateManagementGuide(forecast) {
+    const guide = document.getElementById('weekly-management-guide');
+    if (!guide) return;
+
+    const dangerCount = forecast.filter(d => d.risk === '위험').length;
+    const cautionCount = forecast.filter(d => d.risk === '주의').length;
+
+    if (dangerCount > 0) {
+        guide.textContent = `향후 7일간 ${dangerCount}일의 결로 위험 구간이 감지되었습니다. 열풍기 가동 및 집중 관리가 필요합니다.`;
+        guide.style.color = 'var(--status-danger)';
+    } else if (cautionCount > 0) {
+        guide.textContent = `향후 7일간 ${cautionCount}일의 결로 주의 기간이 예상됩니다. 배풍기를 미리 가동하여 대비하세요.`;
+        guide.style.color = 'var(--status-caution)';
+    } else {
+        guide.textContent = '향후 7일간 결로 위험이 낮습니다. 외부 환경 변화를 지속적으로 모니터링해 주세요.';
+        guide.style.color = 'var(--seah-gray)';
+    }
+}
+
+/**
+ * 당일 및 향후 며칠간의 시간별 습도 예보를 가져와 Firebase에 병합 저장합니다.
+ * 기상청 단기예보 API에서 REH(습도) 데이터를 추출합니다.
+ */
+async function fetchHourlyHumidityForecast(targetDateStr = null) {
+    const API_KEY = kmaShortApiKey;
+    const nx = 56, ny = 92;
+    const todayStr = getLocalDateString().replace(/-/g, '');
+    const dateToSearch = targetDateStr ? targetDateStr.replace(/-/g, '') : todayStr;
+    const isToday = (dateToSearch === todayStr);
+
+    // 1. Firebase에서 해당 날짜의 기존 데이터 로드 (실측 데이터 병합 및 폴백용)
+    let existingData = [];
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        try {
+            const pathDate = targetDateStr || getLocalDateString();
+            const snap = await firebase.database().ref(`hourlyForecasts/${pathDate}`).once('value');
+            const val = snap.val();
+            if (val && val.data) {
+                existingData = val.data;
+                // 이미 24시간 데이터가 꽉 차있고 오늘이 아니거나 충분히 최신이면 반환 (비용 절감)
+                if (existingData.length >= 24 && (!isToday || (Date.now() - (val.updatedAt || 0) < 3600000))) {
+                    console.log(`✅ [캐시/저장소] ${pathDate} 데이터를 사용합니다.`);
+                    return existingData;
+                }
+            }
+        } catch (e) {
+            console.warn('Firebase 데이터 로드 실패:', e);
+        }
+    }
+
+    // 2. 오늘이거나 데이터가 부족한 경우 API 호출 시도
+    // 단, 과거 날짜(어제 이전)는 기상청 단기예보가 제공되지 않으므로 API 호출을 건너뜁니다.
+    if (API_KEY && API_KEY.length >= 10 && (isToday || (existingData.length < 5 && targetDateStr >= todayStr.substring(0, 4) + '-' + todayStr.substring(4, 6) + '-' + todayStr.substring(6, 8)))) {
+        try {
+            const now = new Date();
+            const baseTimes = [23, 20, 17, 14, 11, 8, 5, 2];
+            let fcstBaseTime = 2, fcstBaseDate = todayStr;
+
+            if (now.getHours() < 2 || (now.getHours() === 2 && now.getMinutes() < 15)) {
+                const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+                fcstBaseDate = getLocalDateString(yesterday).replace(/-/g, '');
+                fcstBaseTime = 23;
+            } else {
+                for (const t of baseTimes) {
+                    if (now.getHours() > t || (now.getHours() === t && now.getMinutes() > 15)) {
+                        fcstBaseTime = t; break;
+                    }
+                }
+            }
+
+            const encodedShortKey = encodeURIComponent(API_KEY);
+            const baseUrl = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst';
+            const getParams = (bt) => `dataType=JSON&base_date=${fcstBaseDate}&base_time=${bt}&nx=${nx}&ny=${ny}&numOfRows=1000`;
+
+            console.log(`🌐 시간별 습도 API 호출 시도 (${fcstBaseDate}, ${fcstBaseTime}시 기준)...`);
+            const fcstRes = await fetchWithBaseTimeSearch(baseUrl, getParams, fcstBaseTime, encodedShortKey);
+
+            if (fcstRes?.response?.header?.resultCode === '00') {
+                const items = fcstRes.response.body.items.item.filter(i => i.category === 'REH');
+
+                // 날짜별로 데이터 분류
+                const apiDataByDate = {};
+                items.forEach(item => {
+                    if (!apiDataByDate[item.fcstDate]) apiDataByDate[item.fcstDate] = [];
+                    apiDataByDate[item.fcstDate].push({
+                        time: item.fcstTime.substring(0, 2) + ':' + item.fcstTime.substring(2),
+                        humidity: parseInt(item.fcstValue)
                     });
                 });
-                await batch.commit();
-                // 다시 로드
-                const newSnap = await db.collection("defects").get();
-                allDefects = [];
-                newSnap.forEach(doc => allDefects.push({ id: doc.id, ...doc.data() }));
-            }
 
-            // 중복 제거 로직 (사진이 있는 것을 우선순위로)
-            const titleGroups = {};
-            allDefects.forEach(d => {
-                if (!titleGroups[d.title]) titleGroups[d.title] = [];
-                titleGroups[d.title].push(d);
-            });
+                const targetHours = [
+                    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
+                    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+                    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
+                    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
+                ];
 
-            const finalDefects = [];
-            const idsToDelete = [];
+                // 현재 요청한 날짜 및 API 응답 날짜들에 대해 병합 처리
+                let requestedResult = null;
 
-            for (const title in titleGroups) {
-                const group = titleGroups[title];
-                if (group.length > 1) {
-                    group.sort((a, b) => {
-                        if (a.photo && !b.photo) return -1;
-                        if (!a.photo && b.photo) return 1;
-                        return 0;
-                    });
-                    finalDefects.push(group[0]);
-                    for (let i = 1; i < group.length; i++) {
-                        idsToDelete.push(group[i].id);
+                for (const dateRaw of Object.keys(apiDataByDate)) {
+                    const formattedDate = `${dateRaw.substring(0, 4)}-${dateRaw.substring(4, 6)}-${dateRaw.substring(6, 8)}`;
+                    const apiData = apiDataByDate[dateRaw];
+
+                    // 해당 날짜의 기존 데이터를 Firebase에서 확인
+                    let baseDataForMerge = [];
+                    if (formattedDate === (targetDateStr || getLocalDateString())) {
+                        baseDataForMerge = existingData;
+                    } else if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                        try {
+                            const dateSnap = await firebase.database().ref(`hourlyForecasts/${formattedDate}`).once('value');
+                            const dateVal = dateSnap.val();
+                            if (dateVal && dateVal.data) baseDataForMerge = dateVal.data;
+                        } catch (e) { console.warn(`${formattedDate} 데이터 로드 실패`); }
                     }
-                } else {
-                    finalDefects.push(group[0]);
+
+                    const mergedData = targetHours.map(hourStr => {
+                        const existingMatch = baseDataForMerge.find(d => d.time === hourStr);
+                        const apiMatch = apiData.find(d => d.time === hourStr);
+
+                        // 1. 실측 데이터가 있으면 무조건 보존
+                        if (existingMatch && existingMatch.isObserved) return existingMatch;
+                        // 2. 새로운 API 예보 데이터가 있으면 업데이트 (미래 시간)
+                        if (apiMatch) return apiMatch;
+                        // 3. 기존 데이터(과거 예보 등)가 있다면 유지
+                        return existingMatch || null;
+                    }).filter(d => d !== null);
+
+                    // 현재 조회 중인 날짜인 경우 결과에 담기
+                    if (dateRaw === dateToSearch) {
+                        requestedResult = mergedData;
+                    }
+
+                    // 저장은 동절기(11월~3월)만 수행 (인덱스: 11, 12, 1, 2, 3)
+                    const month = parseInt(dateRaw.substring(4, 6));
+                    const isWinter = (month >= 11 || month <= 3);
+                    if (isWinter && typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                        await firebase.database().ref(`hourlyForecasts/${formattedDate}`).update({
+                            data: mergedData,
+                            updatedAt: Date.now(),
+                            isWinter: true
+                        });
+                    }
                 }
-            }
 
-            if (idsToDelete.length > 0 && isAdmin) {
-                console.log(`🧹 중복 데이터 ${idsToDelete.length}건 삭제 중...`);
-                const deletePromises = idsToDelete.map(id => db.collection("defects").doc(id).delete());
-                await Promise.all(deletePromises);
+                if (requestedResult) return requestedResult;
             }
-
-            localDefects = finalDefects;
-            renderDefectGrid();
         } catch (e) {
-            console.error("Error loading defects:", e);
-            alert("불량 도감 로드 실패: " + e.message);
+            console.error('시간별 습도 API 처리 실패:', e);
         }
     }
 
-    function renderDefectGrid() {
-        if (!defectGrid) return;
-        defectGrid.innerHTML = localDefects.length === 0 ? '<p style="text-align:center; color:#94a3b8; padding:40px;">등록된 데이터가 없습니다.</p>' : '';
+    // 3. 최종적으로 데이터가 있으면 반환, 없으면 null
+    return (existingData && existingData.length > 0) ? existingData : null;
+}
 
-        localDefects.forEach(defect => {
-            const card = document.createElement('div');
-            card.className = 'standard-card';
-            card.style.cssText = 'padding:0; overflow:hidden; display:flex; flex-direction:column; border-radius:12px; border:1px solid #e2e8f0; background:#fff;';
+/**
+ * Firebase에서 과거 시간별 습도 데이터를 불러옵니다.
+ */
+async function loadHistoricalHourlyHumidity(dateStr) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) return null;
 
-            const photoHtml = defect.photo
-                ? `<div style="width:100%; aspect-ratio:1.2; background:#f1f5f9; overflow:hidden; border-bottom:1px solid #f1f5f9;">
-                     <img src="${defect.photo}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.open(this.src)">
-                   </div>`
-                : `<div style="width:100%; aspect-ratio:1.2; background:linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; border-bottom:1px solid #f1f5f9;">
-                     <span style="font-size:32px; margin-bottom:8px;">📷</span>
-                     <span style="font-size:12px;">사진 없음</span>
-                   </div>`;
+    try {
+        const snapshot = await firebase.database().ref(`hourlyForecasts/${dateStr}`).once('value');
+        const val = snapshot.val();
+        if (val && val.data) {
+            console.log(`📦 Firebase에서 과거 습도 데이터 로드 완료 (${dateStr})`);
+            return val.data;
+        }
+    } catch (e) {
+        console.error('Firebase 과거 데이터 로드 에러:', e);
+    }
+    return null;
+}
 
-            card.innerHTML = `
-                ${photoHtml}
-                <div style="padding:16px; flex-grow:1;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <h3 style="margin:0; font-size:16px; font-weight:700; color:#1e293b;">${defect.title}</h3>
-                        <div class="admin-only admin-flex" style="flex-shrink:0;">
-                            <button style="background:#e0f2fe; color:#f97316; width:28px; height:28px; border:none; border-radius:6px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" onclick="editDefect('${defect.id}')">✏️</button>
-                            <button style="background:#fee2e2; color:#6366f1; width:28px; height:28px; border:none; border-radius:6px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="deleteDefect('${defect.id}')">🗑️</button>
-                        </div>
-                    </div>
-                    <div style="font-size:13px; line-height:1.6; color:#475569;">
-                        <div style="margin-bottom:12px;">
-                            <div style="font-weight:700; color:#1e3a8a; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">🔍 예상 원인</div>
-                            <div style="padding-left:2px;">${defect.reason || '-'}</div>
-                        </div>
-                        <div style="margin-bottom:12px;">
-                            <div style="font-weight:700; color:#1e3a8a; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">🏭 내부 검토 항목 (생산)</div>
-                            <div style="padding-left:2px; white-space:pre-wrap;">${defect.internal || '-'}</div>
-                        </div>
-                        <div>
-                            <div style="font-weight:700; color:#1e3a8a; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">💼 외부 검토 항목 (영업)</div>
-                            <div style="padding-left:2px; white-space:pre-wrap;">${defect.external || '-'}</div>
-                        </div>
-                    </div>
+/**
+ * 시간별 습도 예보를 화면에 표시합니다.
+ */
+function displayHourlyHumidity(data, targetDateStr = null) {
+    const grid = document.getElementById('hourly-humidity-grid');
+    const updateTimeEl = document.getElementById('hourly-update-time');
+    const dateInput = document.getElementById('hourly-forecast-date');
+    if (!grid) return;
+
+    const todayStr = getLocalDateString();
+    const isToday = !targetDateStr || targetDateStr === todayStr;
+
+    if (updateTimeEl) {
+        if (isToday) {
+            const nowStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            updateTimeEl.textContent = `(실시간 예보: ${nowStr})`;
+        } else {
+            updateTimeEl.textContent = `(${targetDateStr} 기록)`;
+        }
+    }
+
+    if (dateInput && !dateInput.value) {
+        dateInput.value = targetDateStr || todayStr;
+    }
+
+    if (!data || data.length === 0) {
+        grid.innerHTML = `<div class="hourly-no-data">${isToday ? '시간별 습도 데이터를 가져오지 못했습니다.' : '해당 날짜의 저장된 기록이 없습니다.'}</div>`;
+        return;
+    }
+
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // 오전(00:00~11:00)과 오후(12:00~23:00)로 분리
+    const amData = data.filter(item => parseInt(item.time.split(':')[0]) < 12);
+    const pmData = data.filter(item => parseInt(item.time.split(':')[0]) >= 12);
+
+    const renderItems = (items) => {
+        if (items.length === 0) return '<div class="hourly-no-data" style="grid-column: span 12;">해당 시간대 데이터가 없습니다.</div>';
+
+        return items.map(item => {
+            const hour = parseInt(item.time.split(':')[0]);
+            // 오늘인 경우에만 과거 시간 회색 처리 및 현재 시간 표시
+            const isPast = isToday && hour < currentHour;
+            const isCurrent = isToday && hour === currentHour;
+
+            // 습도 수준에 따른 클래스 결정
+            let humClass = '';
+            if (item.humidity >= 85) humClass = 'hum-danger';
+            else if (item.humidity >= 75) humClass = 'hum-high';
+            else if (item.humidity >= 65) humClass = 'hum-medium';
+            else humClass = 'hum-low';
+
+            const currentStyle = isCurrent ? 'border: 2px solid var(--seah-blue); box-shadow: 0 0 15px rgba(0,94,184,0.4); background: rgba(255,255,255,0.9); z-index: 2;' : '';
+            const pastStyle = isPast ? 'opacity: 0.4; pointer-events: none;' : '';
+
+            const observedTag = item.isObserved ? '<span class="obs-tag">● 실측</span>' : '';
+
+            return `
+                <div class="hourly-humidity-item ${humClass}" style="${currentStyle}${pastStyle}" title="${item.time} 습도: ${item.humidity}% ${item.isObserved ? '(실측 데이터)' : '(기상청 예보)'}">
+                    <span class="hourly-time">${item.time.substring(0, 2)}시</span>
+                    <span class="hourly-value">${item.humidity}%</span>
+                    ${observedTag}
                 </div>
             `;
-            defectGrid.appendChild(card);
+        }).join('');
+    };
+
+    grid.innerHTML = `
+        <div class="hourly-section">
+            <div class="hourly-section-label">🌅 AM <span>오전 ${isToday ? '예보' : '기록'}</span></div>
+            <div class="hourly-section-items">${renderItems(amData)}</div>
+        </div>
+        <div class="hourly-section">
+            <div class="hourly-section-label">🌇 PM <span>오후 ${isToday ? '예보' : '기록'}</span></div>
+            <div class="hourly-section-items">${renderItems(pmData)}</div>
+        </div>
+    `;
+}
+
+/**
+ * 주간 예측 화면에서 시간별 습도 예보를 업데이트합니다.
+ */
+async function updateHourlyHumidity(targetDate = null) {
+    const todayStr = getLocalDateString();
+    const dateToLoad = targetDate || todayStr;
+    const grid = document.getElementById('hourly-humidity-grid');
+
+    // UI 로딩 표시 (그리드가 있을 때만)
+    if (grid) {
+        grid.innerHTML = '<div class="hourly-loading">데이터를 불러오는 중...</div>';
+    }
+
+    // 1. 데이터 가져오기 및 저장 (이 함수 내부에서 Firebase 저장을 수행함)
+    const data = await fetchHourlyHumidityForecast(dateToLoad);
+
+    // 2. UI 업데이트 (그리드가 있을 때만)
+    if (grid) {
+        displayHourlyHumidity(data, dateToLoad);
+    }
+}
+
+
+// 페이지 로드 시 초기화
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+// ========== 17. 설정 관리 ==========
+function openSettingModal() {
+    if (!isAdmin) {
+        alert('관리자만 접근할 수 있습니다.');
+        return;
+    }
+    document.getElementById('setting-modal').style.display = 'block';
+}
+
+function closeSettingModal() {
+    document.getElementById('setting-modal').style.display = 'none';
+}
+
+function saveSettings() {
+    // 더 이상 브라우저에서 직접 수정하지 않으므로 저장 로직 제거
+    alert('설정 정보는 시스템 관리자(Firebase)를 통해 관리됩니다.');
+    closeSettingModal();
+}
+
+// ========== 18. 과거 이력 관리 (History) ==========
+function openPastRecordModal(editId = null) {
+    const modal = document.getElementById('past-record-modal');
+    const locSelect = document.getElementById('past-location');
+    const dateInput = document.getElementById('past-date');
+    const idInput = document.getElementById('past-record-id');
+    const submitBtn = document.getElementById('past-record-submit-btn');
+    if (!modal) return;
+
+    if (locSelect && locSelect.options.length === 0) {
+        WAREHOUSE_LOCATIONS.forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc;
+            opt.textContent = loc;
+            locSelect.appendChild(opt);
         });
     }
 
-    const addDefectBtn = document.getElementById('add-defect-btn');
-    const defectModal = document.getElementById('defect-modal');
-    if (addDefectBtn) {
-        addDefectBtn.onclick = () => {
-            document.getElementById('defect-id').value = '';
-            document.getElementById('defect-form').reset();
-            document.getElementById('defect-modal-title').textContent = '📷 신규 불량 등록';
-            defectModal.style.display = 'flex';
-        };
-    }
+    if (editId) {
+        // 수정 모드
+        let log = null;
 
-    window.editDefect = (id) => {
-        if (!isAdmin) {
-            alert("관리자 권한이 필요합니다.");
-            return;
-        }
-        const d = localDefects.find(x => x.id === id);
-        if (!d) return;
-        document.getElementById('defect-id').value = id;
-        document.getElementById('defect-title').value = d.title;
-        document.getElementById('defect-reason').value = d.reason;
-        document.getElementById('defect-internal').value = d.internal;
-        document.getElementById('defect-external').value = d.external;
-        document.getElementById('defect-modal-title').textContent = '📷 불량 정보 수정';
+        if (editId.startsWith('snap-')) {
+            // snap-YYYY-MM-DD-HH:mm-Location 형식 파싱
+            const parts = editId.split('-');
+            if (parts.length >= 6) {
+                const date = `${parts[1]}-${parts[2]}-${parts[3]}`;
+                const slot = parts[4];
+                const loc = parts.slice(5).join('-');
 
-        const form = document.getElementById('defect-form');
-        if (form) {
-            form.querySelectorAll('input, textarea, select').forEach(i => i.disabled = !isAdmin);
-            const saveBtn = form.querySelector('button[type="submit"]');
-            if (saveBtn) saveBtn.style.display = isAdmin ? 'block' : 'none';
-        }
+                if (allReports[date] && allReports[date][slot] && allReports[date][slot].snapshot[loc]) {
+                    const snap = allReports[date][slot].snapshot[loc];
+                    const report = allReports[date][slot];
 
-        defectModal.style.display = 'flex';
-    };
-
-    window.deleteDefect = (id) => {
-        if (!isAdmin) {
-            alert("관리자 권한이 필요합니다.");
-            return;
-        }
-        if (confirm('이 불량 유형을 삭제하시겠습니까?')) {
-            db.collection("defects").doc(id).delete()
-                .then(loadLocalDefects)
-                .catch(err => alert("삭제 실패: " + err.message));
-        }
-    };
-
-    // --- [6.1 불량 유형 저장 로직 추가] ---
-    const defectForm = document.getElementById('defect-form');
-    if (defectForm) {
-        defectForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('defect-id').value;
-            const photoFile = document.getElementById('defect-photo').files[0];
-            let photoUrl = null;
-
-            // 로딩 표시
-            const submitBtn = defectForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '저장 중...';
-            submitBtn.disabled = true;
-
-            try {
-                if (photoFile) {
-                    const ref = storage.ref(`defects/${Date.now()}_${photoFile.name}`);
-                    await ref.put(photoFile);
-                    photoUrl = await ref.getDownloadURL();
+                    log = {
+                        time: `${date} ${slot}`,
+                        location: loc,
+                        outdoorTemp: (report.outdoor && typeof report.outdoor === 'object') ? report.outdoor.temp : parseFloat(report.outdoor),
+                        outdoorHum: (report.outdoor && typeof report.outdoor === 'object') ? report.outdoor.humidity : 0,
+                        steel: snap.steel,
+                        temp: snap.temp,
+                        humidity: snap.humidity
+                    };
                 }
-
-                const defectData = {
-                    title: document.getElementById('defect-title').value,
-                    reason: document.getElementById('defect-reason').value,
-                    internal: document.getElementById('defect-internal').value,
-                    external: document.getElementById('defect-external').value,
-                    updatedAt: new Date().toISOString()
-                };
-
-                if (photoUrl) defectData.photo = photoUrl;
-
-                if (id) {
-                    await db.collection("defects").doc(id).update(defectData);
-                } else {
-                    defectData.createdAt = new Date().toISOString();
-                    await db.collection("defects").add(defectData);
-                }
-
-                alert('저장되었습니다.');
-                defectModal.style.display = 'none';
-                loadLocalDefects();
-            } catch (err) {
-                alert('저장 오류: ' + err.message);
-                console.error(err);
-            } finally {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
             }
-        };
-    }
-
-    // --- [7. VOC 관리 & 대시보드] ---
-    const vocListBody = document.getElementById('voc-list-body');
-    const vocForm = document.getElementById('voc-form');
-    let lineChart, catChart;
-
-    function loadLocalComplaints() {
-        if (!db) {
-            console.error("Firebase DB not initialized.");
-            return;
-        }
-        db.collection("complaints").orderBy("createdAt", "desc").get().then(snap => {
-            localComplaints = [];
-            snap.forEach(doc => localComplaints.push({ id: doc.id, ...doc.data() }));
-            renderVocTable();
-            updateDashboard();
-        }).catch(err => {
-            console.error("Error loading complaints:", err);
-            // 에러 시 사용자 알림 (권한 부족 등)
-            if (vocListBody) {
-                vocListBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--danger);">데이터를 불러오지 못했습니다: ${err.message}</td></tr>`;
-            }
-        });
-    }
-
-    function renderVocTable() {
-        if (!vocListBody) return;
-        vocListBody.innerHTML = localComplaints.length === 0 ? '<tr><td colspan="7" style="text-align:center; padding:60px; color:#94a3b8; font-size:14px;">현재 등록된 고객불만 내역이 없습니다.</td></tr>' : '';
-        localComplaints.forEach((v, idx) => {
-            const tr = document.createElement('tr');
-            tr.style.cssText = 'border-bottom:1px solid #f1f5f9; cursor:pointer; transition:background 0.2s;';
-            tr.onmouseover = () => tr.style.background = '#f8fafc';
-            tr.onmouseout = () => tr.style.background = 'transparent';
-            tr.onclick = () => openVocModal(v.id);
-
-            const rowColor = v.category === '클레임' ? '#ef4444' : '#f59e0b';
-
-            tr.innerHTML = `
-                <td style="padding:14px; text-align:center;">
-                    <span style="background:${rowColor}10; color:${rowColor}; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; border:1px solid ${rowColor}20;">${v.category}</span>
-                </td>
-                <td style="padding:14px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
-                <td style="padding:14px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
-                <td style="padding:14px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
-                <td style="padding:14px; color:#334155; font-weight:500; text-align:center;">${v.title}</td>
-                <td style="padding:14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
-                <td style="padding:14px; text-align:center;">
-                    <button class="admin-only" style="border:none; background:#fee2e2; color:#ef4444; width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="event.stopPropagation(); deleteVoc('${v.id}')">
-                        <i class="fas fa-trash-alt" style="font-size:12px;"></i>
-                    </button>
-                </td>`;
-            vocListBody.appendChild(tr);
-        });
-    }
-
-    const vocModal = document.getElementById('voc-modal');
-    let currentVocId = null;
-
-    window.openVocModal = (id) => {
-        const v = localComplaints.find(x => x.id === id);
-        if (!v || !vocModal) return;
-        currentVocId = id;
-
-        // 필드 데이터 매핑 (접수 및 처리 정보 전체)
-        const fields = {
-            'modal-edit-category': v.category,
-            'modal-edit-market': v.market,
-            'modal-edit-receiptDate': v.receiptDate,
-            'modal-edit-customer': v.customer,
-            'modal-edit-manager': v.manager,
-            'modal-edit-spec': v.spec,
-            'modal-edit-line': v.line,
-            'modal-edit-prodDate': v.prodDate,
-            'modal-edit-title': v.title,
-
-            // 처리 결과 필드
-            'modal-reply-manager': v.replyManager || '',
-            'modal-reply-cost': v.cost || '',
-            'modal-reply-cause': v.replyCause || '',
-            'modal-reply-countermeasure': v.replyCountermeasure || '',
-            'modal-reply-evaluation': v.replyEvaluation || '',
-            'modal-reply-status': v.status || '접수'
-        };
-
-        for (const [fid, val] of Object.entries(fields)) {
-            const el = document.getElementById(fid);
-            if (el) el.value = val || '';
+        } else {
+            // fbKey, timestamp, time 등 다양한 조건으로 검색
+            log = monitoringLogs.find(l =>
+                (l.fbKey === editId) ||
+                (l.timestamp && l.timestamp.toString() === editId) ||
+                (new Date(l.time).getTime().toString() === editId)
+            );
         }
 
-        // 사진 미리보기 처리
-        const photoContainer = document.getElementById('modal-edit-photo-container');
-        const photoPreview = document.getElementById('modal-edit-photo-preview');
-        if (photoContainer && photoPreview) {
-            if (v.photo) {
-                photoPreview.src = v.photo;
-                photoContainer.style.display = 'block';
-            } else {
-                photoContainer.style.display = 'none';
-            }
+        if (log) {
+            idInput.value = editId;
+            dateInput.value = log.time.replace(' ', 'T').slice(0, 16);
+            locSelect.value = log.location;
+            document.getElementById('past-outdoor').value = log.outdoorTemp || (typeof log.outdoor === 'string' ? parseFloat(log.outdoor) : '');
+            document.getElementById('past-outdoor-humid').value = log.outdoorHum || "";
+            document.getElementById('past-steel').value = log.steel;
+            document.getElementById('past-indoor').value = log.temp;
+            document.getElementById('past-humid').value = log.humidity;
+            submitBtn.textContent = '수정완료';
         }
+    }
+    else {
+        // 등록 모드
+        idInput.value = '';
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localIso = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+        dateInput.value = localIso;
 
-        vocModal.style.display = 'flex';
-        // 방문객은 읽기 전용
-        vocModal.querySelectorAll('input, select, textarea').forEach(i => i.disabled = !isAdmin);
-        const saveBtn = document.getElementById('modal-voc-save-btn');
-        if (saveBtn) saveBtn.style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('past-outdoor').value = '';
+        document.getElementById('past-outdoor-humid').value = '';
+        document.getElementById('past-steel').value = '';
+        document.getElementById('past-indoor').value = '';
+        document.getElementById('past-humid').value = '';
+        submitBtn.textContent = '등록하기';
+    }
+    modal.style.display = 'block';
+}
+
+function closePastRecordModal() {
+    const modal = document.getElementById('past-record-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function savePastRecord() {
+    const editId = document.getElementById('past-record-id').value;
+    const dateStr = document.getElementById('past-date').value;
+    const location = document.getElementById('past-location').value;
+    const outdoor = parseFloat(document.getElementById('past-outdoor').value);
+    const outdoorHum = parseFloat(document.getElementById('past-outdoor-humid').value);
+    const steel = parseFloat(document.getElementById('past-steel').value);
+    const indoor = parseFloat(document.getElementById('past-indoor').value);
+    const humid = parseFloat(document.getElementById('past-humid').value);
+
+    if (!dateStr || isNaN(outdoor) || isNaN(steel) || isNaN(indoor) || isNaN(humid)) {
+        alert('모든 입력 항목을 정확히 작성해주세요.');
+        return;
+    }
+
+    const dpFixed = calculateDewPoint(indoor, humid);
+    const dp = parseFloat(dpFixed);
+
+    let risk = { label: '안전', class: 'status-safe' };
+    let reason = '정상 범위';
+
+    const tempDiff = parseFloat((steel - dp).toFixed(1));
+
+    if (tempDiff <= 2.0) {
+        risk = { label: '위험', class: 'status-danger' };
+        reason = '결로 발생 위험 (강판온도 ≤ 이슬점+2℃)';
+    } else if (tempDiff <= 5.0) {
+        risk = { label: '주의', class: 'status-caution' };
+        reason = '결로 주의 (강판온도 근접)';
+    }
+
+    // 수정 대상 찾기
+    const index = editId && !editId.startsWith('snap-') ? monitoringLogs.findIndex(l =>
+        (l.fbKey === editId) ||
+        (l.timestamp && l.timestamp.toString() === editId) ||
+        (new Date(l.time).getTime().toString() === editId)
+    ) : -1;
+
+    const originalTimestamp = index !== -1 ? (monitoringLogs[index].timestamp || Date.now()) : Date.now();
+
+    const newLog = {
+        time: dateStr.replace('T', ' ') + ':00',
+        location: location,
+        temp: indoor,
+        humidity: humid,
+        outdoor: `${outdoor}°C / ${isNaN(outdoorHum) ? '-' : outdoorHum}%`,
+        outdoorTemp: outdoor,
+        outdoorHum: isNaN(outdoorHum) ? 0 : outdoorHum,
+        steel: steel,
+        dp: dpFixed,
+        tempDiff: tempDiff,
+        risk: risk.label,
+        riskClass: risk.class,
+        riskReason: reason,
+        source: 'manual_history',
+        timestamp: editId && !editId.startsWith('snap-') ? originalTimestamp : Date.now()
     };
 
-    // --- VOC 신규 등록 및 수정 로직 복구 ---
-    if (vocForm) {
-        vocForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const photoFile = document.getElementById('voc-photo').files[0];
-            let photoUrl = null;
+    if (editId) {
+        // 수정
+        if (editId.startsWith('snap-')) {
+            const parts = editId.split('-');
+            if (parts.length >= 6) {
+                const date = `${parts[1]}-${parts[2]}-${parts[3]}`;
+                const slot = parts[4];
+                const loc = parts.slice(5).join('-');
 
-            if (photoFile) {
-                const ref = storage.ref(`complaints/${Date.now()}_${photoFile.name}`);
-                await ref.put(photoFile);
-                photoUrl = await ref.getDownloadURL();
-            }
+                if (allReports[date] && allReports[date][slot] && allReports[date][slot].snapshot[loc]) {
+                    // 전체 보고서의 외기 정보 업데이트 (해당 시간대 공통)
+                    allReports[date][slot].outdoor = {
+                        temp: outdoor,
+                        humidity: isNaN(outdoorHum) ? 0 : outdoorHum
+                    };
 
-            const vocData = {
-                category: document.getElementById('voc-category').value,
-                market: document.getElementById('voc-market').value,
-                receiptDate: document.getElementById('voc-receipt-date').value,
-                customer: document.getElementById('voc-customer').value,
-                manager: document.getElementById('voc-manager').value,
-                spec: document.getElementById('voc-spec').value,
-                color: document.getElementById('voc-color').value,
-                batch: document.getElementById('voc-batch').value,
-                line: document.getElementById('voc-line').value,
-                prodDate: document.getElementById('voc-prod-date').value,
-                deliveryQty: document.getElementById('voc-delivery-qty').value,
-                complaintQty: document.getElementById('voc-complaint-qty').value,
-                title: document.getElementById('voc-title').value,
-                description: document.getElementById('voc-desc').value,
-                photo: photoUrl,
-                status: '접수',
-                createdAt: new Date().toISOString()
-            };
+                    // 개별 스냅샷 데이터 업데이트
+                    const snap = allReports[date][slot].snapshot[loc];
+                    snap.steel = steel.toString();
+                    snap.dp = dpFixed;
+                    snap.temp = indoor.toString();
+                    snap.humidity = humid.toString();
+                    snap.tempDiff = (steel - dp).toFixed(1);
+                    snap.riskLabel = risk.label;
+                    snap.product = '결로 인지';
 
-            db.collection("complaints").add(vocData).then(() => {
-                alert('VOC가 성공적으로 접수되었습니다.');
-                vocForm.reset();
-                loadLocalComplaints();
-            }).catch(err => alert('오류 발생: ' + err.message));
-        };
-    }
-
-    const modalSaveBtn = document.getElementById('modal-voc-save-btn');
-    if (modalSaveBtn) {
-        modalSaveBtn.onclick = () => {
-            if (!currentVocId) return;
-            const updatedData = {
-                category: document.getElementById('modal-edit-category').value,
-                market: document.getElementById('modal-edit-market').value,
-                receiptDate: document.getElementById('modal-edit-receiptDate').value,
-                customer: document.getElementById('modal-edit-customer').value,
-                manager: document.getElementById('modal-edit-manager').value,
-                spec: document.getElementById('modal-edit-spec').value,
-                line: document.getElementById('modal-edit-line').value,
-                prodDate: document.getElementById('modal-edit-prodDate').value,
-                title: document.getElementById('modal-edit-title').value,
-
-                replyManager: document.getElementById('modal-reply-manager').value,
-                cost: document.getElementById('modal-reply-cost').value,
-                replyCause: document.getElementById('modal-reply-cause').value,
-                replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
-                replyEvaluation: document.getElementById('modal-reply-evaluation').value,
-                status: document.getElementById('modal-reply-status').value
-            };
-
-            db.collection("complaints").doc(currentVocId).update(updatedData).then(() => {
-                alert('변경 사항이 저장되었습니다.');
-                vocModal.style.display = 'none';
-                loadLocalComplaints();
-            }).catch(err => alert('저장 실패: ' + err.message));
-        };
-    }
-
-    window.deleteVoc = async (id) => {
-        if (!confirm('삭제하시겠습니까?')) return;
-        try {
-            const doc = await db.collection("complaints").doc(id).get();
-            const data = doc.data();
-            if (data && data.photo) {
-                try {
-                    const fileRef = storage.refFromURL(data.photo);
-                    await fileRef.delete();
-                } catch (e) { console.warn("VOC photo already deleted or error:", e); }
-            }
-            await db.collection("complaints").doc(id).delete();
-            loadLocalComplaints();
-        } catch (err) {
-            alert("삭제 실패: " + err.message);
-        }
-    };
-
-    function updateDashboard() {
-        if (!document.getElementById('dash-total-count')) return;
-        const total = localComplaints.length;
-        const pending = localComplaints.filter(v => v.status !== '완료').length;
-        const completeRate = total > 0 ? Math.round(((total - pending) / total) * 100) : 0;
-
-        document.getElementById('dash-total-count').textContent = total + " EA";
-        document.getElementById('dash-pending-count').textContent = pending + " EA";
-        document.getElementById('dash-completion-rate').textContent = completeRate + "%";
-
-        // 비용 통계 (임의 계산 logic)
-        const totalCost = localComplaints.reduce((acc, v) => acc + (parseInt(v.cost) || 0), 0);
-        document.getElementById('dash-total-cost').textContent = "₩" + totalCost.toLocaleString();
-
-        const lineMap = { 'CPL': 0, 'CRM': 0, 'CGL': 0, '1CCL': 0, '2CCL': 0, '3CCL': 0, 'SSCL': 0 };
-        localComplaints.forEach(v => { if (lineMap.hasOwnProperty(v.line)) lineMap[v.line]++; });
-
-        const ctx = document.getElementById('lineChart');
-        if (ctx && typeof Chart !== 'undefined') {
-            // ChartDataLabels 플러그인 등록
-            if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
-
-            if (lineChart) lineChart.destroy();
-            lineChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(lineMap),
-                    datasets: [{
-                        label: '발생 건수',
-                        data: Object.values(lineMap),
-                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                        borderColor: '#2563eb',
-                        borderWidth: 1,
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold', size: 12 },
-                            anchor: 'end',
-                            align: 'start',
-                            offset: 4,
-                            formatter: (val) => val > 0 ? val : ''
-                        }
-                    },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
-                }
-            });
-        }
-
-        // --- Category Doughnut Chart (클레임/컴플레인 비중) 구현 ---
-        const catCtx = document.getElementById('categoryChart');
-        if (catCtx && typeof Chart !== 'undefined') {
-            const catMap = { '클레임': 0, '컴플레인': 0 };
-            localComplaints.forEach(v => {
-                if (catMap.hasOwnProperty(v.category)) catMap[v.category]++;
-            });
-
-            if (catChart) catChart.destroy();
-            catChart = new Chart(catCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(catMap),
-                    datasets: [{
-                        data: Object.values(catMap),
-                        backgroundColor: ['#ef4444', '#f59e0b'], // 클레임(빨강), 컴플레인(노랑)
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { usePointStyle: true, padding: 20, font: { size: 12, weight: '700' } }
-                        },
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold', size: 13 },
-                            formatter: (val) => val > 0 ? val + "건" : ''
-                        }
+                    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                        const fbSlot = slot.replace(':', '');
+                        const updates = {};
+                        updates[`reports/${date}/${fbSlot}/outdoor`] = allReports[date][slot].outdoor;
+                        updates[`reports/${date}/${fbSlot}/snapshot/${loc}`] = snap;
+                        firebase.database().ref().update(updates);
+                    } else {
+                        localStorage.setItem('seah_all_reports', JSON.stringify(allReports));
                     }
                 }
-            });
-        }
+            }
+        } else {
+            let fbKey = null;
+            if (index !== -1) {
+                fbKey = monitoringLogs[index].fbKey;
+                monitoringLogs[index] = newLog;
+            }
 
-        // Recent Top 5 List
-        const recentList = document.getElementById('dash-recent-list');
-        if (recentList) {
-            recentList.innerHTML = localComplaints.slice(0, 5).map(v => `
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:12px; font-size:13px; font-weight:600; text-align:center;">${v.customer}</td>
-                    <td style="padding:12px; font-size:13px; color:#475569; text-align:center;">${v.title}</td>
-                    <td style="padding:12px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="padding:2px 8px; font-size:10px;">${v.status}</span></td>
-                    <td style="padding:12px; font-size:12px; color:#94a3b8; text-align:center;">${v.receiptDate}</td>
-                </tr>
-            `).join('');
-            if (localComplaints.length === 0) recentList.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">현황 없음</td></tr>';
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                if (fbKey || (editId && !editId.startsWith('snap-'))) {
+                    const keyToUse = fbKey || editId;
+                    firebase.database().ref(`logs/${keyToUse}`).set(newLog);
+                } else {
+                    firebase.database().ref('logs').push(newLog);
+                }
+            }
+        }
+    }
+    else {
+        // 신규
+        monitoringLogs.unshift(newLog);
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            firebase.database().ref('logs').push(newLog);
         }
     }
 
-    // --- [8. 수지별 품질 기준] ---
-    const resinQualityData = {
-        'RMP': { '색차': 'ΔE ≤ 1.0', '도막': 'Top 20±5μm, Back 5±2μm', '광택': '±10%', '연필경도': 'F ~ H 이상', 'MEK': '50회 이상', '굽힘': '3T ~ 5T', '내충격성': '500g*50cm (No Crack)' },
-        'HDP': { '색차': 'ΔE ≤ 0.8', '도막': 'Top 25±5μm', '광택': '±5%', '연필경도': 'H ~ 2H 이상', 'MEK': '100회 이상', '굽힘': '2T ~ 4T', '내후성': 'QUV 2,000hr 이상' },
-        'SMP': { '색차': 'ΔE ≤ 0.8', '도막': 'Top 20±5μm', '광택': '±7%', '연필경도': 'H 이상', 'MEK': '100회 이상', '굽힘': '3T ~ 5T', '가공성': '우수 (No Peeling)' },
-        'ADP': { '색차': 'ΔE ≤ 0.5', '도막': 'Top 25±10μm', '광택': '±5%', '연필경도': 'H ~ 2H', 'MEK': '100회 이상', '굽힘': '1T ~ 2T', '내식성': 'SST 1,000hr (No Blister)' },
-        'HBU': { '색차': 'ΔE ≤ 1.2', '도막': 'Top 35±5μm (고후도)', '광택': '10~30%', '연필경도': 'F ~ H', 'MEK': '50회 이상', '굽힘': '4T ~ 6T', '내마모성': '매우 우수' },
-        'SQP40': { '색차': 'ΔE ≤ 0.8', '도막': 'Top 40±5μm', '광택': '±10%', '연필경도': 'H 이상', 'MEK': '100회 이상', '굽힘': '3T ~ 5T', '보증기간': '15~20년' },
-        'PVDF': { '색차': 'ΔE ≤ 0.5', '도막': 'Top 25±5μm', '광택': '20~40%', '연필경도': 'F ~ H', 'MEK': '150회 이상', '굽힘': '0T ~ 2T', '내후성': '최상 (QUV 3,000hr)' },
-        'HPP': { '색차': 'ΔE ≤ 0.8', '도막': 'Top 25±5μm', '광택': '±5%', '연필경도': 'H 이상', 'MEK': '100회 이상', '굽힘': '2T ~ 4T', '용도': '고성능 건축 외장재' }
+    localStorage.setItem('seah_logs', JSON.stringify(monitoringLogs));
+    alert(editId ? '기록이 수정되었습니다.' : '과거 결로 기록이 등록되었습니다.');
+    closePastRecordModal();
+    updateCondensationHistory();
+}
+
+function editPastRecord(id) {
+    openPastRecordModal(id);
+}
+
+function deletePastRecord(id) {
+    if (!confirm('정말 이 기록을 삭제하시겠습니까?')) return;
+
+    if (id.startsWith('snap-')) {
+        // snap-YYYY-MM-DD-HH:mm-Location
+        const parts = id.split('-');
+        if (parts.length >= 6) {
+            const date = `${parts[1]}-${parts[2]}-${parts[3]}`;
+            const slot = parts[4];
+            const loc = parts.slice(5).join('-');
+
+            if (allReports[date] && allReports[date][slot] && allReports[date][slot].snapshot[loc]) {
+                allReports[date][slot].snapshot[loc].product = '양호';
+
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                    const fbSlot = slot.replace(':', '');
+                    firebase.database().ref(`reports/${date}/${fbSlot}/snapshot/${loc}/product`).set('양호')
+                        .then(() => {
+                            alert('기록이 삭제(상태 변경)되었습니다.');
+                            updateCondensationHistory();
+                        });
+                    return; // Firebase callback에서 처리
+                } else {
+                    localStorage.setItem('seah_all_reports', JSON.stringify(allReports));
+                }
+            }
+        }
+    } else {
+        const index = monitoringLogs.findIndex(l =>
+            (l.fbKey === id) ||
+            (l.timestamp && l.timestamp.toString() === id) ||
+            (new Date(l.time).getTime().toString() === id)
+        );
+        let fbKey = null;
+        if (index !== -1) {
+            fbKey = monitoringLogs[index].fbKey;
+            monitoringLogs.splice(index, 1);
+        }
+
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            const keyToRemove = fbKey || id;
+            if (keyToRemove && (fbKey || !id.startsWith('snap-'))) {
+                firebase.database().ref(`logs/${keyToRemove}`).remove()
+                    .then(() => {
+                        alert('기록이 삭제되었습니다.');
+                        updateCondensationHistory();
+                    })
+                    .catch(err => {
+                        console.error('Delete failed:', err);
+                        alert('삭제에 실패했습니다.');
+                    });
+                return;
+            }
+        }
+        localStorage.setItem('seah_logs', JSON.stringify(monitoringLogs));
+    }
+
+    alert('기록이 삭제되었습니다.');
+    updateCondensationHistory();
+}
+
+// 호환성 유지를 위한 더미 함수 (자동 업데이트 스케줄러에서 호출됨)
+function updateCurrentTime() {
+    // 이미 별도의 setInterval에서 처리 중이므로 비워둠
+}
+
+// 고도화된 결로 예측 알고리즘 (빅데이터 분석 및 Sudden Warming 반영)
+function determineFanHeaterOperationV2(minTemp, maxTemp, amRainProb, pmRainProb, humidity, prevMinTemp, historyData = []) {
+    const maxRainProb = Math.max(amRainProb, pmRainProb);
+    const currentTempDiff = Number((maxTemp - minTemp).toFixed(1));
+    const currentAvgHum = Number(humidity || 60);
+
+    // [핵심 로직] 기온 상승폭 분석 (전일 최저 vs 당일 최고)
+    const referenceMin = prevMinTemp !== undefined ? prevMinTemp : minTemp;
+    const tempJump = Number((maxTemp - referenceMin).toFixed(1));
+
+    let status = {
+        fan: false,
+        heater: false,
+        risk: '안전',
+        reason: '정상 범위'
     };
 
-    // --- [9. 강종 상세 정보 탭 시스템] ---
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const infoPanels = document.querySelectorAll('.info-panel');
-
-    tabBtns.forEach(btn => {
-        btn.onclick = () => {
-            const tabId = btn.getAttribute('data-tab');
-            if (!tabId) return;
-
-            // 버튼 상태 변경
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // 패널 표시 제어
-            infoPanels.forEach(p => {
-                p.classList.remove('active');
-                if (p.id === `panel-${tabId}`) p.classList.add('active');
-            });
-
-            // 상단으로 스크롤 방지 또는 부드러운 이동 (필요시)
-        };
-    });
-
-    const resinBtns = document.querySelectorAll('.resin-btn');
-    const resinCard = document.getElementById('resin-data-card');
-    const resinTbody = document.getElementById('resin-quality-tbody');
-    const resinTitle = document.getElementById('selected-resin-title');
-
-    resinBtns.forEach(btn => {
-        btn.onclick = () => {
-            const resin = btn.getAttribute('data-resin');
-            if (!resinQualityData[resin]) return alert('상세 데이터 준비 중입니다.');
-            resinBtns.forEach(b => b.classList.replace('btn-primary', 'btn-secondary'));
-            btn.classList.replace('btn-secondary', 'btn-primary');
-            resinTitle.textContent = `${resin} 품질 기준`;
-            resinCard.style.display = 'block';
-            resinTbody.innerHTML = Object.entries(resinQualityData[resin]).map(([k, v]) => `
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:14px; font-weight:700; color:#1e3a8a; background:#f8fafc; text-align:center;">${k}</td>
-                    <td style="padding:14px; color:#334155; text-align:center;">${v}</td>
-                </tr>`).join('');
-            resinCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        };
-    });
-
-    // --- [초기화] ---
-    function init() {
-        loadLocalFiles();
-        loadLocalComplaints();
-        loadLocalDefects();
+    // [빅데이터 매칭] 과거 발생 이력과 현재 예보 데이터 비교
+    let historyMatch = null;
+    if (historyData && historyData.length > 0) {
+        // 현재 최고 기온(공기 온도)과 습도가 과거 발생 당시와 유사한지 체크
+        historyMatch = historyData.find(h => {
+            const hTemp = parseFloat(h.outTemp);
+            const hHum = parseFloat(h.outHumid);
+            return !isNaN(hTemp) && !isNaN(hHum) &&
+                Math.abs(hTemp - maxTemp) <= 1.5 && // 온도 오차 1.5도 이내
+                Math.abs(hHum - currentAvgHum) <= 7;   // 습도 오차 7% 이내
+        });
     }
-    init();
-});
+
+    // 1. 위험 (Danger) 판정 기준
+    const isSuddenWarmingDanger = (tempJump >= 10 && currentAvgHum >= 65);
+    const isExtremeDiff = (currentTempDiff >= 12);
+    const isExtremeHumid = (currentAvgHum >= 85 && maxTemp > 0);
+    const isDeepFreeze = (maxTemp <= 3);
+
+    if ((isSuddenWarmingDanger || isExtremeDiff || isExtremeHumid || historyMatch) && !isDeepFreeze) {
+        status.risk = '위험';
+        status.heater = true;
+        status.fan = true;
+
+        if (historyMatch) status.reason = `과거 유사 사례(${historyMatch.outTemp}℃/${historyMatch.outHumid}%) 기반 위험 감지`;
+        else if (isSuddenWarmingDanger) status.reason = `급격한 기온 상승(${tempJump}℃↑) 위험`;
+        else if (isExtremeDiff) status.reason = `극심한 일교차(${currentTempDiff}℃↑) 위험`;
+        else status.reason = `초고습(${currentAvgHum}%↑) 환경 위험`;
+    }
+    // 2. 주의 (Caution) 판정 기준
+    else if (currentTempDiff >= 8 || currentAvgHum >= 80 || tempJump >= 8 || isDeepFreeze && maxRainProb >= 60) {
+        status.risk = '주의';
+        status.fan = true;
+
+        const isHeaterNeed = (tempJump >= 10 || currentAvgHum >= 80 || (tempJump >= 8 && currentAvgHum >= 80));
+        status.heater = isHeaterNeed;
+
+        if (isDeepFreeze && maxRainProb >= 60) status.reason = `한파 중 강수 예보 (고습도 주의)`;
+        else if (tempJump >= 8) status.reason = `기온 상승 추세(${tempJump}℃↑) 주의`;
+        else if (currentAvgHum >= 80) status.reason = `습도 증가(${currentAvgHum}%↑) 주의`;
+        else status.reason = `일교차(${currentTempDiff}℃) 주의 구간`;
+
+        if (isDeepFreeze && currentAvgHum < 75 && maxRainProb < 50) {
+            status.risk = '안전';
+            status.fan = false;
+            status.heater = false;
+            status.reason = '지속 한파 (안전)';
+        }
+    }
+
+    return status;
+}
