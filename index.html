@@ -3,1290 +3,527 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="세아씨엠 품질관리 시스템 - 강종별 규격 및 기계적 성질 관리">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="세아 품질조회">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>세아씨엠 품질 조회 시스템</title>
-    <link rel="icon" href="seah-logo.jpg" type="image/jpeg">
-    <link rel="apple-touch-icon" href="seah-logo.jpg">
-    <link rel="shortcut icon" href="seah-logo.jpg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="seah-logo.jpg">
+    <title>세아씨엠 결로 방지 모니터링 시스템</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#002d57">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker Registered'))
+                    .catch(err => console.log('Service Worker Failed', err));
+            });
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="admin-wrapper">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <img src="seah-logo.jpg" alt="SeAH Logo" class="logo-img">
-                    <div class="sidebar-title">
-                        <h1>세아씨엠 품질 조회 시스템</h1>
-                        <p>Quality Search System</p>
-                    </div>
+    <div class="container">
+        <header class="main-header">
+            <div class="header-left">
+                <div class="brand-box">
+                    <img src="seah-logo.jpg" alt="SeAH CM Logo" class="brand-logo">
                 </div>
+                <div class="header-v-divider"></div>
+                <h1>결로 지수 모니터링 시스템</h1>
             </div>
 
-            <div class="sidebar-nav">
-                <p class="nav-group-title">Main Menu</p>
-                <a href="#search-view" class="active nav-link">
-                    <span>🔍</span> 규격 조회
-                </a>
-                <a href="#resin-quality-view" class="nav-link">
-                    <span>🧪</span> 수지별 품질 기준
-                </a>
-                <a href="#dashboard-view" class="nav-link">
-                    <span>📊</span> 품질 분석 대시보드
-                </a>
-                <a href="#complaint-view" class="nav-link">
-                    <span>📢</span> 고객 불만 관리
-                </a>
-
-                <p class="nav-group-title" style="margin-top: 24px;">Support</p>
-                <a href="#defect-view" class="nav-link">
-                    <span>🖼️</span> 불량 유형 도감
-                </a>
-                <a href="#comparison-view" class="nav-link">
-                    <span>📊</span> 규격 비교
-                </a>
-                <a href="#info-view" class="nav-link">
-                    <span>📖</span> 강종 정보
-                </a>
-                <a href="#management-view" class="nav-link admin-only">
-                    <span>📋</span> 규격 데이터 관리
-                </a>
-                <a href="#settings-view" class="nav-link admin-only">
-                    <span>⚙️</span> 시스템 설정
-                </a>
+            <div class="header-right">
+                <nav class="header-nav">
+                    <button id="nav-dashboard" class="btn-nav active" onclick="toggleView('dashboard')">대시보드</button>
+                    <button id="nav-history" class="btn-nav" onclick="toggleView('history')">결로 이력</button>
+                    <button id="nav-forecast" class="btn-nav" onclick="toggleView('forecast')">주간 예측 ↗</button>
+                    <button id="admin-login-btn" class="btn-nav admin-hidden" onclick="openPwdModal()">관리자 로그인</button>
+                    <div class="admin-badge admin-only">관리자 모드</div>
+                    <button id="admin-logout-btn" class="btn-nav admin-only" onclick="logoutAdmin()">로그아웃</button>
+                    <button id="setting-btn" class="btn-nav admin-only" onclick="openSettingModal()"
+                        style="padding: 5px 10px;">⚙️</button>
+                </nav>
+                <div id="current-time">2024-01-07 13:00</div>
             </div>
+        </header>
 
-            <div class="sidebar-footer">
-                <p>© 2026 SeAH CM</p>
-                <p>품질경영팀 v2.0</p>
+        <!-- ... -->
+
+    </div>
+
+    <!-- Setting Modal -->
+    <div id="setting-modal" class="modal">
+        <div class="modal-content setting-modal-content">
+            <div class="modal-header">
+                <h2>환경 설정</h2>
+                <span class="close-btn" onclick="closeSettingModal()">&times;</span>
             </div>
-        </nav>
-
-        <!-- 모바일 사이드바 오버레이 -->
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-        <!-- Main Content Area -->
-        <main class="main-area">
-            <!-- Top Bar -->
-            <header class="top-bar">
-                <div style="display: flex; align-items: center;">
-                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="메뉴 열기">☰</button>
-                    <div class="breadcrumb">
-                        Dashboard / <span id="current-page">규격 조회</span>
-                    </div>
+            <div class="modal-body">
+                <div class="setting-group" style="text-align: center; padding: 20px 0;">
+                    <p>기상청 API 키 및 주요 시스템 설정은 <br><strong>Firebase 콘솔</strong>에서 직접 관리됩니다.</p>
+                    <small class="text-muted">보안을 위해 앱 내 수정 기능을 비활성화하였습니다.</small>
                 </div>
-                <div class="user-profile" id="admin-login-area">
-                    <button id="admin-login-btn" class="btn-secondary"
-                        style="margin-right: 15px; font-size: 13px; padding: 6px 12px;">
-                        <i class="fas fa-lock"></i> 관리자 로그인
-                    </button>
-                    <div class="user-info">
-                        <span class="user-name" id="display-user-name">방문객</span>
-                        <span class="user-role" id="display-user-role">Guest</span>
-                    </div>
-                    <div class="avatar" id="user-avatar"
-                        style="width: 36px; height: 36px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #64748b;">
-                        G</div>
+                <div class="setting-actions">
+                    <button class="btn-primary" onclick="closeSettingModal()">확인</button>
                 </div>
-            </header>
+            </div>
+        </div>
+    </div>
 
-            <!-- Admin Login Modal -->
-            <div id="admin-modal" class="modal" style="display: none;">
-                <div class="modal-content"
-                    style="max-width: 380px; padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
-                    <!-- 헤더 -->
-                    <div
-                        style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 24px; text-align: center;">
-                        <div
-                            style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center;">
-                            <span style="font-size: 28px;">🔐</span>
+
+    <div id="dashboard-view" class="view-content active">
+        <section class="dashboard-grid">
+            <!-- 상단 정보 영역 (위험도 + 날씨) -->
+            <div class="risk-weather-area">
+                <!-- 현재 결로 위험도 -->
+                <div class="card status-card" id="risk-indicator">
+                    <h3>현재 결로 위험도</h3>
+                    <div style="display: flex; align-items: center; justify-content: space-around; width: 100%;">
+                        <div style="text-align: center; flex: 1;">
+                            <div class="status-value" id="status-text">데이터 부족</div>
+                            <p id="risk-reason-text" class="status-reason"
+                                style="margin-top: 2px; font-size: 0.8rem; opacity: 0.9;">분석 대기 중</p>
                         </div>
-                        <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 700;">관리자 인증</h3>
-                        <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.8); font-size: 13px;">시스템 관리를 위해 비밀번호를
-                            입력하세요.</p>
-                    </div>
-                    <!-- 본문 -->
-                    <div style="padding: 28px;">
-                        <div class="form-field" style="margin-bottom: 16px;">
-                            <label for="admin-password"
-                                style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">비밀번호</label>
-                            <input type="password" id="admin-password" placeholder="••••" maxlength="4"
-                                inputmode="numeric" pattern="[0-9]*"
-                                style="width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 8px; transition: border-color 0.2s; box-sizing: border-box;"
-                                onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
+                        <div style="width: 1px; height: 50px; background: rgba(255,255,255,0.2); margin: 0 8px;"></div>
+                        <div class="metrics-row" style="display: flex; gap: 10px; flex: 1; justify-content: center;">
+                            <div class="metric-box" style="text-align: center;">
+                                <span
+                                    style="font-size: 0.8em; color: #ddd; display: block; margin-bottom: 2px;">이슬점</span>
+                                <strong id="dew-point-val" style="font-size: 1.25em; color: white;">--</strong>
+                            </div>
+                            <div class="metric-box" style="text-align: center;">
+                                <span
+                                    style="font-size: 0.8em; color: #ddd; display: block; margin-bottom: 2px;">온도차</span>
+                                <strong id="temp-diff-val" style="font-size: 1.25em; color: white;">--</strong>
+                            </div>
                         </div>
-                        <p id="admin-login-status"
-                            style="color: #ef4444; font-size: 13px; text-align: center; margin: 0 0 16px 0; display: none;">
-                            ⚠️ 비밀번호가 일치하지 않습니다.
-                        </p>
-                        <!-- 버튼 -->
-                        <div style="display: flex; gap: 12px;">
-                            <button type="button" id="cancel-admin-login" class="btn-secondary"
-                                style="flex: 1; padding: 14px; border-radius: 10px; font-weight: 600;">취소</button>
-                            <button type="button" id="confirm-admin-login" class="btn-primary"
-                                style="flex: 2; padding: 14px; border-radius: 10px; font-weight: 600; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">로그인</button>
+                    </div>
+                </div>
+
+                <!-- 날씨정보 -->
+                <div class="card weather-card">
+                    <h3>날씨정보</h3>
+                    <div class="weather-horizontal-wrap" style="justify-content: space-around; width: 100%;">
+                        <div style="display: flex; align-items: center; justify-content: center; flex: 1; gap: 15px;">
+                            <div class="weather-main">
+                                <div class="weather-value" id="outdoor-temp">--°C</div>
+                                <div class="weather-sub-value" id="outdoor-humidity">습도: --%</div>
+                                <p class="weather-loc">군산 세아씨엠</p>
+                            </div>
+                            <div id="weather-icon-container" class="weather-icon-display"></div>
+                        </div>
+                        <div style="width: 1px; height: 50px; background: rgba(0,0,0,0.1); margin: 0 8px;"></div>
+                        <div class="weather-forecast-grid" style="flex: 1; justify-content: center;">
+                            <div class="forecast-item">
+                                <span class="f-label">오전</span>
+                                <div class="f-data"><span class="f-sub-label">강수:</span><strong
+                                        id="weather-am-rain">--</strong></div>
+                                <div class="f-data"><span class="f-sub-label">확률:</span><span class="f-prob"
+                                        id="weather-am-prob">--%</span></div>
+                            </div>
+                            <div class="forecast-item">
+                                <span class="f-label">오후</span>
+                                <div class="f-data"><span class="f-sub-label">강수:</span><strong
+                                        id="weather-pm-rain">--</strong></div>
+                                <div class="f-data"><span class="f-sub-label">확률:</span><span class="f-prob"
+                                        id="weather-pm-prob">--%</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Page Content -->
-            <div class="content-padding">
-
-                <!-- 1. Search Section (Default View) -->
-                <section id="search-view" class="page-section">
-                    <div class="page-header" style="text-align: center;">
-                        <h2>강종 규격 조회</h2>
-                        <p>강종, 규격, 재질을 선택하여 상세 물성 정보를 조회합니다.</p>
-                    </div>
-
-                    <!-- Quick Stats (Optional aesthetic touch for internal tools) -->
-                    <div class="stats-grid" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                        <div class="stat-card">
-                            <span class="stat-label">조회 가능한 강종</span>
-                            <span class="stat-value">10 EA</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">등록된 규격</span>
-                            <span class="stat-value">4 Type</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">업데이트 일자</span>
-                            <span class="stat-value">2026-01-22</span>
+            <!-- 정기 점검 현황 -->
+            <div class="card report-status-card" style="grid-area: report;">
+                <div class="report-status-header">
+                    <h3>정기 점검 현황</h3>
+                    <input type="date" id="status-inspection-date" class="status-date-input">
+                </div>
+                <div class="report-slots">
+                    <div class="report-slot" id="slot-0700">
+                        <span class="slot-time">07:00</span>
+                        <span class="slot-status">미등록</span>
+                        <div class="slot-actions">
+                            <button id="edit-btn-0700" class="btn-mini btn-primary-mini">기록</button>
+                            <button id="view-btn-0700" class="btn-mini btn-secondary-mini" disabled>조회</button>
                         </div>
                     </div>
+                    <div class="report-slot" id="slot-1500">
+                        <span class="slot-time">15:00</span>
+                        <span class="slot-status">미등록</span>
+                        <div class="slot-actions">
+                            <button id="edit-btn-1500" class="btn-mini btn-primary-mini">기록</button>
+                            <button id="view-btn-1500" class="btn-mini btn-secondary-mini" disabled>조회</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="search-container" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                        <h3 class="section-title-line">
-                            🔎 조회 필터
-                            <span style="font-size: 12px; font-weight: 500; color: var(--danger); margin-left: auto;">
-                                * ASTM, EN 규격 품질경영팀 문의
-                            </span>
+            <!-- 위치별 최신 현황 -->
+            <div class="card location-summary-card" style="grid-area: main;">
+                <div class="location-summary-header">
+                    <div class="header-title">
+                        <h3>위치별 최신 현황 <span id="location-sync-time"
+                                style="font-size: 0.85rem; font-weight: normal; color: #666; margin-left: 8px;"></span>
                         </h3>
-                        <div class="search-form-grid">
-                            <div class="form-field">
-                                <label for="standard-type">1. 규격 (Standard)</label>
-                                <select id="standard-type">
-                                    <option value="">규격 선택</option>
-                                    <option value="KS">KS (한국산업표준)</option>
-                                    <option value="JIS">JIS (일본공업규격)</option>
-                                    <option value="ASTM">ASTM (미국재료시험협회)</option>
-                                    <option value="EN">EN (유럽표준)</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="specific-standard">2. 상세 규격 (Code)</label>
-                                <select id="specific-standard" disabled>
-                                    <option value="">규격을 먼저 선택하세요</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="steel-type">3. 제품군 (Steel Type)</label>
-                                <select id="steel-type" disabled>
-                                    <option value="">제품군 자동 선택</option>
-                                    <optgroup label="냉연 제품 (Cold Rolled / Pickled)">
-                                        <option value="CR">CR (냉연강판)</option>
-                                        <option value="FH">FH (Full Hard)</option>
-                                        <option value="PO">PO (산세강판)</option>
-                                    </optgroup>
-                                    <optgroup label="도금 제품 (Metallic Coated)">
-                                        <option value="GI">GI (용융아연도금)</option>
-                                        <option value="GL">GL (갈바륨)</option>
-                                        <option value="AL">AL (알루미늄도금)</option>
-                                        <option value="ZM">ZM (삼원계 도금)</option>
-                                    </optgroup>
-                                    <optgroup label="컬러도장 제품 (Color Coated)">
-                                        <option value="PPGI">PPGI (컬러아연도금)</option>
-                                        <option value="PPGL">PPGL (컬러갈바륨)</option>
-                                        <option value="PPAL">PPAL (컬러알루미늄)</option>
-                                        <option value="PPZM">PPZM (컬러삼원계)</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="grade-type">4. 재질 (Grade)</label>
-                                <select id="grade-type" disabled>
-                                    <option value="">재질 선택</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="coating-weight">5. 도금량 (Coating)</label>
-                                <select id="coating-weight" disabled>
-                                    <option value="">도금 선택</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="spec-thickness">두께 (Thickness)</label>
-                                <div class="input-with-unit">
-                                    <input type="number" id="spec-thickness" placeholder="0.00" step="0.01">
-                                    <span class="unit">mm</span>
-                                </div>
-                            </div>
-                            <div class="form-field">
-                                <label for="spec-width">폭 (Width)</label>
-                                <div class="input-with-unit">
-                                    <input type="number" id="spec-width" placeholder="0">
-                                    <span class="unit">mm</span>
-                                </div>
-                            </div>
-                            <button id="search-btn" class="btn-primary">데이터 조회</button>
-                        </div>
                     </div>
-                </section>
-
-                <!-- Results Table -->
-                <div id="results-card" class="results-card" style="display: none; margin: 0 auto; max-width: 1200px;">
-                    <div class="results-header-box">
-                        <h3 id="results-title">조회 결과</h3>
-                        <div class="badge-group" id="results-badges"></div>
-                    </div>
-
-                    <div class="table-section">
-                        <!-- Common: Mechanical Properties -->
-                        <h4 class="sub-title">⚙️ 기계적 성질 (Mechanical Properties)</h4>
-                        <table class="data-table">
-                            <thead id="mech-thead">
-                                <tr>
-                                    <th>항목</th>
-                                    <th>기호</th>
-                                    <th>기준치</th>
-                                    <th>단위</th>
-                                    <th>비고</th>
-                                </tr>
-                            </thead>
-                            <tbody id="mechanical-tbody"></tbody>
-                        </table>
-
-                        <!-- Non-Coated Specific: Chemical, Tolerance, Flatness -->
-                        <div id="non-coated-results">
-                            <h4 class="sub-title" style="margin-top: 32px;">🧪 화학 성분 (Chemical Composition)</h4>
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>원소</th>
-                                        <th>C</th>
-                                        <th>Mn</th>
-                                        <th>P</th>
-                                        <th>S</th>
-                                        <th>Si</th>
-                                        <th>Al</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="chemical-tbody"></tbody>
-                            </table>
-
-                            <h4 class="sub-title" style="margin-top: 32px;">📏 제품 허용차 및 평탈도</h4>
-                            <div class="coating-grid">
-                                <div class="info-box">
-                                    <span class="label">두께 허용차</span>
-                                    <span class="value" id="val-thickness">-</span>
-                                </div>
-                                <div class="info-box">
-                                    <span class="label">평탄도 기준</span>
-                                    <span class="value" id="val-flatness">-</span>
-                                </div>
+                    <div class="header-inputs admin-only">
+                        <div class="input-row-mini">
+                            <input type="date" id="report-date" class="mini-input-field">
+                            <select id="report-time" class="mini-input-field">
+                                <option value="07:00">07:00</option>
+                                <option value="15:00">15:00</option>
+                                <option value="실시간">실시간</option>
+                            </select>
+                            <div class="mini-input-wrap">
+                                <span class="mini-label">외온:</span>
+                                <input type="number" id="outdoor-temp-input" step="0.1"
+                                    class="mini-input-field weather-sync" style="width: 75px;">
                             </div>
-                        </div>
-
-                        <!-- Coated Specific: Resin Tests -->
-                        <div id="coated-results" style="display: none;">
-                            <h4 class="sub-title" style="margin-top: 32px;">🎨 도장 제품 품질 기준 (Resin Type Specs)</h4>
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>수지 종류</th>
-                                        <th>굽힘 시험 (Bending)</th>
-                                        <th>충격 시험 (Impact)</th>
-                                        <th>염수분무 (Salt Spray)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="coated-tbody">
-                                    <!-- Will be filled per grade/resin -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <h4 class="sub-title" style="margin-top: 32px;">🛡️ 도금 및 규격 정보</h4>
-                        <div class="coating-grid" id="coating-cards"></div>
-
-                        <div class="info-banner" id="standard-info"></div>
-                    </div>
-                </div>
-
-                <!-- 2. Comparison Section -->
-                <section id="comparison-view" class="page-section" style="display: none;">
-                    <div style="max-width: 1200px; margin: 0 auto;">
-                        <div class="page-header">
-                            <h2>규격별 비교</h2>
-                            <p>지역별 주요 규격의 특징을 비교 분석합니다.</p>
-                        </div>
-
-                        <div class="standard-grid">
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>KS</h3>
-                                    <span class="region-tag">🇰🇷</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>KS D 3506 (용융 아연 도금 강판 및 강대)</li>
-                                        <li>KS D 3770 (55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>KS D 3030 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                        <li>KS D 3520 (도장 용융 아연 도금 강판 및 강대)</li>
-                                        <li>KS D 3862 (도장 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>KS D 6711 (도장 알루미늄 도금 강판 및 강대)</li>
-                                        <li>KS D 3034 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>JIS</h3>
-                                    <span class="region-tag">🇯🇵</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>JIS G 3302 (용융 아연 도금 강판 및 강대)</li>
-                                        <li>JIS G 3321 (용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>JIS G 3323 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                        <li>JIS G 3312 (도장 용융 아연 도금 강판 및 강대)</li>
-                                        <li>JIS G 3322 (도장 용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>JIS H 4001 (알루미늄 및 알루미늄 합금 판)</li>
-                                        <li>JIS G 3318 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>ASTM</h3>
-                                    <span class="region-tag">🇺🇸</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>ASTM A653 (용융 아연 도금 또는 아연-철 합금 도금 강판)</li>
-                                        <li>ASTM A792 (용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>ASTM A1046 (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                        <li>ASTM A755 (도장 용융 금속 도금 강판)</li>
-                                        <li>ASTM A755 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>ASTM B209 (알루미늄 및 알루미늄 합금 판재)</li>
-                                        <li>ASTM A755 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>EN</h3>
-                                    <span class="region-tag">🇪🇺</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>EN 10346 (연속 용융 도금 강 평판 제품)</li>
-                                        <li>EN 10346:AZ (용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>EN 10346:ZM (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                        <li>EN 10169 (연속 유기 피복 강 평판 제품)</li>
-                                        <li>EN 10169 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>EN 1396 (알루미늄 및 알루미늄 합금 도장 코일 코팅 판)</li>
-                                        <li>EN 10169 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                    </ul>
-                                </div>
+                            <div class="mini-input-wrap">
+                                <span class="mini-label">외습:</span>
+                                <input type="number" id="outdoor-humidity-input" step="1"
+                                    class="mini-input-field weather-sync" style="width: 70px;">
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <section id="info-view" class="page-section" style="display: none;">
-                    <div style="max-width: 1000px; margin: 0 auto;">
-                        <div class="page-header">
-                            <h2>강종 상세 정보</h2>
-                            <p>생산 강종별 상세 특징 및 물성 가이드를 확인합니다.</p>
-                        </div>
-
-                        <div class="tab-container">
-                            <div class="tab-header">
-                                <button class="tab-btn active" data-tab="gi">GI</button>
-                                <button class="tab-btn" data-tab="gl">GL</button>
-                                <button class="tab-btn" data-tab="al">AL</button>
-                                <button class="tab-btn" data-tab="zm">ZM</button>
-                                <button class="tab-btn" data-tab="ppgi">PPGI</button>
-                                <button class="tab-btn" data-tab="ppgl">PPGL</button>
-                                <button class="tab-btn" data-tab="ppal">PPAL</button>
-                                <button class="tab-btn" data-tab="ppzm">PPZM</button>
-                            </div>
-                            <div class="tab-content">
-                                <!-- GI -->
-                                <div class="info-panel active" id="panel-gi">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>GI <small>용융아연도금강판</small></h3>
-                                            <p class="info-title-sub">Hot-Dip Galvanized Steel Sheet</p>
-                                            <p class="info-desc">냉연강판을 아연욕조에 통과시켜 아연도금층을 형성한 제품으로, 우수한 내식성과 경제성을 가집니다.
-                                            </p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 우수한 내식성</div>
-                                                <div class="feature-tag">✅ 경제적인 가격</div>
-                                                <div class="feature-tag">✅ 가공성 우수</div>
-                                                <div class="feature-tag">✅ 용접성 양호</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>건축 내외장재, 가전, 자동차</li>
-                                                <li>도금량: 60 ~ 450 g/m²</li>
-                                            </ul>
-                                            <span class="label">대표 물성 범위</span>
-                                            <span class="spec-highlight">Standard Grade</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- GL -->
-                                <div class="info-panel" id="panel-gl">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>GL <small>갈바륨강판</small></h3>
-                                            <p class="info-title-sub">Galvalume Steel Sheet (55% Al-Zn)</p>
-                                            <p class="info-desc">알루미늄 55% 함유 합금도금으로 GI 대비 3~6배 우수한 내식성을 제공합니다.</p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 탁월한 내식성</div>
-                                                <div class="feature-tag">✅ 미려한 외관</div>
-                                                <div class="feature-tag">✅ 우수한 내열성</div>
-                                                <div class="feature-tag">✅ 고반사성</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>지붕/벽체, 가전 내장, 열반사</li>
-                                                <li>도금량: 70 ~ 275 g/m²</li>
-                                            </ul>
-                                            <span class="label">내마모성 등급</span>
-                                            <span class="spec-highlight">High Durability</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- AL -->
-                                <div class="info-panel" id="panel-al">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>AL <small>알루미늄도금강판</small></h3>
-                                            <p class="info-title-sub">Aluminized Steel Sheet</p>
-                                            <p class="info-desc">고온 내산화성과 내열성이 뛰어나 자동차 배기계 등에 주로 사용됩니다.</p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 고온 내열성</div>
-                                                <div class="feature-tag">✅ 내산화성</div>
-                                                <div class="feature-tag">✅ 열반사 우수</div>
-                                                <div class="feature-tag">✅ 특수 용도</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>배기계, 오븐, 히터 부품</li>
-                                                <li>도금량: 40 ~ 120 g/m²</li>
-                                            </ul>
-                                            <span class="label">최대 가용 온도</span>
-                                            <span class="spec-highlight">600 ℃</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- ZM (삼원계) -->
-                                <div class="info-panel" id="panel-zm">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>ZM <small>삼원계 고내식 합금도금</small></h3>
-                                            <p class="info-title-sub">Zinc-Aluminum-Magnesium Alloy Coated</p>
-                                            <p class="info-desc">아연, 알루미늄, 마그네슘의 3원계 합금도금층을 형성하여 GI 대비 최대 10배 이상의 초고내식성을
-                                                제공합니다.</p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 초고내식성</div>
-                                                <div class="feature-tag">✅ 절단면 자기희생방식</div>
-                                                <div class="feature-tag">✅ 우수한 내스크래치성</div>
-                                                <div class="feature-tag">✅ 가공 후 강한 내구성</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>태양광 거치대, 축사, 해안가 인접 도로</li>
-                                                <li>도금량: 60 ~ 600 g/m²</li>
-                                            </ul>
-                                            <span class="label">내식성 등급</span>
-                                            <span class="spec-highlight">Ultra High Corrosion</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- PPGI -->
-                                <div class="info-panel" id="panel-ppgi">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>PPGI <small>컬러아연도금강판</small></h3>
-                                            <p class="info-title-sub">Prepainted Galvanized Steel Sheet</p>
-                                            <p class="info-desc">GI 강판 위에 정교한 컬러 도장을 입힌 제품으로, 우수한 내식성과 미려한 색상을 동시에
-                                                제공합니다.</p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 미려한 외관</div>
-                                                <div class="feature-tag">✅ 다양한 색상 구현</div>
-                                                <div class="feature-tag">✅ 가공성 및 밀착성</div>
-                                                <div class="feature-tag">✅ 경제적 내구성</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>샌드위치 판넬, 지붕재, 가전 외장</li>
-                                                <li>수지: PE, SMP, PVDF 등</li>
-                                            </ul>
-                                            <span class="label">대표 도막 두께</span>
-                                            <span class="spec-highlight">Top 20~25 μm</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- PPGL -->
-                                <div class="info-panel" id="panel-ppgl">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>PPGL <small>컬러갈바륨강판</small></h3>
-                                            <p class="info-title-sub">Prepainted Galvalume Steel Sheet</p>
-                                            <p class="info-desc">알루미늄-아연 합금도금(GL)의 강력한 내식성 위에 컬러 도장을 더해 장기 내구성이 매우
-                                                뛰어납니다.</p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 장기 고내식성</div>
-                                                <div class="feature-tag">✅ 내열성 및 반사율</div>
-                                                <div class="feature-tag">✅ 고급 건축 외장</div>
-                                                <div class="feature-tag">✅ 우수한 도막 밀착</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>공장 지붕, 벽체, 고급 주택</li>
-                                                <li>도금량: AZ70 ~ AZ150</li>
-                                            </ul>
-                                            <span class="label">권장 수지</span>
-                                            <span class="spec-highlight">PVDF / HDP</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- PPAL -->
-                                <div class="info-panel" id="panel-ppal">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>PPAL <small>컬러알루미늄판</small></h3>
-                                            <p class="info-title-sub">Prepainted Aluminum Sheet</p>
-                                            <p class="info-desc">알루미늄 판넬에 도장을 하여 무게가 가볍고 부식이 거의 없으며, 재활용이 가능한 친환경 소재입니다.
-                                            </p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 초경량성</div>
-                                                <div class="feature-tag">✅ 반영구적 내식성</div>
-                                                <div class="feature-tag">✅ 친환경 소재</div>
-                                                <div class="feature-tag">✅ 가공성 극대화</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>커튼월, 고급 로고, 천정재</li>
-                                                <li>합금: 3003, 3105 등</li>
-                                            </ul>
-                                            <span class="label">무게 대비 강성</span>
-                                            <span class="spec-highlight">Ultra Light</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- PPZM -->
-                                <div class="info-panel" id="panel-ppzm">
-                                    <div class="info-layout">
-                                        <div class="info-text">
-                                            <h3>PPZM <small>컬러삼원계강판</small></h3>
-                                            <p class="info-title-sub">Prepainted ZM Steel Sheet</p>
-                                            <p class="info-desc">삼원계 고내식 합금도금(ZM) 위에 컬러를 입혀, 가혹한 부식 환경에서도 최상의 성능을 발휘합니다.
-                                            </p>
-                                            <div class="info-feature-grid">
-                                                <div class="feature-tag">✅ 끝판왕 내식성</div>
-                                                <div class="feature-tag">✅ 절단면 내부식성</div>
-                                                <div class="feature-tag">✅ 특수 산업 시설</div>
-                                                <div class="feature-tag">✅ 장기 보증 가능</div>
-                                            </div>
-                                        </div>
-                                        <div class="info-spec-box">
-                                            <h4>주요 고시 정보</h4>
-                                            <ul>
-                                                <li>축사 시설, 화학 공장, 해안가</li>
-                                                <li>규격: KS D 3034</li>
-                                            </ul>
-                                            <span class="label">보증 수명</span>
-                                            <span class="spec-highlight">Extremely Long</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+                <div id="location-status-list" class="status-list"></div>
             </div>
-            </section>
 
-            <!-- Management View -->
-            <section id="management-view" class="page-section" style="display: none;">
-                <div style="max-width: 800px; margin: 0 auto;">
-                    <div class="page-header">
-                        <h2>규격 데이터 관리</h2>
-                        <p>현장의 품질 규격서 파일을 로컬 라이브러리에 등록하고 조회 데이터와 연동합니다.</p>
-                    </div>
-
-                    <div class="search-container">
-                        <div class="ai-analysis-box">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
-                                <span style="font-size: 20px;">📁</span>
-                                <h4 style="font-size: 16px; color: var(--primary);">규격 라이브러리 및 인식 엔진</h4>
-                            </div>
-
-                            <div class="search-form-grid admin-only"
-                                style="grid-template-columns: 1fr; gap: 15px; margin-bottom: 24px;">
-                                <div class="form-field">
-                                    <label>규격서 파일 등록 (PDF/이미지)</label>
-                                    <input type="file" id="spec-file" accept=".pdf,image/*" style="display: none;"
-                                        multiple>
-                                    <div id="drop-zone"
-                                        style="border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
-                                        <p style="color: var(--text-muted); margin-bottom: 10px;">파일을 마우스로 끌어다 놓거나
-                                            클릭하여
-                                            선택하세요.</p>
-                                        <button type="button" id="custom-file-upload-btn" class="btn-secondary">파일
-                                            선택</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="file-status-container"
-                                style="display: flex; flex-direction: column; gap: 12px; background: #f8fafc; padding: 20px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 5px;">
-                                    <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">📚 등록된
-                                        규격서
-                                        라이브러리</span>
-                                    <button type="button" id="clear-all-files-btn" class="admin-only"
-                                        style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline; font-weight: 600;">전체
-                                        삭제</button>
-                                </div>
-                                <div id="registered-file-list"
-                                    style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-                                    <!-- 파일 리스트가 여기에 동적으로 생성됩니다 -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="info-banner" style="margin-top: 24px;">
-                        <h5>💡 지능형 연동 안내</h5>
-                        <p>등록된 파일은 <strong>파일명 분석</strong>을 통해 자동으로 규격을 인식합니다. 인식된 파일은 '규격 조회' 시 실시간으로 참조 문서로 자동
-                            매칭됩니다.
-                        </p>
+            <!-- 점검 기록 히스토리 -->
+            <div class="card history-card" style="grid-area: history;">
+                <div class="card-header-column">
+                    <h3>점검 기록 히스토리</h3>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 0;">📅 날짜를 클릭하여 상세 이력을 조회하세요.</p>
+                    <div class="calendar-nav">
+                        <button onclick="changeMonth(-1)" class="btn-cal-nav">&lt;</button>
+                        <span id="calendar-month-year">2024년 1월</span>
+                        <button onclick="changeMonth(1)" class="btn-cal-nav">&gt;</button>
                     </div>
                 </div>
-            </section>
-
-            <!-- 4. Complaint Management View -->
-            <section id="complaint-view" class="page-section" style="display: none;">
-                <div class="page-header" style="text-align: center;">
-                    <h2>고객 불만 관리 (VOC)</h2>
-                    <p>본사/영업소의 고객 불만을 체계적으로 기록하고 처리 현황을 실시간으로 관리합니다.</p>
+                <div id="calendar-container" class="calendar-container">
+                    <!-- JS에서 동적 생성 -->
                 </div>
+            </div>
+        </section>
 
-                <!-- [Top] Detailed Registration Form -->
-                <div class="search-container" style="margin: 0 auto 24px auto; max-width: 1100px;">
-                    <h4 class="section-title-line">📝 VOC 상세 정보 접수</h4>
-                    <form id="voc-form" class="search-form-grid">
-                        <div class="form-field">
-                            <label>구분</label>
-                            <select id="voc-category">
-                                <option value="클레임">클레임 (Claim)</option>
-                                <option value="컴플레인">컴플레인 (Complain)</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>내수/수출</label>
-                            <select id="voc-market">
-                                <option value="내수">내수</option>
-                                <option value="수출">수출</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>불만 접수 일자</label>
-                            <input type="date" id="voc-receipt-date" required>
-                        </div>
-                        <div class="form-field">
-                            <label>고객사명</label>
-                            <input type="text" id="voc-customer" placeholder="고객사명" required>
-                        </div>
-                        <div class="form-field">
-                            <label>담당자명</label>
-                            <input type="text" id="voc-manager" placeholder="담당자 이름" required>
-                        </div>
-                        <div class="form-field">
-                            <label>제품 SPEC</label>
-                            <input type="text" id="voc-spec" placeholder="예: 0.5T x 1219W" required>
-                        </div>
-                        <div class="form-field">
-                            <label>색상명</label>
-                            <input type="text" id="voc-color" placeholder="Color Name">
-                        </div>
-                        <div class="form-field">
-                            <label>배치번호 (Batch)</label>
-                            <input type="text" id="voc-batch" placeholder="Lot No.">
-                        </div>
-                        <div class="form-field">
-                            <label>생산 라인</label>
-                            <select id="voc-line">
-                                <option value="CPL">CPL</option>
-                                <option value="CRM">CRM</option>
-                                <option value="CGL">CGL</option>
-                                <option value="1CCL">1CCL</option>
-                                <option value="2CCL">2CCL</option>
-                                <option value="3CCL">3CCL</option>
-                                <option value="SSCL">SSCL</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>생산 일자</label>
-                            <input type="date" id="voc-prod-date">
-                        </div>
-                        <div class="form-field">
-                            <label>납품 수량</label>
-                            <input type="text" id="voc-delivery-qty" placeholder="수량">
-                        </div>
-                        <div class="form-field">
-                            <label>불만 수량</label>
-                            <input type="text" id="voc-complaint-qty" placeholder="수량">
-                        </div>
-                        <div class="form-field" style="grid-column: span 2;">
-                            <label>불만명 (제목)</label>
-                            <input type="text" id="voc-title" placeholder="불만 사항 요약" required>
-                        </div>
-                        <div class="form-field" style="grid-column: span 1;">
-                            <label>현장 사진</label>
-                            <input type="file" id="voc-photo" accept="image/*">
-                        </div>
-                        <div class="form-field" style="grid-column: span 1; display: flex; align-items: flex-end;">
-                            <button type="submit" class="btn-primary" style="width: 100%; height: 42px;">VOC
-                                접수완료</button>
-                        </div>
-                        <div class="form-field" style="display:none;">
-                            <input type="hidden" id="voc-desc" value="상세내용없음">
-                        </div>
-                    </form>
-                </div>
-
-                <!-- [Bottom] VOC List Table -->
-                <div class="search-container" style="margin: 0 auto; max-width: 1100px;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h4 class="section-title-line" style="margin-bottom: 0;">📋 VOC 처리 대장</h4>
-                        <div style="font-size: 11px; color: var(--text-muted);">* 행을 클릭하면 상세 내용 및 조치 결과를 입력할 수 있습니다.
-                        </div>
-                    </div>
-
-                    <div class="table-container" style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
-                            <thead>
-                                <tr style="background: #f1f5f9; text-align: center;">
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 100px; text-align: center;">
-                                        구분</th>
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 125px; text-align: center; white-space: nowrap;">
-                                        접수일</th>
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 140px; text-align: center;">
-                                        고객사</th>
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 90px; text-align: center;">
-                                        라인</th>
-                                    <th style="padding: 12px; font-size: 13px; color: #475569; text-align: center;">불만명
-                                        (제목)</th>
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 90px; text-align: center;">
-                                        상태</th>
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 70px; text-align: center;">
-                                        관리</th>
-                                </tr>
-                            </thead>
-                            <tbody id="voc-list-body">
-                                <!-- VOC 데이터가 테이블 행으로 추가됩니다 -->
-                            </tbody>
-                        </table>
+        <!-- 로그 테이블 -->
+        <div class="log-section">
+            <div class="card">
+                <div class="log-header">
+                    <h3>모니터링 로그 (최근 5건)</h3>
+                    <div class="header-btns">
+                        <button id="view-all-logs-btn" class="btn-mini" onclick="viewAllLogs()">전체보기</button>
+                        <button id="clear-log-btn" class="btn-mini btn-danger admin-only">기록 삭제</button>
                     </div>
                 </div>
-
-                <!-- VOC 상세 및 답변 모달 (상세 보기용) -->
-                <div id="voc-modal"
-                    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-                    <div
-                        style="background: white; width: 90%; max-width: 600px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;">
-                        <div
-                            style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                            <h3 id="modal-voc-title" style="margin: 0; font-size: 18px; color: var(--text-main);">
-                                VOC
-                                상세보기</h3>
-                            <button onclick="document.getElementById('voc-modal').style.display='none'"
-                                style="background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;">✕</button>
-                        </div>
-                        <div style="padding: 24px; max-height: 80vh; overflow-y: auto;">
-                            <!-- 1. 접수 정보 수정 구역 -->
-                            <div id="modal-voc-receipt-section" style="margin-bottom: 30px;">
-                                <h4
-                                    style="margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-                                    <span>📝</span> 접수 정보 수정
-                                </h4>
-                                <div class="voc-modal-grid"
-                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                    <div class="form-field">
-                                        <label>구분</label>
-                                        <select id="modal-edit-category">
-                                            <option value="클레임">클레임 (Claim)</option>
-                                            <option value="컴플레인">컴플레인 (Complain)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label>내수/수출</label>
-                                        <select id="modal-edit-market">
-                                            <option value="내수">내수</option>
-                                            <option value="수출">수출</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label>접수일</label>
-                                        <input type="date" id="modal-edit-receiptDate">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>고객사명</label>
-                                        <input type="text" id="modal-edit-customer">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>담당자</label>
-                                        <input type="text" id="modal-edit-manager">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>제품 SPEC</label>
-                                        <input type="text" id="modal-edit-spec">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>생산라인</label>
-                                        <select id="modal-edit-line">
-                                            <option value="CPL">CPL</option>
-                                            <option value="CRM">CRM</option>
-                                            <option value="CGL">CGL</option>
-                                            <option value="1CCL">1CCL</option>
-                                            <option value="2CCL">2CCL</option>
-                                            <option value="3CCL">3CCL</option>
-                                            <option value="SSCL">SSCL</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label>생산일자</label>
-                                        <input type="date" id="modal-edit-prodDate">
-                                    </div>
-                                </div>
-                                <div class="form-field" style="margin-top: 12px;">
-                                    <label>불만명 (제목)</label>
-                                    <input type="text" id="modal-edit-title">
-                                </div>
-                                <div id="modal-edit-photo-container" style="margin-top: 12px; display: none;">
-                                    <label>현장 사진</label>
-                                    <img id="modal-edit-photo-preview" src=""
-                                        style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 5px; cursor: pointer;"
-                                        onclick="window.open(this.src)">
-                                </div>
-                            </div>
-
-                            <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 24px 0;">
-
-                            <!-- 2. 품질팀 조치 결과 구역 -->
-                            <div id="modal-voc-action-box">
-                                <h4
-                                    style="margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-                                    <span>🛠️</span> 품질팀 분석 및 처리 결과
-                                </h4>
-                                <div class="voc-modal-grid"
-                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-                                    <div class="form-field">
-                                        <label>품질 담당자명</label>
-                                        <input type="text" id="modal-reply-manager" placeholder="담당자 성함">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>예상 손실 비용</label>
-                                        <input type="text" id="modal-reply-cost" placeholder="예: 500,000원">
-                                    </div>
-                                </div>
-                                <div class="form-field" style="margin-bottom: 12px;">
-                                    <label>근본(예상) 원인</label>
-                                    <textarea id="modal-reply-cause" rows="2" placeholder="원인 분석 내용"></textarea>
-                                </div>
-                                <div class="form-field" style="margin-bottom: 12px;">
-                                    <label>개선 대책</label>
-                                    <textarea id="modal-reply-countermeasure" rows="2"
-                                        placeholder="재발 방지 대책"></textarea>
-                                </div>
-                                <div class="form-field" style="margin-bottom: 12px;">
-                                    <label>유효성 평가 및 특이사항</label>
-                                    <textarea id="modal-reply-evaluation" rows="2"
-                                        placeholder="조치 결과 평가 및 특이사항"></textarea>
-                                </div>
-                                <div class="form-field" style="margin-bottom: 20px;">
-                                    <label>최종 처리 상태</label>
-                                    <select id="modal-reply-status">
-                                        <option value="접수">접수 (Registered)</option>
-                                        <option value="진행">진행 중 (In Progress)</option>
-                                        <option value="완료">완료 (Closed)</option>
-                                    </select>
-                                </div>
-                                <button id="modal-voc-save-btn" class="btn-primary"
-                                    style="width: 100%; height: 45px; font-weight: 700; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">모든
-                                    변경 내용 저장하기</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>일시</th>
+                                <th>위치</th>
+                                <th>외온</th>
+                                <th>외습</th>
+                                <th>내온</th>
+                                <th>내습</th>
+                                <th>이슬점</th>
+                                <th>소재</th>
+                                <th>온도차</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-body">
+                            <!-- Logs populated by JS -->
+                        </tbody>
+                    </table>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- 6. Quality Analysis Dashboard View -->
-            <section id="dashboard-view" class="page-section" style="display: none;">
-                <div class="page-header" style="text-align: center;">
-                    <h2>품질 분석 대시보드 (Quality Dashboard)</h2>
-                    <p>등록된 VOC 데이터를 분석하여 주요 품질 지표 및 실시간 현황을 시각화합니다.</p>
+        <!-- NEW: Full Log History Modal -->
+        <div id="log-modal" class="modal">
+            <div class="modal-content full-modal">
+                <div class="modal-header">
+                    <h2 id="log-modal-title">전체 모니터링 로그 분석</h2>
+                    <span class="close-btn" onclick="closeLogModal()">&times;</span>
                 </div>
-
-                <!-- [Row 1] Summary Widgets -->
-                <div class="stats-grid" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                    <div class="stat-card" style="border-top: 4px solid var(--primary);">
-                        <span class="stat-label">총 VOC 발생건수</span>
-                        <span id="dash-total-count" class="stat-value">0 EA</span>
-                    </div>
-                    <div class="stat-card" style="border-top: 4px solid var(--warning);">
-                        <span class="stat-label">미처리(접수/진행)</span>
-                        <span id="dash-pending-count" class="stat-value">0 EA</span>
-                    </div>
-                    <div class="stat-card" style="border-top: 4px solid var(--success);">
-                        <span class="stat-label">조치 완료율</span>
-                        <span id="dash-completion-rate" class="stat-value">0%</span>
-                    </div>
-                    <div class="stat-card" style="border-top: 4px solid var(--danger);">
-                        <span class="stat-label">총 예상 손실 비용</span>
-                        <span id="dash-total-cost" class="stat-value">₩0</span>
-                    </div>
-                </div>
-
-                <!-- [Row 2] Visual Analytics with Chart.js -->
-                <div class="dashboard-charts-grid"
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin: 0 auto 32px auto; max-width: 1200px;">
-                    <!-- Line Performance Bar Chart -->
-                    <div class="search-container" style="margin-bottom: 0; text-align: center;">
-                        <h4 class="section-title-line" style="text-align: center;">🏭 생산 라인별 발생 현황</h4>
-                        <div style="height: 280px; padding: 10px 0;">
-                            <canvas id="lineChart"></canvas>
-                        </div>
-                    </div>
-                    <!-- Category Doughnut Chart -->
-                    <div class="search-container" style="margin-bottom: 0; text-align: center;">
-                        <h4 class="section-title-line" style="text-align: center;">⚖️ 클레임/컴플레인 비중</h4>
-                        <div style="height: 280px; display: flex; align-items: center; justify-content: center;">
-                            <canvas id="categoryChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- [Row 3] Recent High Priority -->
-                <div class="search-container" style="margin: 0 auto; max-width: 1200px; text-align: center;">
-                    <h4 class="section-title-line" style="text-align: center;">⏱️ 최근 주요 발생 내역 (Top 5)</h4>
+                <div class="modal-body">
                     <div class="table-container">
-                        <table style="width: 100%; border-collapse: collapse;">
+                        <table>
                             <thead>
-                                <tr style="background: #f8fafc; text-align: center;">
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">고객사
-                                    </th>
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">불만명
-                                    </th>
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">상태
-                                    </th>
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">발생일
-                                    </th>
+                                <tr>
+                                    <th>일시</th>
+                                    <th>위치</th>
+                                    <th>외온</th>
+                                    <th>외습</th>
+                                    <th>내온</th>
+                                    <th>내습</th>
+                                    <th>이슬점</th>
+                                    <th>소재</th>
+                                    <th>온도차</th>
+                                    <th>상태</th>
                                 </tr>
                             </thead>
-                            <tbody id="dash-recent-list">
-                                <!-- Recent items injected here -->
-                            </tbody>
+                            <tbody id="full-log-body"></tbody>
                         </table>
                     </div>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <!-- 5. Resin Quality Standard View -->
-            <section id="resin-quality-view" class="page-section" style="display: none;">
-                <div class="page-header" style="text-align: center;">
-                    <h2>수지별 품질 기준 (Resin Quality Standard)</h2>
-                    <p>도료별(RMP, HDP 등) 표준 품질 항목 및 검사 기준치를 확인합니다.</p>
+        <!-- Report Details Modal -->
+        <div id="report-modal" class="modal">
+            <div class="modal-content full-modal">
+                <div class="modal-header">
+                    <h2 id="modal-title">점검 상세 기록</h2>
+                    <span class="close-btn" onclick="closeModal()">&times;</span>
                 </div>
-
-                <div class="search-container" style="margin: 0 auto 24px auto; max-width: 1000px; text-align: center;">
-                    <h4 class="section-title-line" style="text-align: center;">🎨 수지(제품) 선택</h4>
-                    <div id="resin-select-buttons" class="resin-grid" style="justify-content: center;">
-                        <!-- Buttons will be generated by app.js -->
-                        <button class="btn-secondary resin-btn" data-resin="RMP">RMP</button>
-                        <button class="btn-secondary resin-btn" data-resin="HDP">HDP</button>
-                        <button class="btn-secondary resin-btn" data-resin="SMP">SMP</button>
-                        <button class="btn-secondary resin-btn" data-resin="ADP">ADP</button>
-                        <button class="btn-secondary resin-btn" data-resin="HBU">HBU</button>
-                        <button class="btn-secondary resin-btn" data-resin="SQP40">SQP40</button>
-                        <button class="btn-secondary resin-btn" data-resin="PVDF">PVDF</button>
-                        <button class="btn-secondary resin-btn" data-resin="HPP">HPP</button>
-                    </div>
-                </div>
-
-                <div id="resin-data-card" class="search-container"
-                    style="display: none; margin: 0 auto; max-width: 1000px; text-align: center;">
-                    <div
-                        style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;">
-                        <h3 id="selected-resin-title" style="margin: 0; color: var(--primary);">RMP 품질 기준</h3>
-                        <span class="badge badge-blue">표준 규격</span>
-                    </div>
-
+                <div class="modal-body">
                     <div class="table-container">
-                        <table style="width: 100%; border-collapse: collapse;">
+                        <table>
                             <thead>
-                                <tr style="background: #f1f5f9; text-align: center;">
-                                    <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 200px; text-align: center;">
-                                        품질 항목 (Criteria)</th>
-                                    <th style="padding: 12px; font-size: 13px; color: #475569; text-align: center;">검사
-                                        기준 및 규격</th>
+                                <tr>
+                                    <th>위치</th>
+                                    <th>시간</th>
+                                    <th>외온</th>
+                                    <th>외습</th>
+                                    <th>내온</th>
+                                    <th>내습</th>
+                                    <th>이슬점</th>
+                                    <th>소재</th>
+                                    <th>온도차</th>
+                                    <th>GATE</th>
+                                    <th>포장</th>
+                                    <th>제품상태</th>
+                                    <th>위험도</th>
                                 </tr>
                             </thead>
-                            <tbody id="resin-quality-tbody">
-                                <!-- Data rows injected here -->
-                            </tbody>
+                            <tbody id="modal-table-body"></tbody>
                         </table>
                     </div>
                 </div>
-            </section>
-
-            <!-- 7. Defect Encyclopedia View -->
-            <section id="defect-view" class="page-section" style="display: none;">
-                <div class="page-header" style="text-align: center; position: relative;">
-                    <h2>불량 유형 도감 (Defect Encyclopedia)</h2>
-                    <p>도금 및 컬러강판 생산 및 과정에서 발생하는 주요 불량 유형과 판정 기준을 확인합니다.</p>
-                    <button id="add-defect-btn" class="btn-primary admin-only"
-                        style="position: absolute; right: 20px; bottom: 0; width: auto; padding: 10px 20px;">
-                        <span>➕</span> 신규 불량 등록
-                    </button>
-                </div>
-
-                <div class="search-container" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                    <div class="standard-grid" id="defect-grid">
-                        <!-- Dynamic Defect Cards rendered by app.js -->
-                    </div>
-                </div>
-
-                <!-- Defect Manage Modal -->
-                <div id="defect-modal" class="modal"
-                    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
-                    <div class="modal-content"
-                        style="width:90%; max-width:480px; background:white; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:85vh; overflow-y:auto;">
-                        <!-- Modal Header -->
-                        <div
-                            style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
-                            <h3 id="defect-modal-title" style="margin:0; color:white; font-size:18px; font-weight:600;">
-                                📷 불량 유형 등록</h3>
-                            <span onclick="document.getElementById('defect-modal').style.display='none'"
-                                style="color:white; font-size:24px; cursor:pointer; opacity:0.8; transition:opacity 0.2s;"
-                                onmouseover="this.style.opacity='1'"
-                                onmouseout="this.style.opacity='0.8'">&times;</span>
-                        </div>
-                        <!-- Modal Body -->
-                        <form id="defect-form" style="padding:24px;">
-                            <input type="hidden" id="defect-id">
-                            <!-- 불량명 -->
-                            <div style="margin-bottom:16px;">
-                                <label
-                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">불량명</label>
-                                <input type="text" id="defect-title" placeholder="예: 흑청/백청/적청" required
-                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.2s; box-sizing:border-box;"
-                                    onfocus="this.style.borderColor='#3b82f6'"
-                                    onblur="this.style.borderColor='#e5e7eb'">
-                            </div>
-                            <!-- 사진 업로드 -->
-                            <div style="margin-bottom:16px;">
-                                <label
-                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">불량
-                                    사진</label>
-                                <input type="file" id="defect-photo" accept="image/*"
-                                    style="width:100%; padding:10px; border:1px dashed #d1d5db; border-radius:8px; font-size:13px; background:#f9fafb; cursor:pointer; box-sizing:border-box;">
-                                <div id="defect-photo-preview"
-                                    style="margin-top:10px; display:none; text-align:center;">
-                                    <img id="defect-preview-img" src=""
-                                        style="width:120px; height:120px; object-fit:cover; border-radius:8px; border:2px solid #e5e7eb;">
-                                </div>
-                            </div>
-                            <!-- 예상 원인 -->
-                            <div style="margin-bottom:16px;">
-                                <label
-                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">예상
-                                    원인</label>
-                                <textarea id="defect-reason" rows="2" placeholder="주요 발생 원인 입력" required
-                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                    onfocus="this.style.borderColor='#3b82f6'"
-                                    onblur="this.style.borderColor='#e5e7eb'"></textarea>
-                            </div>
-                            <!-- 내부 검토 항목 -->
-                            <div style="margin-bottom:16px;">
-                                <label
-                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">내부
-                                    검토 항목 <span style="font-weight:400; color:#6b7280;">(생산)</span></label>
-                                <textarea id="defect-internal" rows="3" placeholder="생산 현장 검토 항목 입력" required
-                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                    onfocus="this.style.borderColor='#3b82f6'"
-                                    onblur="this.style.borderColor='#e5e7eb'"></textarea>
-                            </div>
-                            <!-- 외부 검토 항목 -->
-                            <div style="margin-bottom:20px;">
-                                <label
-                                    style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">외부
-                                    검토 항목 <span style="font-weight:400; color:#6b7280;">(영업)</span></label>
-                                <textarea id="defect-external" rows="2" placeholder="영업/고객사 측 검토 항목 입력" required
-                                    style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                    onfocus="this.style.borderColor='#3b82f6'"
-                                    onblur="this.style.borderColor='#e5e7eb'"></textarea>
-                            </div>
-                            <!-- 버튼 -->
-                            <div
-                                style="display:flex; gap:12px; justify-content:flex-end; padding-top:8px; border-top:1px solid #f3f4f6;">
-                                <button type="button"
-                                    onclick="document.getElementById('defect-modal').style.display='none'"
-                                    style="padding:10px 20px; border:1px solid #d1d5db; background:white; color:#374151; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; transition:background 0.2s;"
-                                    onmouseover="this.style.background='#f9fafb'"
-                                    onmouseout="this.style.background='white'">취소</button>
-                                <button type="submit"
-                                    style="padding:10px 24px; border:none; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity 0.2s;"
-                                    onmouseover="this.style.opacity='0.9'"
-                                    onmouseout="this.style.opacity='1'">저장하기</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </section>
-
-
-            <!-- Settings View -->
-            <section id="settings-view" class="page-section" style="display: none;">
-                <div class="page-header">
-                    <h2>시스템 설정</h2>
-                    <p>사용자 환경 및 시스템 운영 정책을 설정합니다.</p>
-                </div>
-
-                <div class="settings-grid"
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
-                    <!-- UI & Display Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">🎨 인터페이스 및 표시</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field"
-                                style="flex-direction: row; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <label style="margin-bottom: 0;">다크 모드 적용</label>
-                                    <p style="font-size: 11px; color: var(--text-muted);">시스템 테마를 어둡게 변경합니다.</p>
-                                </div>
-                                <input type="checkbox" id="dark-mode-toggle"
-                                    style="width: 20px; height: 20px; cursor: pointer;">
-                            </div>
-                            <div class="form-field">
-                                <label>기본 표시 단위</label>
-                                <select id="setting-unit">
-                                    <option value="Metric">Metric (MPa, g/m², mm)</option>
-                                    <option value="Imperial">Imperial (ksi, oz/ft², in)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Data & Search Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">🔍 데이터 및 조회 정책</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field">
-                                <label>기본 우선 규격</label>
-                                <select id="setting-default-standard">
-                                    <option value="KS">KS (한국산업표준)</option>
-                                    <option value="JIS">JIS (일본공업규격)</option>
-                                    <option value="ASTM">ASTM (미국재료시험협회)</option>
-                                </select>
-                            </div>
-                            <div class="form-field"
-                                style="flex-direction: row; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <label style="margin-bottom: 0;">조회 이력 자동 저장</label>
-                                    <p style="font-size: 11px; color: var(--text-muted);">최근 검색한 10개의 강종을 로컬에 저장합니다.
-                                    </p>
-                                </div>
-                                <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- User Profile Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">👤 계정 및 보안</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field">
-                                <label>현재 사용자</label>
-                                <p style="font-size: 14px; font-weight: 600; color: var(--primary);">품질경영팀 관리자
-                                    (admin_seah)</p>
-                            </div>
-                            <div class="form-field">
-                                <label>권한 등급</label>
-                                <span class="badge badge-orange" style="width: fit-content;">System
-                                    Administrator</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn-secondary" style="width: 120px;">초기화</button>
-                    <button class="btn-primary" id="save-settings-btn" style="width: 120px;">설정 저장</button>
-                </div>
-            </section>
-
-    </div>
-    </main>
+            </div>
+        </div>
     </div>
 
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="firebase-config.js"></script>
+    <!-- Password Prompt Modal -->
+    <div id="pwd-modal" class="pwd-modal">
+        <div class="pwd-modal-content">
+            <h3>관리자 인증</h3>
+            <p>관리자 암호를 입력해주세요.</p>
+            <input type="tel" id="admin-pwd-input" class="pwd-input" placeholder="****" inputmode="numeric"
+                pattern="[0-9]*" maxlength="4" autocomplete="one-time-code">
+            <div class="pwd-btns">
+                <button class="btn-cancel" onclick="closePwdModal()">취소</button>
+                <button class="btn-login" onclick="loginAdmin()">확인</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Config and Logic -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <div id="forecast-view" class="view-content">
+        <section class="forecast-container">
+            <div class="forecast-header">
+                <div>
+                    <h2>차주 결로 발생 예측 (7일 예보)</h2>
+                    <p class="text-muted">기상청 단기/중기 예보 및 군산 세아씨엠 지역 데이터를 기반으로 한 예측입니다.</p>
+                </div>
+                <button onclick="refreshWeeklyForecast()" class="btn-refresh" title="최신 데이터 새로고침">
+                    🔄 새로고침
+                </button>
+            </div>
+
+            <div class="forecast-summary-card card mt-md">
+                <div class="summary-icon">💡</div>
+                <div class="summary-text">
+                    <h4>주간 관리 가이드</h4>
+                    <p id="weekly-management-guide">데이터를 분석 중입니다...</p>
+                </div>
+            </div>
+
+            <div id="weekly-forecast-grid" class="weekly-forecast-grid mt-lg">
+                <!-- JS에서 7일간의 예측 카드를 생성합니다 -->
+            </div>
+
+            <!-- 당일 시간별 습도 예보 -->
+            <div class="hourly-humidity-card card mt-lg">
+                <div class="card-header-flex"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <h4>💧 시간별 습도 예보 <span id="hourly-update-time"></span></h4>
+                    <input type="date" id="hourly-forecast-date" class="status-date-input" style="width: auto;">
+                </div>
+                <p class="text-muted" style="margin-bottom: 12px; font-size: 0.85rem;">기상청 단기예보 기준 (1시간 단위)</p>
+                <div id="hourly-humidity-grid" class="hourly-humidity-grid">
+                    <div class="hourly-loading">데이터를 불러오는 중...</div>
+                </div>
+            </div>
+
+            <div class="equipment-guide-card card mt-lg">
+                <h4>🛠️ 설비 가동 기준 안내</h4>
+                <div class="guide-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="guide-item guide-heater">
+                        <div class="guide-header">
+                            <span class="guide-icon">🔥</span>
+                            <strong>열풍기 (강판 예열)</strong>
+                        </div>
+                        <p class="guide-condition">전일대비 기온상승 <strong>8~10℃↑</strong><br>또는 습도 <strong>80%↑</strong></p>
+                        <small>목적: 따뜻한 공기 유입 전 강판 온도 선제적 상승</small>
+                    </div>
+                    <div class="guide-item guide-fan">
+                        <div class="guide-header">
+                            <span class="guide-icon">🌀</span>
+                            <strong>배풍기 (습기 제거)</strong>
+                        </div>
+                        <p class="guide-condition">기온 상승폭 <strong>8℃ 이상</strong><br>또는 습도 <strong>80% 이상</strong></p>
+                        <small>목적: 내부 정체 습기 제거 및 외부 공기 순환</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 결로 이력 뷰 -->
+    <div id="history-view" class="view-content">
+        <section class="card full-width">
+            <div class="forecast-header">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2>🚨 결로 발생 분석 및 이력</h2>
+                        <button onclick="openPastRecordModal()" class="btn-nav admin-only"
+                            style="background: var(--seah-orange); color: white;">➕ 과거 이력 등록</button>
+                    </div>
+                    <p class="text-muted">축적된 과거 결로 발생 데이터를 토대로 주간 예보의 정확도를 높입니다.</p>
+                </div>
+
+                <!-- 결로 분석 상단 카드 -->
+                <div class="analysis-stats-container mt-md">
+                    <div class="stat-card stat-blue">
+                        <span class="stat-label">총 발생 횟수</span>
+                        <strong id="stat-total-count" class="stat-value-mini">0 건</strong>
+                        <span class="stat-sub-label">기준: 수동 등록 및 점검 결과 합계</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">주요 발생 외기온도</span>
+                        <strong id="stat-avg-outdoor-temp" class="stat-value-mini">- °C</strong>
+                        <span class="stat-sub-label">최빈 발생 구간 분석 결과</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">평균 발생 외기습도</span>
+                        <strong id="stat-avg-outdoor-hum" class="stat-value-mini">- %</strong>
+                        <span class="stat-sub-label">기상 예보 연동 시 주요 선행 지표</span>
+                    </div>
+                    <div class="stat-card stat-red">
+                        <span class="stat-label">평균 온도차 (소재-이슬점)</span>
+                        <strong id="stat-avg-diff" class="stat-value-mini">- °C</strong>
+                        <span class="stat-sub-label">발생 시 평균 이슬점 근접도</span>
+                    </div>
+                </div>
+                <div class="table-container mt-md">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>발생일시</th>
+                                <th>위치</th>
+                                <th title="외기온도">외온</th>
+                                <th title="외기습도">외습</th>
+                                <th title="실내온도">내온</th>
+                                <th title="실내습도">내습</th>
+                                <th>이슬점</th>
+                                <th title="소재온도">소재</th>
+                                <th>온도차</th>
+                                <th>발생원인</th>
+                                <th class="admin-only">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-log-body">
+                            <!-- JS Inject -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="history-pagination" class="pagination-container mt-md"></div>
+                <div id="history-message" class="text-center mt-md text-muted">데이터를 조회 중입니다...</div>
+        </section>
+    </div>
+    </div>
+
+    <!-- Past Record Modal -->
+    <div id="past-record-modal" class="modal">
+        <div class="modal-content setting-modal-content">
+            <div class="modal-header">
+                <h2>과거 결로 기록 등록</h2>
+                <span class="close-btn" onclick="closePastRecordModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted text-center mb-md">과거에 발생한 결로 데이터를 등록하여<br>예측 정확도를 높입니다.</p>
+                <div class="input-group">
+                    <label>발생 일시</label>
+                    <input type="datetime-local" id="past-date" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label>위치</label>
+                    <select id="past-location" class="input-field">
+                        <!-- JS로 채움 -->
+                    </select>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>당시 외기온도 (℃)</label>
+                        <input type="number" id="past-outdoor" class="input-field" step="0.1" placeholder="예: -2.5">
+                    </div>
+                    <div class="input-group">
+                        <label>당시 외기습도 (%)</label>
+                        <input type="number" id="past-outdoor-humid" class="input-field" step="1" placeholder="예: 85">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>강판온도 (℃)</label>
+                        <input type="number" id="past-steel" class="input-field" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>실내온도 (℃)</label>
+                        <input type="number" id="past-indoor" class="input-field" step="0.1">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>실내습도 (%)</label>
+                    <input type="number" id="past-humid" class="input-field" step="1">
+                </div>
+                <input type="hidden" id="past-record-id">
+                <div class="setting-actions">
+                    <button class="btn-secondary" onclick="closePastRecordModal()">취소</button>
+                    <button id="past-record-submit-btn" class="btn-primary" onclick="savePastRecord()">등록하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (호환 버전) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+
     <script>
-        // pdf.js 워커 설정
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        // Firebase 설정 (사용자 프로젝트: seahcm-dashboard)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAt26JyW_MNzj033K3BPX4pPRGUAUH2occ",
+            authDomain: "seahcm-dashboard.firebaseapp.com",
+            databaseURL: "https://seahcm-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "seahcm-dashboard",
+            storageBucket: "seahcm-dashboard.firebasestorage.app",
+            messagingSenderId: "892539664890",
+            appId: "1:892539664890:web:0a0a9275615175ba504c43",
+            measurementId: "G-Y1CQHT81G9"
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        firebase.analytics();
     </script>
-    <script src="data.js"></script>
+
+    <!-- 앱 로직 실행 -->
     <script src="app.js"></script>
 </body>
 
