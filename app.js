@@ -135,6 +135,42 @@ document.addEventListener('DOMContentLoaded', function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    window.openSecureViewer = (url) => {
+        const modal = document.getElementById('doc-viewer-modal');
+        const body = document.getElementById('viewer-body');
+        const iframe = document.getElementById('viewer-iframe');
+        const img = document.getElementById('viewer-img');
+        const shield = document.getElementById('viewer-shield');
+
+        if (!modal || !body || !iframe || !img) return;
+
+        // 1. 초기화
+        iframe.style.display = 'none';
+        img.style.display = 'none';
+        iframe.src = '';
+        img.src = '';
+        modal.style.display = 'flex';
+
+        const isPdf = url.includes('.pdf') || url.includes('blob:');
+
+        if (isPdf) {
+            iframe.src = url.includes('#toolbar=0') ? url : url + '#toolbar=0&navpanes=0';
+            iframe.style.display = 'block';
+            iframe.style.height = '100%';
+        } else {
+            img.src = url;
+            img.style.display = 'block';
+        }
+
+        if (shield) {
+            shield.style.height = '0';
+            shield.oncontextmenu = (e) => {
+                e.preventDefault();
+                alert('보안 정책에 따라 우클릭 및 저장이 제한됩니다.');
+            };
+        }
+    };
+
     navLinks.forEach(link => {
         link.onclick = (e) => {
             e.preventDefault();
@@ -241,13 +277,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function loadLocalFiles() {
         if (!db) return;
-        db.collection("specs").orderBy("uploadedAt", "desc").get().then(snap => {
+
+        // orderBy를 제거하여 필드가 없는 문서도 일단 모두 가져온 뒤 JS에서 정렬 (데이터 누락 방지)
+        db.collection("specs").get().then(snap => {
             localFiles = [];
-            snap.forEach(doc => localFiles.push({ id: doc.id, ...doc.data() }));
+            snap.forEach(doc => {
+                const data = doc.data();
+                localFiles.push({ id: doc.id, ...data });
+            });
+
+            // 업로드 시간 순으로 정렬 (필드 없을 경우 대비)
+            localFiles.sort((a, b) => {
+                const dateA = a.uploadedAt || a.createdAt || '';
+                const dateB = b.uploadedAt || b.createdAt || '';
+                return dateB.localeCompare(dateA);
+            });
+
             renderFileList();
             updateSearchOptions();
+            console.log("✅ 라이브러리 로드 완료:", localFiles.length, "건");
         }).catch(err => {
             console.error("Error loading specs:", err);
+            alert("라이브러리 로드 중 오류가 발생했습니다: " + err.message);
             if (registeredFileList) {
                 registeredFileList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger);">라이브러리 로드 실패: ${err.message}</div>`;
             }
@@ -260,8 +311,9 @@ document.addEventListener('DOMContentLoaded', function () {
         localFiles.forEach(f => {
             const div = document.createElement('div');
             div.className = 'file-list-item-new';
+            const viewUrl = f.content + (f.content.includes('.pdf') ? '#toolbar=0' : '');
             div.innerHTML = `
-                <div class="file-info-header" style="cursor:pointer;" onclick="window.open('${f.content}${f.content.includes('.pdf') ? '#toolbar=0' : ''}')">
+                <div class="file-info-header" style="cursor:pointer;" onclick="window.openSecureViewer('${viewUrl}')">
                     <div class="file-icon">📄</div>
                     <div class="file-meta">
                         <span class="file-name-link">${f.name}</span>
@@ -442,9 +494,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const file = localFiles.find(f => f.detectedSpec === spec);
             if (file) {
-                // PDF일 경우 툴바를 숨겨서 다운로드 어렵게 함
-                const viewUrl = file.content.includes('.pdf') ? file.content + '#toolbar=0' : file.content;
-                window.open(viewUrl);
+                window.openSecureViewer(file.content);
             } else {
                 alert('해당 규격으로 등록된 원본 문서가 없습니다. 라이브러리에 문서를 먼저 등록해주세요.');
             }
@@ -1104,4 +1154,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('dragstart', (e) => {
         if (e.target.tagName === 'IMG') e.preventDefault();
     });
+
+    // 4. 인쇄 이벤트 감지
+    window.onbeforeprint = (e) => {
+        if (!isAdmin) {
+            alert('보안 정책에 따라 인쇄 기능이 차단되었습니다.');
+            return false;
+        }
+    };
 });

@@ -2024,3 +2024,20 @@ body.admin-mode button.admin-only {
         grid-template-columns: 1fr;
     }
 }
+
+/* --- [보안: 인쇄 전면 차단] --- */
+@media print {
+    body {
+        display: none !important;
+    }
+
+    html::after {
+        content: "보안 정책에 따라 문서 인쇄가 전면 금지되어 있습니다. (Security Policy: No Printing)";
+        display: block;
+        text-align: center;
+        margin-top: 50px;
+        font-size: 20px;
+        font-weight: bold;
+        color: #ef4444;
+    }
+}

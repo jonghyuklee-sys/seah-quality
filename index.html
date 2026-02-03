@@ -1146,6 +1146,48 @@
                 </div>
             </section>
 
+            <!-- 📄 전용 보안 뷰어 모달 (문서 유출 방지용) -->
+            <div id="doc-viewer-modal" class="modal" style="display: none; z-index: 10000;">
+                <div class="modal-content"
+                    style="width: 95%; height: 95%; max-width: 1400px; padding: 0; position: relative; display: flex; flex-direction: column;">
+                    <!-- 뷰어 헤더 -->
+                    <div
+                        style="background: #0f172a; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;"><span
+                                style="margin-right: 10px;">📋</span> 보안 문서 통합 뷰어</h3>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <span
+                                style="font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px;">보안
+                                모드 가동 중</span>
+                            <button onclick="document.getElementById('doc-viewer-modal').style.display='none'"
+                                style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                        </div>
+                    </div>
+                    <!-- 뷰어 본문 -->
+                    <div id="viewer-body" style="flex: 1; background: #525659; overflow: hidden; position: relative;">
+                        <!-- 실제 콘텐츠 (PDF/IMG) -->
+                        <iframe id="viewer-iframe"
+                            style="width: 100%; height: 100%; border: none; background: white; display: none;"
+                            src=""></iframe>
+                        <img id="viewer-img"
+                            style="display: none; max-width: 100%; height: auto; margin: 0 auto; background: white;"
+                            src="">
+
+                        <!-- 캔버스 컨테이너 유지 (스크립트 오류 방지용) -->
+                        <div id="viewer-canvas-container" style="display: none;"></div>
+                        <!-- 보안 실드 (간섭 방지를 위해 z-index 조정) -->
+                        <div id="viewer-shield"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: -1;"></div>
+                    </div>
+                    <!-- 뷰어 푸터 -->
+                    <div
+                        style="background: #f8fafc; padding: 10px 25px; border-top: 1px solid #e2e8f0; text-align: center; z-index: 20;">
+                        <p style="margin: 0; font-size: 12px; color: #64748b;">본 문서는 세아씨엠 보안 정책에 의해 보호받고 있습니다. 캡처 및 무단
+                            배포 시 법적 책임을 물을 수 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+
     </div>
     </main>
     </div>
