@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const div = document.createElement('div');
             div.className = 'file-list-item-new';
             div.innerHTML = `
-                <div class="file-info-header" style="cursor:pointer;" onclick="window.open('${f.content}')">
+                <div class="file-info-header" style="cursor:pointer;" onclick="window.open('${f.content}${f.content.includes('.pdf') ? '#toolbar=0' : ''}')">
                     <div class="file-icon">📄</div>
                     <div class="file-meta">
                         <span class="file-name-link">${f.name}</span>
@@ -442,7 +442,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const file = localFiles.find(f => f.detectedSpec === spec);
             if (file) {
-                window.open(file.content);
+                // PDF일 경우 툴바를 숨겨서 다운로드 어렵게 함
+                const viewUrl = file.content.includes('.pdf') ? file.content + '#toolbar=0' : file.content;
+                window.open(viewUrl);
             } else {
                 alert('해당 규격으로 등록된 원본 문서가 없습니다. 라이브러리에 문서를 먼저 등록해주세요.');
             }
@@ -1075,4 +1077,31 @@ document.addEventListener('DOMContentLoaded', function () {
         loadLocalDefects();
     }
     init();
+
+    // --- [보안: 다운로드 및 무단 복제 방지] ---
+    // 1. 우클릭 방지
+    document.addEventListener('contextmenu', (e) => {
+        if (!isAdmin) {
+            e.preventDefault();
+            alert('보안 정책에 따라 우클릭을 통한 저장이 제한됩니다.');
+        }
+    });
+
+    // 2. 주요 단축키 차단 (저장, 인쇄, 소스보기 등)
+    document.addEventListener('keydown', (e) => {
+        if (isAdmin) return;
+
+        // Ctrl+S, Ctrl+P, Ctrl+U (소스), Ctrl+Shift+I (개발자도구)
+        if ((e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'u')) ||
+            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+            (e.key === 'F12')) {
+            e.preventDefault();
+            alert('보안 정책에 따라 해당 기능을 사용할 수 없습니다.');
+        }
+    });
+
+    // 3. 이미지 드래그 방지
+    document.addEventListener('dragstart', (e) => {
+        if (e.target.tagName === 'IMG') e.preventDefault();
+    });
 });
