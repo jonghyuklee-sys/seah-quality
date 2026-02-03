@@ -1164,18 +1164,22 @@
                         </div>
                     </div>
                     <!-- 뷰어 본문 -->
-                    <div id="viewer-body" style="flex: 1; background: #525659; overflow: hidden; position: relative;">
+                    <div id="viewer-body"
+                        style="flex: 1; background: #525659; overflow: auto; position: relative; -webkit-overflow-scrolling: touch;">
                         <!-- 실제 콘텐츠 (PDF/IMG) -->
                         <iframe id="viewer-iframe"
                             style="width: 100%; height: 100%; border: none; background: white; display: none;"
                             src=""></iframe>
-                        <img id="viewer-img"
-                            style="display: none; max-width: 100%; height: auto; margin: 0 auto; background: white;"
-                            src="">
 
-                        <!-- 캔버스 컨테이너 유지 (스크립트 오류 방지용) -->
+                        <div id="viewer-img-container"
+                            style="display: none; width: 100%; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 10px;">
+                            <img id="viewer-img"
+                                style="max-width: 100%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); background: white;"
+                                src="">
+                        </div>
+
+                        <!-- 스크립트 오류 방지용 유지 -->
                         <div id="viewer-canvas-container" style="display: none;"></div>
-                        <!-- 보안 실드 (간섭 방지를 위해 z-index 조정) -->
                         <div id="viewer-shield"
                             style="position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: -1;"></div>
                     </div>

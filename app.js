@@ -140,30 +140,37 @@ document.addEventListener('DOMContentLoaded', function () {
         const body = document.getElementById('viewer-body');
         const iframe = document.getElementById('viewer-iframe');
         const img = document.getElementById('viewer-img');
+        const imgContainer = document.getElementById('viewer-img-container');
         const shield = document.getElementById('viewer-shield');
 
         if (!modal || !body || !iframe || !img) return;
 
         // 1. 초기화
         iframe.style.display = 'none';
-        img.style.display = 'none';
+        if (imgContainer) imgContainer.style.display = 'none';
         iframe.src = '';
         img.src = '';
+        body.scrollTop = 0;
         modal.style.display = 'flex';
 
         const isPdf = url.includes('.pdf') || url.includes('blob:');
 
         if (isPdf) {
-            iframe.src = url.includes('#toolbar=0') ? url : url + '#toolbar=0&navpanes=0';
+            // 모바일 가독성 및 전체 페이지 로드를 위한 뷰어 옵션 강화
+            // view=FitH(가로맞춤), navpanes=0(사이드바 제거)
+            const viewerOptions = '#toolbar=0&navpanes=0&view=FitH';
+            iframe.src = url.includes('#') ? url : url + viewerOptions;
             iframe.style.display = 'block';
             iframe.style.height = '100%';
         } else {
+            // 이미지 처리 (컨테이너와 함께 표시)
             img.src = url;
-            img.style.display = 'block';
+            if (imgContainer) imgContainer.style.display = 'flex';
         }
 
+        // 보안 설정
         if (shield) {
-            shield.style.height = '0';
+            shield.style.height = '0'; // 스크롤 간섭 방지
             shield.oncontextmenu = (e) => {
                 e.preventDefault();
                 alert('보안 정책에 따라 우클릭 및 저장이 제한됩니다.');
