@@ -1829,3 +1829,198 @@ body.admin-mode button.admin-only {
         padding: 6px 8px;
     }
 }
+
+/* --- Premium Quality Library Styles --- */
+.library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    perspective: 1000px;
+}
+
+.library-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: default;
+}
+
+.library-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: var(--primary-light);
+}
+
+.library-card-header {
+    padding: 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.library-type-badge {
+    align-self: flex-start;
+    padding: 4px 10px;
+    background: var(--primary);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.library-card-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.library-card-header p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--secondary);
+    font-weight: 500;
+}
+
+.library-card-body {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.standard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.standard-item {
+    background: #f8fafc;
+    border: 1px solid #eef2f6;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.standard-item:hover {
+    background: #ffffff;
+    border-color: var(--primary-light);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+.standard-info-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.standard-tag-icon {
+    width: 36px;
+    height: 36px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.standard-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.standard-code {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.standard-alias {
+    font-size: 11px;
+    color: var(--text-light);
+}
+
+.standard-arrow {
+    color: var(--text-light);
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.standard-item:hover .standard-arrow {
+    transform: translateX(3px);
+    color: var(--primary-light);
+}
+
+.library-card-footer {
+    padding: 16px 20px;
+    background: #fafafa;
+    border-top: 1px dotted #eee;
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Library Filter Tabs Refined */
+.library-filter-container .tab-header {
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.library-filter-container .tab-btn {
+    padding: 10px 28px;
+    font-weight: 700;
+}
+
+/* Category Sections */
+.library-section-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin: 48px 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.library-section-title::after {
+    content: "";
+    flex-grow: 1;
+    height: 1px;
+    background: linear-gradient(to right, #e2e8f0, transparent);
+}
+
+@media (max-width: 640px) {
+    .library-grid {
+        grid-template-columns: 1fr;
+    }
+}

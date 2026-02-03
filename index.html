@@ -41,7 +41,7 @@
             <div class="sidebar-nav">
                 <p class="nav-group-title">Main Menu</p>
                 <a href="#search-view" class="active nav-link">
-                    <span>🔍</span> 규격 조회
+                    <span>🔍</span> 품질 규격 조회
                 </a>
                 <a href="#resin-quality-view" class="nav-link">
                     <span>🧪</span> 수지별 품질 기준
@@ -56,9 +56,6 @@
                 <p class="nav-group-title" style="margin-top: 24px;">Support</p>
                 <a href="#defect-view" class="nav-link">
                     <span>🖼️</span> 불량 유형 도감
-                </a>
-                <a href="#comparison-view" class="nav-link">
-                    <span>📊</span> 규격 비교
                 </a>
                 <a href="#info-view" class="nav-link">
                     <span>📖</span> 강종 정보
@@ -87,7 +84,7 @@
                 <div style="display: flex; align-items: center;">
                     <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="메뉴 열기">☰</button>
                     <div class="breadcrumb">
-                        Dashboard / <span id="current-page">규격 조회</span>
+                        Dashboard / <span id="current-page">품질 규격 조회</span>
                     </div>
                 </div>
                 <div class="user-profile" id="admin-login-area">
@@ -148,266 +145,138 @@
             <!-- Page Content -->
             <div class="content-padding">
 
-                <!-- 1. Search Section (Default View) -->
+                <!-- 1. Search Section (Library View) -->
                 <section id="search-view" class="page-section">
                     <div class="page-header" style="text-align: center;">
-                        <h2>강종 규격 조회</h2>
-                        <p>강종, 규격, 재질을 선택하여 상세 물성 정보를 조회합니다.</p>
+                        <h2>품질 규격 라이브러리</h2>
+                        <p>KS 및 JIS 강종 규격 정보를 시스템에서 조회하고 등록된 규격서를 열람하세요.</p>
                     </div>
 
-                    <!-- Quick Stats (Optional aesthetic touch for internal tools) -->
-                    <div class="stats-grid" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                        <div class="stat-card">
-                            <span class="stat-label">조회 가능한 강종</span>
-                            <span class="stat-value">10 EA</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">등록된 규격</span>
-                            <span class="stat-value">4 Type</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">업데이트 일자</span>
-                            <span class="stat-value">2026-01-22</span>
-                        </div>
-                    </div>
-
-                    <div class="search-container" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                        <h3 class="section-title-line">
-                            🔎 조회 필터
-                            <span style="font-size: 12px; font-weight: 500; color: var(--danger); margin-left: auto;">
-                                * ASTM, EN 규격 품질경영팀 문의
-                            </span>
-                        </h3>
-                        <div class="search-form-grid">
-                            <div class="form-field">
-                                <label for="standard-type">1. 규격 (Standard)</label>
-                                <select id="standard-type">
-                                    <option value="">규격 선택</option>
-                                    <option value="KS">KS (한국산업표준)</option>
-                                    <option value="JIS">JIS (일본공업규격)</option>
-                                    <option value="ASTM">ASTM (미국재료시험협회)</option>
-                                    <option value="EN">EN (유럽표준)</option>
+                    <!-- 1-1. Top Search Bar -->
+                    <div class="search-container" id="library-search-box"
+                        style="margin: 0 auto 32px auto; max-width: 1000px; border-radius: 50px; padding: 10px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+                        <div class="search-form-grid"
+                            style="grid-template-columns: 1fr 1.5fr 1fr auto; gap: 15px; align-items: center;">
+                            <div class="form-field" style="margin-bottom: 0;">
+                                <select id="standard-type" style="border-radius: 25px;">
+                                    <option value="">국가 규격 선택</option>
+                                    <option value="KS">KS (한국 표준)</option>
+                                    <option value="JIS">JIS (일본 표준)</option>
                                 </select>
                             </div>
-                            <div class="form-field">
-                                <label for="specific-standard">2. 상세 규격 (Code)</label>
-                                <select id="specific-standard" disabled>
-                                    <option value="">규격을 먼저 선택하세요</option>
+                            <div class="form-field" style="margin-bottom: 0;">
+                                <select id="specific-standard" disabled style="border-radius: 25px;">
+                                    <option value="">상세 규격 선택</option>
                                 </select>
                             </div>
-                            <div class="form-field">
-                                <label for="steel-type">3. 제품군 (Steel Type)</label>
-                                <select id="steel-type" disabled>
+                            <div class="form-field" style="margin-bottom: 0;">
+                                <select id="steel-type" disabled style="border-radius: 25px;">
                                     <option value="">제품군 자동 선택</option>
-                                    <optgroup label="냉연 제품 (Cold Rolled / Pickled)">
-                                        <option value="CR">CR (냉연강판)</option>
-                                        <option value="FH">FH (Full Hard)</option>
+                                    <optgroup label="냉연/도금 제품">
                                         <option value="PO">PO (산세강판)</option>
-                                    </optgroup>
-                                    <optgroup label="도금 제품 (Metallic Coated)">
-                                        <option value="GI">GI (용융아연도금)</option>
+                                        <option value="GI">GI (아연도금)</option>
                                         <option value="GL">GL (갈바륨)</option>
-                                        <option value="AL">AL (알루미늄도금)</option>
+                                        <option value="AL">AL (알루미늄판)</option>
                                         <option value="ZM">ZM (삼원계 도금)</option>
                                     </optgroup>
-                                    <optgroup label="컬러도장 제품 (Color Coated)">
-                                        <option value="PPGI">PPGI (컬러아연도금)</option>
+                                    <optgroup label="컬러 도장 제품">
+                                        <option value="PPGI">PPGI (컬러아연)</option>
                                         <option value="PPGL">PPGL (컬러갈바륨)</option>
                                         <option value="PPAL">PPAL (컬러알루미늄)</option>
                                         <option value="PPZM">PPZM (컬러삼원계)</option>
                                     </optgroup>
                                 </select>
                             </div>
-                            <div class="form-field">
-                                <label for="grade-type">4. 재질 (Grade)</label>
-                                <select id="grade-type" disabled>
-                                    <option value="">재질 선택</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="coating-weight">5. 도금량 (Coating)</label>
-                                <select id="coating-weight" disabled>
-                                    <option value="">도금 선택</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="spec-thickness">두께 (Thickness)</label>
-                                <div class="input-with-unit">
-                                    <input type="number" id="spec-thickness" placeholder="0.00" step="0.01">
-                                    <span class="unit">mm</span>
-                                </div>
-                            </div>
-                            <div class="form-field">
-                                <label for="spec-width">폭 (Width)</label>
-                                <div class="input-with-unit">
-                                    <input type="number" id="spec-width" placeholder="0">
-                                    <span class="unit">mm</span>
-                                </div>
-                            </div>
-                            <button id="search-btn" class="btn-primary">데이터 조회</button>
+                            <button id="search-btn" class="btn-primary"
+                                style="height: 44px; border-radius: 25px; min-width: 120px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                                🔍 품질 규격 조회
+                            </button>
                         </div>
-                    </div>
+
+                        <!-- 규격별 비교 통합 -->
+                        <div id="integrated-comparison"
+                            style="margin-top: 60px; border-top: 1px solid #e2e8f0; padding-top: 40px;">
+                            <div style="max-width: 1200px; margin: 0 auto;">
+                                <div class="page-header" style="text-align: center; margin-bottom: 30px;">
+                                    <h3 style="font-size: 24px; font-weight: 700; color: #1e3a8a;">📋 국가별 주요 규격 비교</h3>
+                                    <p style="color: #64748b;">주요 국가별 표준 규격의 체계와 종류를 한눈에 비교할 수 있습니다.</p>
+                                </div>
+
+                                <div class="standard-grid">
+                                    <div class="standard-card">
+                                        <div class="card-header">
+                                            <h3>KS</h3>
+                                            <span class="region-tag">🇰🇷</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>KS D 3506 (용융 아연 도금 강판 및 강대)</li>
+                                                <li>KS D 3770 (55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                                <li>KS D 3030 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
+                                                <li>KS D 3520 (도장 용융 아연 도금 강판 및 강대)</li>
+                                                <li>KS D 3862 (도장 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                                <li>KS D 6711 (도장 알루미늄 도금 강판 및 강대)</li>
+                                                <li>KS D 3034 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="standard-card">
+                                        <div class="card-header">
+                                            <h3>JIS</h3>
+                                            <span class="region-tag">🇯🇵</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>JIS G 3302 (용융 아연 도금 강판 및 강대)</li>
+                                                <li>JIS G 3321 (용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                                <li>JIS G 3323 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
+                                                <li>JIS G 3312 (도장 용융 아연 도금 강판 및 강대)</li>
+                                                <li>JIS G 3322 (도장 용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
+                                                <li>JIS H 4001 (알루미늄 및 알루미늄 합금 판)</li>
+                                                <li>JIS G 3318 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="standard-card">
+                                        <div class="card-header">
+                                            <h3>ASTM</h3>
+                                            <span class="region-tag">🇺🇸</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>ASTM A653 (용융 아연 도금 또는 아연-철 합금 도금 강판)</li>
+                                                <li>ASTM A792 (용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                                <li>ASTM A1046 (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
+                                                <li>ASTM A755 (도장 용융 금속 도금 강판)</li>
+                                                <li>ASTM A755 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                                <li>ASTM B209 (알루미늄 및 알루미늄 합금 판재)</li>
+                                                <li>ASTM A755 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="standard-card">
+                                        <div class="card-header">
+                                            <h3>EN</h3>
+                                            <span class="region-tag">🇪🇺</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>EN 10346 (연속 용융 도금 강 평판 제품)</li>
+                                                <li>EN 10346:AZ (용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                                <li>EN 10346:ZM (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
+                                                <li>EN 10169 (연속 유기 피복 강 평판 제품)</li>
+                                                <li>EN 10169 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
+                                                <li>EN 1396 (알루미늄 및 알루미늄 합금 도장 코일 코팅 판)</li>
+                                                <li>EN 10169 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                 </section>
 
-                <!-- Results Table -->
-                <div id="results-card" class="results-card" style="display: none; margin: 0 auto; max-width: 1200px;">
-                    <div class="results-header-box">
-                        <h3 id="results-title">조회 결과</h3>
-                        <div class="badge-group" id="results-badges"></div>
-                    </div>
 
-                    <div class="table-section">
-                        <!-- Common: Mechanical Properties -->
-                        <h4 class="sub-title">⚙️ 기계적 성질 (Mechanical Properties)</h4>
-                        <table class="data-table">
-                            <thead id="mech-thead">
-                                <tr>
-                                    <th>항목</th>
-                                    <th>기호</th>
-                                    <th>기준치</th>
-                                    <th>단위</th>
-                                    <th>비고</th>
-                                </tr>
-                            </thead>
-                            <tbody id="mechanical-tbody"></tbody>
-                        </table>
-
-                        <!-- Non-Coated Specific: Chemical, Tolerance, Flatness -->
-                        <div id="non-coated-results">
-                            <h4 class="sub-title" style="margin-top: 32px;">🧪 화학 성분 (Chemical Composition)</h4>
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>원소</th>
-                                        <th>C</th>
-                                        <th>Mn</th>
-                                        <th>P</th>
-                                        <th>S</th>
-                                        <th>Si</th>
-                                        <th>Al</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="chemical-tbody"></tbody>
-                            </table>
-
-                            <h4 class="sub-title" style="margin-top: 32px;">📏 제품 허용차 및 평탈도</h4>
-                            <div class="coating-grid">
-                                <div class="info-box">
-                                    <span class="label">두께 허용차</span>
-                                    <span class="value" id="val-thickness">-</span>
-                                </div>
-                                <div class="info-box">
-                                    <span class="label">평탄도 기준</span>
-                                    <span class="value" id="val-flatness">-</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Coated Specific: Resin Tests -->
-                        <div id="coated-results" style="display: none;">
-                            <h4 class="sub-title" style="margin-top: 32px;">🎨 도장 제품 품질 기준 (Resin Type Specs)</h4>
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>수지 종류</th>
-                                        <th>굽힘 시험 (Bending)</th>
-                                        <th>충격 시험 (Impact)</th>
-                                        <th>염수분무 (Salt Spray)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="coated-tbody">
-                                    <!-- Will be filled per grade/resin -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <h4 class="sub-title" style="margin-top: 32px;">🛡️ 도금 및 규격 정보</h4>
-                        <div class="coating-grid" id="coating-cards"></div>
-
-                        <div class="info-banner" id="standard-info"></div>
-                    </div>
-                </div>
-
-                <!-- 2. Comparison Section -->
-                <section id="comparison-view" class="page-section" style="display: none;">
-                    <div style="max-width: 1200px; margin: 0 auto;">
-                        <div class="page-header">
-                            <h2>규격별 비교</h2>
-                            <p>지역별 주요 규격의 특징을 비교 분석합니다.</p>
-                        </div>
-
-                        <div class="standard-grid">
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>KS</h3>
-                                    <span class="region-tag">🇰🇷</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>KS D 3506 (용융 아연 도금 강판 및 강대)</li>
-                                        <li>KS D 3770 (55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>KS D 3030 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                        <li>KS D 3520 (도장 용융 아연 도금 강판 및 강대)</li>
-                                        <li>KS D 3862 (도장 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>KS D 6711 (도장 알루미늄 도금 강판 및 강대)</li>
-                                        <li>KS D 3034 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>JIS</h3>
-                                    <span class="region-tag">🇯🇵</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>JIS G 3302 (용융 아연 도금 강판 및 강대)</li>
-                                        <li>JIS G 3321 (용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>JIS G 3323 (용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                        <li>JIS G 3312 (도장 용융 아연 도금 강판 및 강대)</li>
-                                        <li>JIS G 3322 (도장 용융 55% 알루미늄-아연 합금 도금 강판 및 강대)</li>
-                                        <li>JIS H 4001 (알루미늄 및 알루미늄 합금 판)</li>
-                                        <li>JIS G 3318 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판 및 강대)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>ASTM</h3>
-                                    <span class="region-tag">🇺🇸</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>ASTM A653 (용융 아연 도금 또는 아연-철 합금 도금 강판)</li>
-                                        <li>ASTM A792 (용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>ASTM A1046 (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                        <li>ASTM A755 (도장 용융 금속 도금 강판)</li>
-                                        <li>ASTM A755 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>ASTM B209 (알루미늄 및 알루미늄 합금 판재)</li>
-                                        <li>ASTM A755 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="standard-card">
-                                <div class="card-header">
-                                    <h3>EN</h3>
-                                    <span class="region-tag">🇪🇺</span>
-                                </div>
-                                <div class="card-body">
-                                    <ul>
-                                        <li>EN 10346 (연속 용융 도금 강 평판 제품)</li>
-                                        <li>EN 10346:AZ (용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>EN 10346:ZM (용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                        <li>EN 10169 (연속 유기 피복 강 평판 제품)</li>
-                                        <li>EN 10169 (도장 용융 55% 알루미늄-아연 합금 도금 강판)</li>
-                                        <li>EN 1396 (알루미늄 및 알루미늄 합금 도장 코일 코팅 판)</li>
-                                        <li>EN 10169 (도장 용융 아연-알루미늄-마그네슘 합금 도금 강판)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
                 <section id="info-view" class="page-section" style="display: none;">
                     <div style="max-width: 1000px; margin: 0 auto;">

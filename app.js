@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const displayUserRole = document.getElementById('display-user-role');
     const userAvatar = document.getElementById('user-avatar');
 
+
+
     function updateAdminUI() {
         if (isAdmin) {
             document.body.classList.add('admin-mode');
@@ -188,17 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
             { reg: /3322|G3322/, name: "JIS G 3322", ref: "JIS" },
             { reg: /4001|H4001/, name: "JIS H 4001", ref: "JIS" },
             { reg: /3141|G3141/, name: "JIS G 3141", ref: "JIS" },
-            { reg: /3131|G3131/, name: "JIS G 3131", ref: "JIS" },
-            { reg: /A653/, name: "ASTM A653", ref: "ASTM" },
-            { reg: /A792/, name: "ASTM A792", ref: "ASTM" },
-            { reg: /B209/, name: "ASTM B209", ref: "ASTM" },
-            { reg: /A1046/, name: "ASTM A1046", ref: "ASTM" },
-            { reg: /A755/, name: "ASTM A755", ref: "ASTM" },
-            { reg: /A1008/, name: "ASTM A1008", ref: "ASTM" },
-            { reg: /10346/, name: "EN 10346", ref: "EN" },
-            { reg: /10169/, name: "EN 10169", ref: "EN" },
-            { reg: /10130/, name: "EN 10130", ref: "EN" },
-            { reg: /485/, name: "EN 485", ref: "EN" }
+            { reg: /3131|G3131/, name: "JIS G 3131", ref: "JIS" }
         ];
         let found = { name: "기타", ref: "기타" };
         for (const s of specs) { if (s.reg.test(pool)) { found = { name: s.name, ref: s.ref }; break; } }
@@ -366,14 +358,43 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- [5. 조회 엔진] ---
     function updateSearchOptions() {
         if (!standardTypeSelect || !specificStandardSelect) return;
-        const std = standardTypeSelect.value;
-        if (!std) {
-            specificStandardSelect.innerHTML = '<option value="">규격을 선택하세요</option>';
+        const region = standardTypeSelect.value;
+        if (!region) {
+            specificStandardSelect.innerHTML = '<option value="">국가 규격을 먼저 선택하세요</option>';
             specificStandardSelect.disabled = true;
             return;
         }
-        const specs = [...new Set(localFiles.filter(f => f.detectedRef === std).map(f => f.detectedSpec))].sort();
-        specificStandardSelect.innerHTML = '<option value="">상세 규격 선택</option>' + specs.map(s => `<option value="${s}">${s}</option>`).join('');
+
+        // 1. 시스템(steelData)에 정의된 모든 해당 국가 규격 추출
+        const systemSpecs = [];
+        for (const [sType, sObj] of Object.entries(steelData)) {
+            if (sObj[region] && sObj[region].standard) {
+                systemSpecs.push(sObj[region].standard);
+            }
+        }
+
+        // 중복 제거 및 정렬
+        const allSpecs = [...new Set(systemSpecs)].sort();
+
+        // 2. 드롭다운 생성 (라이브러리 등록 여부 표시)
+        let html = '<option value="">상세 규격 선택</option>';
+        allSpecs.forEach(spec => {
+            // 해당 규격의 Title 찾기
+            let title = '';
+            for (const sObj of Object.values(steelData)) {
+                if (sObj[region] && sObj[region].standard === spec) {
+                    title = sObj[region].title || '';
+                    break;
+                }
+            }
+
+            const hasFile = localFiles.some(f => f.detectedSpec === spec);
+            const icon = hasFile ? ' 📄' : '';
+            const displayName = title ? `${spec} - ${title}` : spec;
+            html += `<option value="${spec}">${displayName}${icon}</option>`;
+        });
+
+        specificStandardSelect.innerHTML = html;
         specificStandardSelect.disabled = false;
     }
 
@@ -381,14 +402,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (specificStandardSelect) {
         specificStandardSelect.onchange = () => {
             const spec = specificStandardSelect.value;
-            let grades = [];
-            for (const [key, val] of Object.entries(steelData)) {
-                if (val[standardTypeSelect.value] && val[standardTypeSelect.value].standard === spec) {
-                    grades = [...new Set([...grades, ...val[standardTypeSelect.value].grades])];
-                }
-            }
-            gradeTypeSelect.innerHTML = '<option value="">재질 선택</option>' + grades.sort().map(g => `<option value="${g}">${g}</option>`).join('');
-            gradeTypeSelect.disabled = false;
 
             // 제품군 자동 선택 및 고정 (Standard 기반)
             let detectedSteelType = '';
@@ -400,78 +413,42 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const productLabels = {
-                'CR': 'CR (냉연강판)', 'FH': 'FH (Full Hard)', 'PO': 'PO (산세강판)',
-                'GI': 'GI (용융아연도금)', 'GL': 'GL (갈바륨)', 'AL': 'AL (알루미늄도금)', 'ZM': 'ZM (삼원계 도금)',
-                'PPGI': 'PPGI (컬러아연도금)', 'PPGL': 'PPGL (컬러갈바륨)', 'PPAL': 'PPAL (컬러알루미늄)', 'PPZM': 'PPZM (컬러삼원계)'
+                'PO': 'PO (산세강판)', 'GI': 'GI (용융아연도금)', 'GL': 'GL (갈바륨)',
+                'AL': 'AL (알루미늄판)', 'ZM': 'ZM (삼원계 도금)',
+                'PPGI': 'PPGI (컬러아연)', 'PPGL': 'PPGL (컬러갈바륨)',
+                'PPAL': 'PPAL (컬러알루미늄)', 'PPZM': 'PPZM (컬러삼원계)'
             };
 
-            steelTypeSelect.innerHTML = Object.keys(productLabels).map(s =>
-                `<option value="${s}" ${s === detectedSteelType ? 'selected' : ''}>${productLabels[s]}</option>`
-            ).join('');
+            if (steelTypeSelect) {
+                steelTypeSelect.innerHTML = Object.keys(productLabels).map(s =>
+                    `<option value="${s}" ${s === detectedSteelType ? 'selected' : ''}>${productLabels[s]}</option>`
+                ).join('');
 
-            if (detectedSteelType) {
-                steelTypeSelect.value = detectedSteelType;
-                steelTypeSelect.disabled = true; // 제품군 고정
-            } else {
-                steelTypeSelect.disabled = false;
-            }
-
-            // 도금량 정보 추가 (data.js의 coatingOptions 기반)
-            let coatings = [];
-            for (const [key, val] of Object.entries(steelData)) {
-                if (val[standardTypeSelect.value] && val[standardTypeSelect.value].standard === spec) {
-                    coatings = [...new Set([...coatings, ...(val[standardTypeSelect.value].coatingOptions || [])])];
+                if (detectedSteelType) {
+                    steelTypeSelect.value = detectedSteelType;
+                    steelTypeSelect.disabled = true; // 제품군 고정
+                } else {
+                    steelTypeSelect.disabled = false;
                 }
             }
-            coatingWeightSelect.innerHTML = '<option value="">도금 선택</option>' + coatings.sort().map(c => `<option value="${c}">${c}</option>`).join('');
-            coatingWeightSelect.disabled = false;
         };
     }
 
     if (searchBtn) {
         searchBtn.onclick = () => {
+            const region = standardTypeSelect.value;
             const spec = specificStandardSelect.value;
-            const grade = gradeTypeSelect.value;
             const steel = steelTypeSelect.value;
-            if (!spec || !grade || !steel) return alert('모든 항목을 선택해주세요.');
+
+            if (!region || !spec || !steel) return alert('모든 항목을 선택해주세요.');
+
             const file = localFiles.find(f => f.detectedSpec === spec);
-            if (!file) return alert('해당 규격서가 없습니다.');
-
-            const data = extractFromText(file.fullText, grade);
-            displayResults(file, data, steel, grade);
+            if (file) {
+                window.open(file.content);
+            } else {
+                alert('해당 규격으로 등록된 원본 문서가 없습니다. 라이브러리에 문서를 먼저 등록해주세요.');
+            }
         };
-    }
-
-    function extractFromText(text, grade) {
-        const idx = text.indexOf(grade);
-        const context = idx !== -1 ? text.substring(idx, idx + 800) : text;
-        const get = (re) => { const m = context.match(re); return m ? m[1].trim() : "문서 참조"; };
-        return {
-            ys: get(/(?:YS|YP|항복|Yield)[\s\:]*([0-9\~\-\s]+(?:이상이하|↑|↓)?)/i),
-            ts: get(/(?:TS|인장|Tensile)[\s\:]*([0-9\~\-\s]+(?:이상이하|↑|↓)?)/i),
-            el: get(/(?:EL|연신|Elongation)[\s\:]*([0-9\~\-\s]+(?:이상이하|↑|↓)?)/i),
-            tol: get(/(?:두께[\s]?허용|Thickness[\s]?Tol)[\s\:]*([\±\+\-0-9\.]+)/i)
-        };
-    }
-
-    function displayResults(file, data, steelType, gradeName) {
-        const t = thicknessInput.value || '0.00', w = widthInput.value || '000';
-        resultsCard.style.display = 'block';
-        resultsCardWasVisible = true;
-        document.getElementById('results-title').textContent = `${t}T x ${w}W x ${gradeName} (${steelType}) 결과`;
-        document.getElementById('results-badges').innerHTML = `
-            <span class="badge badge-blue">${steelType}</span>
-            <span class="badge badge-green">📄 문서 분석 완료</span>
-            <span style="margin-left:10px; font-size:12px;"><a href="${file.content}" target="_blank">📄 원본 보기</a></span>`;
-        document.getElementById('mechanical-tbody').innerHTML = `
-            <tr><td class="text-bold">항복강도</td><td>YP</td><td>${data.ys}</td><td>MPa</td></tr>
-            <tr><td class="text-bold">인장강도</td><td>TS</td><td>${data.ts}</td><td>MPa</td></tr>
-            <tr><td class="text-bold">연신율</td><td>El</td><td>${data.el}</td><td>%</td></tr>
-            <tr><td class="text-bold">두께 공차</td><td>Tol</td><td>${data.tol}</td><td>mm</td></tr>`;
-        document.getElementById('non-coated-results').style.display = 'block';
-        document.getElementById('val-thickness').textContent = data.tol;
-        document.getElementById('val-flatness').textContent = "12mm 이하";
-        resultsCard.scrollIntoView({ behavior: 'smooth' });
     }
 
     // --- [6. 불량 유형 도감] ---
