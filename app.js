@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    let isAdmin = localStorage.getItem('isAdmin') === 'true';
+    let isAdmin = false; // 초기 접속 시 항상 게스트 모드로 시작
     let localFiles = [];
     let localComplaints = [];
     let localDefects = [];
@@ -70,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isAdmin) {
                 if (confirm('관리자 모드를 종료하시겠습니까?')) {
                     isAdmin = false;
-                    localStorage.setItem('isAdmin', 'false');
                     updateAdminUI();
                     showSection('search-view');
                 }
@@ -87,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmAdminLoginBtn.onclick = () => {
             if (adminPasswordInput.value === '0000') {
                 isAdmin = true;
-                localStorage.setItem('isAdmin', 'true');
                 updateAdminUI();
                 adminModal.style.display = 'none';
                 alert('관리자 모드로 전환되었습니다.');
@@ -767,15 +765,21 @@ document.addEventListener('DOMContentLoaded', function () {
             if (el) el.value = val || '';
         }
 
-        // 사진 미리보기 처리
+        // 사진 미리보기 및 수정 처리
         const photoContainer = document.getElementById('modal-edit-photo-container');
         const photoPreview = document.getElementById('modal-edit-photo-preview');
+        const photoInput = document.getElementById('modal-edit-photo-input');
+        if (photoInput) photoInput.value = ''; // 입력 필드 초기화
+
         if (photoContainer && photoPreview) {
             if (v.photo) {
                 photoPreview.src = v.photo;
+                photoPreview.style.display = 'block';
                 photoContainer.style.display = 'block';
             } else {
-                photoContainer.style.display = 'none';
+                photoPreview.style.display = 'none';
+                // 관리자면 사진이 없어도 업로드 필드 보여주기 위해 컨테이너 표시
+                photoContainer.style.display = isAdmin ? 'block' : 'none';
             }
         }
 
@@ -829,32 +833,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const modalSaveBtn = document.getElementById('modal-voc-save-btn');
     if (modalSaveBtn) {
-        modalSaveBtn.onclick = () => {
+        modalSaveBtn.onclick = async () => {
             if (!currentVocId) return;
-            const updatedData = {
-                category: document.getElementById('modal-edit-category').value,
-                market: document.getElementById('modal-edit-market').value,
-                receiptDate: document.getElementById('modal-edit-receiptDate').value,
-                customer: document.getElementById('modal-edit-customer').value,
-                manager: document.getElementById('modal-edit-manager').value,
-                spec: document.getElementById('modal-edit-spec').value,
-                line: document.getElementById('modal-edit-line').value,
-                prodDate: document.getElementById('modal-edit-prodDate').value,
-                title: document.getElementById('modal-edit-title').value,
+            const originalText = modalSaveBtn.textContent;
+            modalSaveBtn.textContent = '저장 중...';
+            modalSaveBtn.disabled = true;
 
-                replyManager: document.getElementById('modal-reply-manager').value,
-                cost: document.getElementById('modal-reply-cost').value,
-                replyCause: document.getElementById('modal-reply-cause').value,
-                replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
-                replyEvaluation: document.getElementById('modal-reply-evaluation').value,
-                status: document.getElementById('modal-reply-status').value
-            };
+            try {
+                const photoInput = document.getElementById('modal-edit-photo-input');
+                let newPhotoUrl = null;
 
-            db.collection("complaints").doc(currentVocId).update(updatedData).then(() => {
+                if (photoInput && photoInput.files && photoInput.files[0]) {
+                    const file = photoInput.files[0];
+                    const ref = storage.ref(`complaints/${Date.now()}_${file.name}`);
+                    await ref.put(file);
+                    newPhotoUrl = await ref.getDownloadURL();
+                }
+
+                const updatedData = {
+                    category: document.getElementById('modal-edit-category').value,
+                    market: document.getElementById('modal-edit-market').value,
+                    receiptDate: document.getElementById('modal-edit-receiptDate').value,
+                    customer: document.getElementById('modal-edit-customer').value,
+                    manager: document.getElementById('modal-edit-manager').value,
+                    spec: document.getElementById('modal-edit-spec').value,
+                    line: document.getElementById('modal-edit-line').value,
+                    prodDate: document.getElementById('modal-edit-prodDate').value,
+                    title: document.getElementById('modal-edit-title').value,
+
+                    replyManager: document.getElementById('modal-reply-manager').value,
+                    cost: document.getElementById('modal-reply-cost').value,
+                    replyCause: document.getElementById('modal-reply-cause').value,
+                    replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
+                    replyEvaluation: document.getElementById('modal-reply-evaluation').value,
+                    status: document.getElementById('modal-reply-status').value
+                };
+
+                if (newPhotoUrl) updatedData.photo = newPhotoUrl;
+
+                await db.collection("complaints").doc(currentVocId).update(updatedData);
                 alert('변경 사항이 저장되었습니다.');
                 vocModal.style.display = 'none';
                 loadLocalComplaints();
-            }).catch(err => alert('저장 실패: ' + err.message));
+            } catch (err) {
+                alert('저장 실패: ' + err.message);
+            } finally {
+                modalSaveBtn.textContent = originalText;
+                modalSaveBtn.disabled = false;
+            }
         };
     }
 

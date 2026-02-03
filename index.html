@@ -60,7 +60,7 @@
                 <a href="#info-view" class="nav-link">
                     <span>📖</span> 강종 정보
                 </a>
-                <a href="#management-view" class="nav-link admin-only">
+                <a href="#management-view" class="nav-link">
                     <span>📋</span> 규격 데이터 관리
                 </a>
                 <a href="#settings-view" class="nav-link admin-only">
@@ -780,6 +780,13 @@
                                     <img id="modal-edit-photo-preview" src=""
                                         style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 5px; cursor: pointer;"
                                         onclick="window.open(this.src)">
+                                    <div class="admin-only" style="margin-top: 10px;">
+                                        <label
+                                            style="display:block; font-size:12px; color:var(--primary); margin-bottom:5px; font-weight:700;">📸
+                                            사진 변경 (관리자 전용)</label>
+                                        <input type="file" id="modal-edit-photo-input" accept="image/*"
+                                            style="font-size:12px; width:100%;">
+                                    </div>
                                 </div>
                             </div>
 
