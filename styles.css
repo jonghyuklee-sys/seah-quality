@@ -1618,7 +1618,7 @@ body.admin-mode button.admin-only {
     #resin-quality-view tbody {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 0;
         padding: 12px;
     }
 
@@ -1630,6 +1630,68 @@ body.admin-mode button.admin-only {
         border-radius: 10px;
         padding: 14px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        margin-bottom: 12px;
+    }
+
+    /* 그룹 시작 (같은 검사항목의 첫 번째) */
+    #resin-quality-view tbody tr.group-start {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom: 1px dashed #cbd5e1;
+        margin-bottom: 0;
+        padding-bottom: 10px;
+    }
+
+    /* 그룹 중간 (같은 검사항목의 중간) */
+    #resin-quality-view tbody tr.group-middle {
+        border-radius: 0;
+        border-top: none;
+        border-bottom: 1px dashed #cbd5e1;
+        margin-bottom: 0;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    /* 그룹 끝 (같은 검사항목의 마지막) */
+    #resin-quality-view tbody tr.group-end {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-top: none;
+        margin-bottom: 12px;
+        padding-top: 10px;
+    }
+
+    /* 그룹 단일 (혼자인 검사항목) */
+    #resin-quality-view tbody tr.group-single {
+        margin-bottom: 12px;
+    }
+
+    /* 그룹 시작/단일에서만 검사항목(첫 번째 td) 표시 */
+    #resin-quality-view tbody tr.group-start td:first-child,
+    #resin-quality-view tbody tr.group-single td:first-child {
+        display: block !important;
+    }
+
+    /* group-middle, group-end에서는 조건이 첫 번째 td이므로 표시 */
+    #resin-quality-view tbody tr.group-middle td:first-child,
+    #resin-quality-view tbody tr.group-end td:first-child {
+        display: block !important;
+        font-weight: 400 !important;
+        color: #475569 !important;
+        font-size: 13px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* group-middle, group-end의 첫 번째 td에 조건 라벨 표시 */
+    #resin-quality-view tbody tr.group-middle td:first-child::before,
+    #resin-quality-view tbody tr.group-end td:first-child::before {
+        content: "조건: " !important;
+        font-weight: 700;
+        color: #64748b;
+        font-size: 11px;
+        display: block;
+        margin-bottom: 4px;
     }
 
     #resin-quality-view tbody tr td {
@@ -1660,7 +1722,9 @@ body.admin-mode button.admin-only {
         margin-bottom: 4px;
     }
 
-    #resin-quality-view tbody tr td:nth-child(2)::before {
+    #resin-quality-view tbody tr td:nth-child(2)::before,
+    #resin-quality-view tbody tr.group-middle td:first-child::before,
+    #resin-quality-view tbody tr.group-end td:first-child::before {
         content: "조건: ";
         font-weight: 700;
         color: #64748b;
@@ -1686,6 +1750,8 @@ body.admin-mode button.admin-only {
         padding-bottom: 12px !important;
         border-bottom: 2px solid #e2e8f0;
     }
+
+
 
     .criteria-item {
         font-size: 13px !important;

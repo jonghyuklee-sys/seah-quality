@@ -1410,10 +1410,24 @@ document.addEventListener('DOMContentLoaded', function () {
             let html = '';
 
             data.forEach((row, idx) => {
-                html += '<tr style="border-bottom:1px solid #f1f5f9;">';
+                // 그룹 클래스 결정 (모바일에서 같은 검사항목을 시각적으로 연결)
+                const isFirstOfItem = (idx === 0 || data[idx - 1].item !== row.item);
+                const isLastOfItem = (idx === data.length - 1 || data[idx + 1].item !== row.item);
+
+                let groupClass = '';
+                if (isFirstOfItem && isLastOfItem) {
+                    groupClass = 'group-single';
+                } else if (isFirstOfItem) {
+                    groupClass = 'group-start';
+                } else if (isLastOfItem) {
+                    groupClass = 'group-end';
+                } else {
+                    groupClass = 'group-middle';
+                }
+
+                html += `<tr class="${groupClass}" data-item="${row.item}" style="border-bottom:1px solid #f1f5f9;">`;
 
                 // 검사항목 (Rowspan 로직)
-                const isFirstOfItem = (idx === 0 || data[idx - 1].item !== row.item);
                 if (isFirstOfItem) {
                     let rs = 1;
                     for (let i = idx + 1; i < data.length; i++) {
