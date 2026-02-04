@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const imgContainer = document.getElementById('viewer-img-container');
         const shield = document.getElementById('viewer-shield');
         const watermark = document.getElementById('viewer-watermark');
+        const canvasContainer = document.getElementById('viewer-canvas-container');
 
         if (!modal || !body || !iframe || !img) return;
 
@@ -152,7 +153,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (imgContainer) imgContainer.style.display = 'none';
         img.src = '';
 
-        // 기존 렌더링된 PDF 캔버스 제거
+        if (canvasContainer) {
+            canvasContainer.innerHTML = '';
+            canvasContainer.style.display = 'none';
+        }
+
+        // 기존 직접 삽입된 캔버스들도 제거
         body.querySelectorAll('.pdf-page-canvas').forEach(c => c.remove());
 
         body.scrollTop = 0;
@@ -161,21 +167,29 @@ document.addEventListener('DOMContentLoaded', function () {
         const isPdf = url.includes('.pdf') || url.includes('blob:');
 
         if (isPdf) {
-            // --- [PDF 전용 고보안 캔버스 렌더링] ---
+            // URL에서 해시(#) 제거 (pdf.js 로딩 라이브러리용)
+            const cleanUrl = url.split('#')[0];
+
             try {
-                const loadingTask = pdfjsLib.getDocument(url);
+                if (canvasContainer) {
+                    canvasContainer.style.display = 'block';
+                    canvasContainer.innerHTML = '<div style="color:white; text-align:center; padding:50px;">문서를 불러오는 중입니다...</div>';
+                }
+
+                const loadingTask = pdfjsLib.getDocument(cleanUrl);
                 const pdf = await loadingTask.promise;
+
+                if (canvasContainer) canvasContainer.innerHTML = '';
 
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
-                    // 해상도 향상을 위한 스케일 조정 (1.5)
                     const viewport = page.getViewport({ scale: 1.5 });
 
                     const canvas = document.createElement('canvas');
                     canvas.className = 'pdf-page-canvas';
                     canvas.style.display = 'block';
                     canvas.style.margin = '20px auto';
-                    canvas.style.maxWidth = '80%'; // 사용자 요청 배율 유지
+                    canvas.style.maxWidth = '90%'; // 모바일 대응을 위해 약간 확대
                     canvas.style.width = '80%';
                     canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
                     canvas.style.background = 'white';
@@ -184,24 +198,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
 
-                    // 워터마크 레이어 이전에 삽입하여 워터마크가 위로 오게 함
-                    body.insertBefore(canvas, watermark);
+                    if (canvasContainer) {
+                        canvasContainer.appendChild(canvas);
+                    } else {
+                        body.insertBefore(canvas, watermark);
+                    }
+
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    // 각 페이지 렌더링 후 보안 레이어 크기 업데이트
+                    syncSecurityLayers();
                 }
             } catch (e) {
                 console.error("PDF 렌더링 실패:", e);
-                // 폴백: 렌더링 실패 시에만 iframe 사용
-                iframe.src = url + '#toolbar=0&navpanes=0&zoom=80';
+                if (canvasContainer) canvasContainer.style.display = 'none';
+                iframe.src = cleanUrl + '#toolbar=0&navpanes=0&zoom=80';
                 iframe.style.display = 'block';
             }
         } else {
-            // 이미지 처리
             img.src = url;
             if (imgContainer) imgContainer.style.display = 'flex';
         }
 
-        // 보안 설정 및 레이어 크기 동기화
-        const syncSecurityLayers = () => {
+        function syncSecurityLayers() {
             const h = Math.max(body.scrollHeight, body.offsetHeight);
             const w = Math.max(body.scrollWidth, body.offsetWidth);
             if (watermark) {
@@ -212,16 +231,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 shield.style.height = h + 'px';
                 shield.style.width = w + 'px';
                 shield.style.display = 'block';
-                shield.style.pointerEvents = 'none'; // 중요: 쉴드가 스크롤을 방해하지 않도록 설정
+                shield.style.pointerEvents = 'none';
             }
-        };
+        }
 
-        // 로드 시점에 맞춰 여러 번 호출하여 정확한 높이 확보
-        setTimeout(syncSecurityLayers, 100);
         setTimeout(syncSecurityLayers, 500);
-        setTimeout(syncSecurityLayers, 1500);
+        setTimeout(syncSecurityLayers, 2000);
 
-        // 뷰어 영역 전체 우클릭 차단 (이제 iframe이 아니므로 확실히 차단됨)
         body.oncontextmenu = (e) => {
             e.preventDefault();
             alert('보안: 이 문서는 우클릭 및 저장이 금지되어 있습니다.');
