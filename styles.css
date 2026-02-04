@@ -1523,6 +1523,140 @@ body.admin-mode button.admin-only {
    섹션별 모바일 최적화 (규격조회처럼 깔끔하게)
    ======================================== */
 
+/* --- 국가별 규격 비교 모바일 최적화 --- */
+@media (max-width: 768px) {
+    #integrated-comparison {
+        margin-top: 30px !important;
+        padding-top: 20px !important;
+    }
+
+    #integrated-comparison .page-header h3 {
+        font-size: 18px !important;
+    }
+
+    #integrated-comparison .page-header p {
+        font-size: 12px !important;
+    }
+
+    #integrated-comparison .standard-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    #integrated-comparison .standard-card .card-header {
+        padding: 14px 16px;
+    }
+
+    #integrated-comparison .standard-card h3 {
+        font-size: 18px;
+    }
+
+    #integrated-comparison .standard-card .card-body {
+        padding: 16px;
+    }
+
+    #integrated-comparison .standard-card li {
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        padding-left: 16px;
+    }
+}
+
+/* --- VOC 폼 모바일 최적화 --- */
+@media (max-width: 768px) {
+
+    /* VOC 상단 헤더 영역 */
+    #complaint-view .search-container>div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    #complaint-view .search-container>div:first-child .section-title-line {
+        text-align: center;
+        justify-content: center;
+    }
+
+    #complaint-view .search-container>div:first-child button[type="submit"] {
+        width: 100% !important;
+        padding: 14px 20px !important;
+        font-size: 15px !important;
+    }
+
+    /* VOC 폼 그리드 - 모바일에서 2열 → 1열 */
+    #voc-form.search-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+
+    /* span 2개짜리 필드도 1열로 */
+    #voc-form .form-field[style*="grid-column: span"] {
+        grid-column: span 1 !important;
+    }
+
+    /* 라벨 스타일 */
+    #voc-form .form-field label {
+        font-size: 12px !important;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px !important;
+    }
+
+    /* 입력 필드 스타일 개선 */
+    #voc-form .form-field select,
+    #voc-form .form-field input,
+    #voc-form .form-field textarea {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    #voc-form .form-field textarea {
+        min-height: 100px !important;
+    }
+
+    /* VOC 처리 대장 헤더 영역 */
+    #complaint-view .search-container:last-child>div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    #complaint-view .filter-box {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    #complaint-view .filter-box select {
+        flex: 1;
+    }
+
+    /* 테이블 힌트 텍스트 */
+    #complaint-view .search-container:last-child>div:first-child>div:last-child {
+        text-align: center !important;
+    }
+}
+
+/* --- VOC 폼 매우 작은 화면 추가 최적화 (480px 이하) --- */
+@media (max-width: 480px) {
+    #voc-form .form-field label {
+        font-size: 11px !important;
+    }
+
+    #voc-form .form-field select,
+    #voc-form .form-field input {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+    }
+
+    /* 파일 선택 버튼 스타일 개선 */
+    #voc-form input[type="file"] {
+        font-size: 11px !important;
+    }
+}
+
 @media (max-width: 768px) {
 
     /* === 공통: 모든 섹션 전체 너비 사용 === */
