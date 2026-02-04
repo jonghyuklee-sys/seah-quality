@@ -2328,3 +2328,41 @@ body.admin-mode button.admin-only {
         z-index: 100000;
     }
 }
+/* VOC Notification Email Tags */
+.notify-email-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #3b82f6;
+    color: #1e3a8a;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+    transition: all 0.2s;
+}
+.notify-email-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+}
+.notify-email-tag .remove-btn {
+    cursor: pointer;
+    color: #ef4444;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+.notify-email-tag .remove-btn:hover {
+    background: #fee2e2;
+}
+.notify-email-tag i {
+    font-size: 11px;
+}

@@ -7,7 +7,7 @@
     <meta name="description" content="세아씨엠 품질관리 시스템 - 강종별 규격 및 기계적 성질 관리">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="세아 품질조회">
+    <meta name="apple-mobile-web-app-title" content="세아씨엠 품질조회">
     <meta name="mobile-web-app-capable" content="yes">
     <title>세아씨엠 품질 조회 시스템</title>
     <link rel="icon" href="seah-logo.jpg" type="image/jpeg">
@@ -22,6 +22,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function () {
+            // 이 서비스 정보를 나중에 본인의 키로 교체하세요!
+            emailjs.init("q2oGtAPYvvyOlL3Kq");
+        })();
+    </script>
 </head>
 
 <body>
@@ -1127,6 +1134,33 @@
                                     </p>
                                 </div>
                                 <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VOC Notification Settings -->
+                    <div class="search-container admin-only">
+                        <h3 class="section-title-line">✉️ VOC 알림 설정</h3>
+                        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
+                            VOC가 새롭게 접수되면 아래 등록된 담당자들에게 이메일 알림이 발송됩니다.
+                        </p>
+
+                        <div class="form-field" style="margin-bottom: 24px;">
+                            <label>담당자 이메일 추가</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="email" id="new-notify-email" placeholder="example@seah.co.kr"
+                                    style="flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <button type="button" id="add-notify-email-btn" class="btn-primary"
+                                    style="width: 80px; height: 45px; border-radius: 8px;">추가</button>
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label>현재 등록된 알림 명단</label>
+                            <div id="notify-email-list"
+                                style="display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; min-height: 50px;">
+                                <div style="color: #94a3b8; font-size: 13px; width: 100%; text-align: center;">등록된 이메일이
+                                    없습니다.</div>
                             </div>
                         </div>
                     </div>
