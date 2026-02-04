@@ -1603,31 +1603,88 @@ body.admin-mode button.admin-only {
         padding: 0;
     }
 
+    /* 수지별 품질 기준 테이블 - 모바일 카드 형식으로 변환 */
     #resin-quality-view table {
-        min-width: 750px;
-        /* 상세 정보를 위해 최소 너비 확보 (스크롤 유도) */
+        display: block;
+        width: 100%;
+        min-width: unset !important;
     }
 
-    #resin-quality-view th {
-        font-size: 12px !important;
-        padding: 12px 8px !important;
+    #resin-quality-view thead {
+        display: none;
+        /* 헤더 숨김 */
     }
 
-    #resin-quality-view td {
-        padding: 14px 10px !important;
+    #resin-quality-view tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    #resin-quality-view tbody tr {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    #resin-quality-view tbody tr td {
+        display: block !important;
+        width: 100% !important;
+        min-width: unset !important;
+        padding: 8px 0 !important;
+        border: none !important;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left !important;
         font-size: 13px !important;
-        line-height: 1.4 !important;
+        line-height: 1.5 !important;
+        background: transparent !important;
     }
 
-    #resin-quality-view td:first-child {
-        width: 90px !important;
-        min-width: 90px !important;
-        font-size: 12px !important;
+    #resin-quality-view tbody tr td:last-child {
+        border-bottom: none;
+        padding-bottom: 0 !important;
     }
 
-    #resin-quality-view td:nth-child(2) {
-        width: 130px !important;
-        min-width: 130px !important;
+    /* 모바일에서 각 셀 앞에 라벨 표시 */
+    #resin-quality-view tbody tr td:first-child::before {
+        content: "검사항목: ";
+        font-weight: 700;
+        color: #1e3a8a;
+        font-size: 11px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    #resin-quality-view tbody tr td:nth-child(2)::before {
+        content: "조건: ";
+        font-weight: 700;
+        color: #64748b;
+        font-size: 11px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    #resin-quality-view tbody tr td:last-child::before {
+        content: "합부 기준: ";
+        font-weight: 700;
+        color: #16a34a;
+        font-size: 11px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    /* 검사항목 셀 스타일 */
+    #resin-quality-view tbody tr td:first-child {
+        font-weight: 700;
+        color: #1e3a8a;
+        font-size: 15px !important;
+        padding-bottom: 12px !important;
+        border-bottom: 2px solid #e2e8f0;
     }
 
     .criteria-item {

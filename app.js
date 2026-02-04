@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentPageNum = 1;
     let totalPageCount = 0;
     let currentPdfUrl = "";
+    let currentZoom = 1.3; // 기본 줌 레벨
 
     // --- [2. 관리자 모드 로직] ---
     const adminLoginBtn = document.getElementById('admin-login-btn');
@@ -148,6 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const watermark = document.getElementById('viewer-watermark');
         const shield = document.getElementById('viewer-shield');
         const pageDisplay = document.getElementById('page-num-display');
+        const zoomDisplay = document.getElementById('zoom-level-display');
 
         if (!currentPdfDoc || !canvasContainer) return;
 
@@ -156,15 +158,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const page = await currentPdfDoc.getPage(num);
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const renderScale = isMobile ? 1.3 : 1.6; // 단일 페이지이므로 배율 상향
-            const viewport = page.getViewport({ scale: renderScale });
+
+            // 줌 레벨 적용
+            const viewport = page.getViewport({ scale: currentZoom });
 
             const canvas = document.createElement('canvas');
             canvas.className = 'pdf-page-canvas';
             canvas.style.display = 'block';
             canvas.style.margin = '20px auto';
-            canvas.style.width = isMobile ? '98%' : '85%';
-            canvas.style.maxWidth = '1200px';
+
+            // 시각적 너비 계산 (줌 레벨에 따라 유동적으로 조절)
+            const referenceZoom = isMobile ? 1.3 : 1.6;
+            const visualWidth = (isMobile ? 98 : 85) * (currentZoom / referenceZoom);
+            canvas.style.width = visualWidth + '%';
+
+            canvas.style.maxWidth = 'none'; // 확대 시 1200px 제한 해제
             canvas.style.boxShadow = '0 15px 40px rgba(0,0,0,0.6)';
             canvas.style.background = 'white';
 
@@ -177,8 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-            // 페이지 정보 업데이트
+            // 표시 정보 업데이트
             if (pageDisplay) pageDisplay.textContent = `${num} / ${totalPageCount}`;
+            if (zoomDisplay) zoomDisplay.textContent = `${Math.round(currentZoom * 77)}%`;
             currentPageNum = num;
 
             // 스크롤 상단 이동
@@ -202,6 +211,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // 페이징 버튼 이벤트 바인딩
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
+    const zoomInBtn = document.getElementById('zoom-in-btn');
+    const zoomOutBtn = document.getElementById('zoom-out-btn');
 
     if (prevPageBtn) {
         prevPageBtn.onclick = () => {
@@ -213,6 +224,22 @@ document.addEventListener('DOMContentLoaded', function () {
         nextPageBtn.onclick = () => {
             if (currentPageNum >= totalPageCount) return;
             renderPdfPage(currentPageNum + 1);
+        };
+    }
+
+    // 확대/축소 로직
+    if (zoomInBtn) {
+        zoomInBtn.onclick = () => {
+            if (currentZoom >= 3.0) return; // 최대 3배
+            currentZoom += 0.2;
+            renderPdfPage(currentPageNum);
+        };
+    }
+    if (zoomOutBtn) {
+        zoomOutBtn.onclick = () => {
+            if (currentZoom <= 0.7) return; // 최소 0.7배
+            currentZoom -= 0.2;
+            renderPdfPage(currentPageNum);
         };
     }
 
@@ -1204,138 +1231,138 @@ document.addEventListener('DOMContentLoaded', function () {
     const resinQualityData = {
         'RMP': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">H 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item">50회 이상 (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 2T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 3T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'HPP': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">HB 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 0T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">5점 이상 (도막 균열 없을 것)</span>' },
             { item: '굽힘 시험', condition: '180° / 1T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 보증 불가할 수 있음)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 보증 불가할 수 있음)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 보증 불가할 수 있음)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">240 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'HDP': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">H 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item">50회 이상 (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 2T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 3T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'SMP': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">H 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item">50회 이상 (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 2T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 3T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'ADP': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">H 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item">50회 이상 (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 2T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 3T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'HBU': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">H 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item">50회 이상 (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 2T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 3T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'SQP40': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">H 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item">50회 이상 (일반)</span><span class="criteria-item">20회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">50회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">20회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 2T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 3T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
-            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item">24 Hr 이상 견딜 것</span>' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">24 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 협의 필요)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
         'PVDF': [
             { item: '색차', condition: 'ΔE', criteria: '<span class="highlight-blue">M/C 대비 ΔE 1.20 이내</span><br><span class="note-text">(메탈릭 ΔE 1.50 이내)</span>' },
-            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="criteria-item">제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
-            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="criteria-item">요청 품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
+            { item: '색차', condition: '동일 LOT 색차', criteria: '<span class="highlight-blue">동일 LOT 제품 대비 ΔE 0.30 이내</span><span class="note-text">※ 같은 날 생산된 동일 컬러 기준 (Roll 교체 무관)</span>' },
+            { item: '색차', condition: '타 LOT간 색차', criteria: '<span class="highlight-blue">요청 LOT 제품 대비 ΔE 0.50 이내</span><span class="note-text">※ 수요가 요청 시 대응, M/C 대비 기준은 별도 적용</span>' },
             { item: '도막', condition: '두께 측정\n(DJH / Meter)', criteria: '<span class="highlight-blue">지정 도막 ± 3μm</span><br><span class="note-text">(Matt/Wrinkle 제품은 별도 M/C 뒷면 범위 준수)</span>' },
             { item: '광택', condition: '60°\n(고정 광택계)', criteria: '<span class="criteria-item">71% 이상 : <span class="highlight-blue">±10</span></span><span class="criteria-item">51% ~ 70% : <span class="highlight-blue">±7</span></span><span class="criteria-item">50% 이하 : <span class="highlight-blue">±5</span></span>' },
             { item: '연필경도', condition: '연필 (미쓰비시)', criteria: '<span class="highlight-blue">F 이상</span><br><span class="note-text">(※ 광택도에 따라 기준 조정될 수 있음)</span>' },
-            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">100회 이상</span> (일반)</span><span class="criteria-item">50회 이상 (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
+            { item: 'M.E.K', condition: '상하 왕복 1회\n(100 ~ 150mm)', criteria: '<span class="criteria-item"><span class="highlight-blue">100회 이상</span> (일반)</span><span class="criteria-item"><span class="highlight-blue">50회 이상</span> (메탈릭)</span><span class="note-text">※ 프라이머 노출 시 종료</span>' },
             { item: 'C.C.E', condition: '10 X 10 X 6 mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '굽힘 시험', condition: '180° / 0T\n(≤ 0.4 mm)', criteria: '<span class="highlight-blue">5점 이상 (도막 균열 없을 것)</span><br><span class="note-text">※ 단, AL 복합판넬의 경우 0T NO CRACK 임</span>' },
             { item: '굽힘 시험', condition: '180° / 1T\n(≥ 0.6 mm)', criteria: '<span class="highlight-blue">4점 이상</span> (도막 박리 없을 것)' },
             { item: '내충격성', condition: '500g X 500mm', criteria: '<span class="highlight-blue">5점 이상</span> (도막 박리 없을 것)' },
             { item: '내약품성', condition: '내산성 (5% HCl)', criteria: '<span class="highlight-blue">48 Hr 이상</span> 견딜 것<br><span class="note-text">(메탈릭/유기안료 함량 높은 경우 보증 불가할 수 있음)</span>' },
-            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="highlight-blue">48 Hr 이상</span> 견딜 것' },
-            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item">Rust, Crack, 변색 : 4점 이상</span><span class="criteria-item">광택유지율 70%↑, ΔE 1.0↓</span>' },
+            { item: '내약품성', condition: '내알칼리성\n(5% NaOH)', criteria: '<span class="criteria-item"><span class="highlight-blue">48 Hr 이상</span> 견딜 것</span><span class="note-text">(메탈릭/유기안료 함량 높은 경우 보증 불가할 수 있음)</span>' },
+            { item: '내약품성', condition: '판정 지표', criteria: '<span class="criteria-item"><span class="highlight-blue">Rust, Crack, 변색 : 4점 이상</span></span><span class="criteria-item"><span class="highlight-blue">광택유지율 70%↑, ΔE 1.0↓</span></span>' },
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">500 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
     };
