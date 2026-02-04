@@ -22,6 +22,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let localNotifyEmails = []; // 추가
     let resultsCardWasVisible = false;
 
+    // VOC 페이지네이션 및 필터 상태
+    let vocCurrentPage = 1;
+    let vocItemsPerPage = 10;
+    let vocMonthFilter = 'all';
+
     // PDF 뷰어 상태 관리
     let currentPdfDoc = null;
     let currentPageNum = 1;
@@ -897,7 +902,22 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- [7. VOC 관리 & 대시보드] ---
     const vocListBody = document.getElementById('voc-list-body');
     const vocForm = document.getElementById('voc-form');
-    let lineChart, catChart;
+    const vocPaginationEl = document.getElementById('voc-pagination');
+    const vocMonthFilterEl = document.getElementById('voc-month-filter');
+    let lineChart, catChart, monthlyChart, marketChart, teamChart, costChart;
+
+    if (vocMonthFilterEl) {
+        vocMonthFilterEl.onchange = (e) => {
+            vocMonthFilter = e.target.value;
+            vocCurrentPage = 1;
+            renderVocTable();
+        };
+    }
+
+    const dashPeriodFilter = document.getElementById('dash-period-filter');
+    if (dashPeriodFilter) {
+        dashPeriodFilter.onchange = () => updateDashboard();
+    }
 
     function loadLocalComplaints() {
         if (!db) {
@@ -907,21 +927,78 @@ document.addEventListener('DOMContentLoaded', function () {
         db.collection("complaints").orderBy("createdAt", "desc").get().then(snap => {
             localComplaints = [];
             snap.forEach(doc => localComplaints.push({ id: doc.id, ...doc.data() }));
+
+            updateVocMonthFilterOptions();
+            updateDashFilterOptions();
             renderVocTable();
             updateDashboard();
         }).catch(err => {
             console.error("Error loading complaints:", err);
-            // 에러 시 사용자 알림 (권한 부족 등)
             if (vocListBody) {
-                vocListBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--danger);">데이터를 불러오지 못했습니다: ${err.message}</td></tr>`;
+                vocListBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--danger);">데이터를 불러오지 못했습니다: ${err.message}</td></tr>`;
             }
         });
     }
 
+    function updateVocMonthFilterOptions() {
+        if (!vocMonthFilterEl) return;
+        const months = [...new Set(localComplaints.map(v => v.receiptDate ? v.receiptDate.substring(0, 7) : ""))].filter(m => m).sort().reverse();
+        let html = '<option value="all">전체 내역</option>';
+        months.forEach(m => {
+            html += `<option value="${m}">${m.split('-')[0]}년 ${m.split('-')[1]}월</option>`;
+        });
+        vocMonthFilterEl.innerHTML = html;
+        vocMonthFilterEl.value = vocMonthFilter;
+    }
+
+    function updateDashFilterOptions() {
+        const dashPeriodFilter = document.getElementById('dash-period-filter');
+        if (!dashPeriodFilter) return;
+
+        const receiptDates = localComplaints.map(v => v.receiptDate).filter(d => d);
+        const years = [...new Set(receiptDates.map(d => d.substring(0, 4)))].sort().reverse();
+        const months = [...new Set(receiptDates.map(d => d.substring(0, 7)))].sort().reverse();
+
+        let html = '<option value="all">전체 (Overall)</option>';
+        years.forEach(y => {
+            html += `<option value="year-${y}">${y}년 전체 (Yearly)</option>`;
+        });
+        months.forEach(m => {
+            const [y, mm] = m.split('-');
+            html += `<option value="month-${m}">${y}년 ${mm}월 (Monthly)</option>`;
+        });
+
+        const currentVal = dashPeriodFilter.value;
+        dashPeriodFilter.innerHTML = html;
+        if (Array.from(dashPeriodFilter.options).some(o => o.value === currentVal)) {
+            dashPeriodFilter.value = currentVal;
+        } else {
+            dashPeriodFilter.value = 'all';
+        }
+    }
+
     function renderVocTable() {
         if (!vocListBody) return;
-        vocListBody.innerHTML = localComplaints.length === 0 ? '<tr><td colspan="7" style="text-align:center; padding:60px; color:#94a3b8; font-size:14px;">현재 등록된 고객불만 내역이 없습니다.</td></tr>' : '';
-        localComplaints.forEach((v, idx) => {
+
+        // 1. Filter
+        let filtered = localComplaints;
+        if (vocMonthFilter !== 'all') {
+            filtered = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(vocMonthFilter));
+        }
+
+        // 2. Pagination Calculation
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / vocItemsPerPage);
+
+        // 현재 페이지가 전체 페이지보다 크면 조정
+        if (vocCurrentPage > totalPages && totalPages > 0) vocCurrentPage = totalPages;
+
+        const startIdx = (vocCurrentPage - 1) * vocItemsPerPage;
+        const pagedItems = filtered.slice(startIdx, startIdx + vocItemsPerPage);
+
+        vocListBody.innerHTML = filtered.length === 0 ? '<tr><td colspan="8" style="text-align:center; padding:60px; color:#94a3b8; font-size:14px;">현재 등록된 고객불만 내역이 없습니다.</td></tr>' : '';
+
+        pagedItems.forEach((v, idx) => {
             const tr = document.createElement('tr');
             tr.style.cssText = 'border-bottom:1px solid #f1f5f9; cursor:pointer; transition:background 0.2s;';
             tr.onmouseover = () => tr.style.background = '#f8fafc';
@@ -929,6 +1006,7 @@ document.addEventListener('DOMContentLoaded', function () {
             tr.onclick = () => openVocModal(v.id);
 
             const rowColor = v.category === '클레임' ? '#ef4444' : '#f59e0b';
+            const managerDisplay = (v.team ? `<small style="color:#64748b">[${v.team}]</small> ` : '') + v.manager;
 
             tr.innerHTML = `
                 <td style="padding:14px; text-align:center;">
@@ -936,6 +1014,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </td>
                 <td style="padding:14px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
                 <td style="padding:14px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
+                <td style="padding:14px; text-align:center; font-size:13px; color:#475569;">${managerDisplay}</td>
                 <td style="padding:14px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
                 <td style="padding:14px; color:#334155; font-weight:500; text-align:center;">${v.title}</td>
                 <td style="padding:14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
@@ -946,6 +1025,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 </td>`;
             vocListBody.appendChild(tr);
         });
+
+        renderVocPagination(totalPages);
+    }
+
+    function renderVocPagination(totalPages) {
+        if (!vocPaginationEl) return;
+        vocPaginationEl.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Previous Button
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn';
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.disabled = vocCurrentPage === 1;
+        prevBtn.onclick = () => { if (vocCurrentPage > 1) { vocCurrentPage--; renderVocTable(); } };
+        vocPaginationEl.appendChild(prevBtn);
+
+        // Page Numbers
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `page-btn ${vocCurrentPage === i ? 'active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => { vocCurrentPage = i; renderVocTable(); };
+            vocPaginationEl.appendChild(pageBtn);
+        }
+
+        // Next Button
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn';
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = vocCurrentPage === totalPages;
+        nextBtn.onclick = () => { if (vocCurrentPage < totalPages) { vocCurrentPage++; renderVocTable(); } };
+        vocPaginationEl.appendChild(nextBtn);
     }
 
     const vocModal = document.getElementById('voc-modal');
@@ -962,6 +1075,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'modal-edit-market': v.market,
             'modal-edit-receiptDate': v.receiptDate,
             'modal-edit-customer': v.customer,
+            'modal-edit-team': v.team || '',
             'modal-edit-manager': v.manager,
             'modal-edit-spec': v.spec,
             'modal-edit-line': v.line,
@@ -1025,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 market: document.getElementById('voc-market').value,
                 receiptDate: document.getElementById('voc-receipt-date').value,
                 customer: document.getElementById('voc-customer').value,
+                team: document.getElementById('voc-team').value,
                 manager: document.getElementById('voc-manager').value,
                 spec: document.getElementById('voc-spec').value,
                 color: document.getElementById('voc-color').value,
@@ -1077,6 +1192,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     market: document.getElementById('modal-edit-market').value,
                     receiptDate: document.getElementById('modal-edit-receiptDate').value,
                     customer: document.getElementById('modal-edit-customer').value,
+                    team: document.getElementById('modal-edit-team').value,
                     manager: document.getElementById('modal-edit-manager').value,
                     spec: document.getElementById('modal-edit-spec').value,
                     line: document.getElementById('modal-edit-line').value,
@@ -1124,30 +1240,110 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    // 대시보드 필터 옵션 업데이트 함수
+    function updateDashFilterOptions() {
+        const filterSelect = document.getElementById('dash-period-filter');
+        if (!filterSelect) return;
+
+        const years = new Set();
+        const months = new Set();
+
+        localComplaints.forEach(v => {
+            if (v.receiptDate) {
+                const year = v.receiptDate.substring(0, 4);
+                const month = v.receiptDate.substring(0, 7);
+                years.add(year);
+                months.add(month);
+            }
+        });
+
+        // Clear existing options except 'all'
+        filterSelect.innerHTML = '<option value="all">전체</option>';
+
+        const now = new Date();
+        const currentYear = now.getFullYear().toString();
+        const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        // Add "올해" and "이번 달" if applicable
+        if (years.has(currentYear)) {
+            const currentYearOption = document.createElement('option');
+            currentYearOption.value = `year-${currentYear}`;
+            currentYearOption.textContent = `${currentYear}년`;
+            filterSelect.appendChild(currentYearOption);
+        }
+        if (months.has(currentMonth)) {
+            const currentMonthOption = document.createElement('option');
+            currentMonthOption.value = `month-${currentMonth}`;
+            currentMonthOption.textContent = `${currentMonth}월`;
+            filterSelect.appendChild(currentMonthOption);
+        }
+
+        // Add options for each unique year
+        Array.from(years).sort((a, b) => b.localeCompare(a)).forEach(year => {
+            if (year !== currentYear) { // Avoid duplication if "올해" is already added
+                const option = document.createElement('option');
+                option.value = `year-${year}`;
+                option.textContent = `${year}년`;
+                filterSelect.appendChild(option);
+            }
+        });
+
+        // Add options for each unique month
+        Array.from(months).sort((a, b) => b.localeCompare(a)).forEach(month => {
+            if (month !== currentMonth) { // Avoid duplication if "이번 달" is already added
+                const option = document.createElement('option');
+                option.value = `month-${month}`;
+                option.textContent = `${month}월`;
+                filterSelect.appendChild(option);
+            }
+        });
+    }
+
     function updateDashboard() {
         if (!document.getElementById('dash-total-count')) return;
-        const total = localComplaints.length;
-        const pending = localComplaints.filter(v => v.status !== '완료').length;
+
+        // [Filter Logic] 선택된 기간에 따라 데이터 필터링
+        const periodValue = document.getElementById('dash-period-filter')?.value || 'all';
+        let filteredData = localComplaints;
+
+        if (periodValue.startsWith('year-')) {
+            const y = periodValue.replace('year-', '');
+            filteredData = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(y));
+        } else if (periodValue.startsWith('month-')) {
+            const m = periodValue.replace('month-', '');
+            filteredData = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(m));
+        }
+
+        // 정렬: 접수일자 기준 내림차순 (대시보드 표시용)
+        const displayData = [...filteredData].sort((a, b) => {
+            const da = a.receiptDate || '';
+            const db = b.receiptDate || '';
+            return db.localeCompare(da);
+        });
+
+        const total = displayData.length;
+        const pending = displayData.filter(v => v.status !== '완료').length;
         const completeRate = total > 0 ? Math.round(((total - pending) / total) * 100) : 0;
 
         document.getElementById('dash-total-count').textContent = total + " EA";
         document.getElementById('dash-pending-count').textContent = pending + " EA";
         document.getElementById('dash-completion-rate').textContent = completeRate + "%";
 
-        // 비용 통계 (임의 계산 logic)
-        const totalCost = localComplaints.reduce((acc, v) => acc + (parseInt(v.cost) || 0), 0);
+        // 비용 합계 계산
+        const totalCost = displayData.reduce((acc, v) => acc + (parseInt(v.cost) || 0), 0);
         document.getElementById('dash-total-cost').textContent = "₩" + totalCost.toLocaleString();
 
+        if (typeof Chart === 'undefined') return;
+        if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+
+        // [1] 라인별 발생 현황 (Bar)
         const lineMap = { 'CPL': 0, 'CRM': 0, 'CGL': 0, '1CCL': 0, '2CCL': 0, '3CCL': 0, 'SSCL': 0 };
-        localComplaints.forEach(v => { if (lineMap.hasOwnProperty(v.line)) lineMap[v.line]++; });
+        displayData.forEach(v => { if (lineMap.hasOwnProperty(v.line)) lineMap[v.line]++; });
 
-        const ctx = document.getElementById('lineChart');
-        if (ctx && typeof Chart !== 'undefined') {
-            // ChartDataLabels 플러그인 등록
-            if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
-
+        const lineCtx = document.getElementById('lineChart');
+        if (lineCtx) {
             if (lineChart) lineChart.destroy();
-            lineChart = new Chart(ctx, {
+            lineChart = new Chart(lineCtx, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(lineMap),
@@ -1161,32 +1357,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold', size: 12 },
-                            anchor: 'end',
-                            align: 'start',
-                            offset: 4,
-                            formatter: (val) => val > 0 ? val : ''
-                        }
-                    },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { color: '#475569', anchor: 'end', align: 'top', formatter: Math.round } },
                     scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
                 }
             });
         }
 
-        // --- Category Doughnut Chart (클레임/컴플레인 비중) 구현 ---
-        const catCtx = document.getElementById('categoryChart');
-        if (catCtx && typeof Chart !== 'undefined') {
-            const catMap = { '클레임': 0, '컴플레인': 0 };
-            localComplaints.forEach(v => {
-                if (catMap.hasOwnProperty(v.category)) catMap[v.category]++;
-            });
+        // [2] 클레임/컴플레인 비중 (Doughnut)
+        const catMap = { '클레임': 0, '컴플레인': 0 };
+        displayData.forEach(v => { if (catMap.hasOwnProperty(v.category)) catMap[v.category]++; });
 
+        const catCtx = document.getElementById('categoryChart');
+        if (catCtx) {
             if (catChart) catChart.destroy();
             catChart = new Chart(catCtx, {
                 type: 'doughnut',
@@ -1194,34 +1377,143 @@ document.addEventListener('DOMContentLoaded', function () {
                     labels: Object.keys(catMap),
                     datasets: [{
                         data: Object.values(catMap),
-                        backgroundColor: ['#ef4444', '#f59e0b'], // 클레임(빨강), 컴플레인(노랑)
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
+                        backgroundColor: ['#ef4444', '#f59e0b'],
+                        borderWidth: 2, borderColor: '#ffffff'
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { usePointStyle: true, padding: 20, font: { size: 12, weight: '700' } }
-                        },
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold', size: 13 },
-                            formatter: (val) => val > 0 ? val + "건" : ''
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }, datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: (v) => v > 0 ? v + '건' : '' } }
                 }
             });
         }
 
-        // Recent Top 5 List
+        // [3] 월별 VOC 발생 추이 (Line)
+        const monthlyMap = {};
+        displayData.forEach(v => {
+            if (v.receiptDate) {
+                const mStr = v.receiptDate.substring(0, 7);
+                monthlyMap[mStr] = (monthlyMap[mStr] || 0) + 1;
+            }
+        });
+        const sortedMonths = Object.keys(monthlyMap).sort().slice(-6); // 최근 6개월
+
+        const monthlyCtx = document.getElementById('monthlyTrendChart');
+        if (monthlyCtx) {
+            if (monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: 'VOC 발생건수',
+                        data: sortedMonths.map(m => monthlyMap[m]),
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#8b5cf6'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { align: 'top', color: '#8b5cf6', font: { weight: 'bold' } } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } } }
+                }
+            });
+        }
+
+        // [4] 내수 vs 수출 비중 (Pie)
+        const marketMap = { '내수': 0, '수출': 0 };
+        displayData.forEach(v => { if (marketMap.hasOwnProperty(v.market)) marketMap[v.market]++; });
+
+        const marketCtx = document.getElementById('marketShareChart');
+        if (marketCtx) {
+            if (marketChart) marketChart.destroy();
+            marketChart = new Chart(marketCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(marketMap),
+                    datasets: [{
+                        data: Object.values(marketMap),
+                        backgroundColor: ['#3b82f6', '#10b981'],
+                        borderWidth: 2, borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }, datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: (v) => v > 0 ? v + '건' : '' } }
+                }
+            });
+        }
+
+        // [5] 담당 팀별 VOC 현황 (Horizontal Bar)
+        const teamMap = { '영업1팀': 0, '영업2팀': 0, '수출팀': 0 };
+        displayData.forEach(v => { if (v.team && teamMap.hasOwnProperty(v.team)) teamMap[v.team]++; });
+
+        const teamCtx = document.getElementById('teamShareChart');
+        if (teamCtx) {
+            if (teamChart) teamChart.destroy();
+            teamChart = new Chart(teamCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(teamMap),
+                    datasets: [{
+                        label: '팀별 건수',
+                        data: Object.values(teamMap),
+                        backgroundColor: 'rgba(20, 184, 166, 0.7)',
+                        borderColor: '#14b8a6',
+                        borderWidth: 1, borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#14b8a6', font: { weight: 'bold' } } },
+                    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // [6] 라인별 예상 손실 비용 (Bar)
+        const lineCostMap = { 'CPL': 0, 'CRM': 0, 'CGL': 0, '1CCL': 0, '2CCL': 0, '3CCL': 0, 'SSCL': 0 };
+        displayData.forEach(v => {
+            if (v.line && lineCostMap.hasOwnProperty(v.line)) {
+                lineCostMap[v.line] += (parseInt(v.cost) || 0);
+            }
+        });
+
+        const costCtx = document.getElementById('lineCostChart');
+        if (costCtx) {
+            if (costChart) costChart.destroy();
+            costChart = new Chart(costCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(lineCostMap),
+                    datasets: [{
+                        label: '손실 비용(원)',
+                        data: Object.values(lineCostMap),
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1, borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end', align: 'top', color: '#ef4444', font: { weight: 'bold', size: 10 },
+                            formatter: (v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // Recent Top 5 List (필터링된 데이터 중 최근 5건)
         const recentList = document.getElementById('dash-recent-list');
         if (recentList) {
-            recentList.innerHTML = localComplaints.slice(0, 5).map(v => `
+            recentList.innerHTML = displayData.slice(0, 5).map(v => `
                 <tr style="border-bottom:1px solid #f1f5f9;">
                     <td style="padding:12px; font-size:13px; font-weight:600; text-align:center;">${v.customer}</td>
                     <td style="padding:12px; font-size:13px; color:#475569; text-align:center;">${v.title}</td>
@@ -1229,7 +1521,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td style="padding:12px; font-size:12px; color:#94a3b8; text-align:center;">${v.receiptDate}</td>
                 </tr>
             `).join('');
-            if (localComplaints.length === 0) recentList.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">현황 없음</td></tr>';
+            if (displayData.length === 0) recentList.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">현황 없음</td></tr>';
         }
     }
 
@@ -1459,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', function () {
             category: vocData.category,
             customer: vocData.customer,
             title: vocData.title,
-            manager: vocData.manager,
+            manager: (vocData.team ? `[${vocData.team}] ` : '') + vocData.manager,
             receipt_date: vocData.receiptDate,
             spec: vocData.spec,
             line: vocData.line,

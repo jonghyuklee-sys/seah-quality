@@ -2366,3 +2366,37 @@ body.admin-mode button.admin-only {
 .notify-email-tag i {
     font-size: 11px;
 }
+
+/* Pagination Styles */
+.pagination-container .page-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-main);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-container .page-btn:hover {
+    background: #f1f5f9;
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.pagination-container .page-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.pagination-container .page-btn:disabled {
+    opacity: 0.5;
+    cursor:not-allowed;
+}
