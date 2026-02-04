@@ -1155,8 +1155,10 @@
                     <!-- 뷰어 헤더 -->
                     <div
                         style="background: #0f172a; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;"><span
-                                style="margin-right: 10px;">📋</span> 보안 문서 통합 뷰어</h3>
+                        <h3
+                            style="margin: 0; font-size: 15px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px;">
+                            <span>📋</span> 보안 문서 통합 뷰어
+                        </h3>
                         <div style="display: flex; gap: 15px; align-items: center;">
                             <span
                                 style="font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px;">보안
@@ -1188,11 +1190,24 @@
                         <!-- 🛡️ 보안 워터마크 오버레이 -->
                         <div class="viewer-watermark-overlay" id="viewer-watermark"></div>
                     </div>
-                    <!-- 뷰어 푸터 -->
-                    <div
-                        style="background: #f8fafc; padding: 10px 25px; border-top: 1px solid #e2e8f0; text-align: center; z-index: 20;">
-                        <p style="margin: 0; font-size: 12px; color: #64748b;">본 문서는 세아씨엠 보안 정책에 의해 보호받고 있습니다. 캡처 및 무단
-                            배포 시 법적 책임을 물을 수 있습니다.</p>
+                    <!-- 뷰어 푸터 및 페이지 컨트롤러 -->
+                    <div id="viewer-footer"
+                        style="background: #f8fafc; padding: 12px 25px; border-top: 1px solid #e2e8f0; z-index: 20;">
+                        <!-- 페이지 컨트롤러 (PDF인 경우 app.js에서 표시함) -->
+                        <div id="viewer-pagination"
+                            style="display: none; justify-content: center; align-items: center; gap: 25px; margin-bottom: 12px;">
+                            <button id="prev-page"
+                                style="padding: 8px 18px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">◀
+                                이전</button>
+                            <span id="page-num-display"
+                                style="font-weight: 800; color: #1e293b; font-size: 15px; min-width: 80px; text-align: center;">1
+                                / 1</span>
+                            <button id="next-page"
+                                style="padding: 8px 18px; background: #1e3a8a; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">다음
+                                ▶</button>
+                        </div>
+                        <p style="margin: 0; font-size: 11px; color: #94a3b8; text-align: center;">본 문서는 세아씨엠 보안 정책에 의해
+                            보호받고 있습니다. 캡처 및 무단 배포 시 법적 책임을 물을 수 있습니다.</p>
                     </div>
                 </div>
             </div>

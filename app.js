@@ -21,6 +21,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let localDefects = [];
     let resultsCardWasVisible = false;
 
+    // PDF 뷰어 상태 관리
+    let currentPdfDoc = null;
+    let currentPageNum = 1;
+    let totalPageCount = 0;
+    let currentPdfUrl = "";
+
     // --- [2. 관리자 모드 로직] ---
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const adminModal = document.getElementById('admin-modal');
@@ -135,114 +141,140 @@ document.addEventListener('DOMContentLoaded', function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // --- [PDF 페이지 렌더링 전용 함수] ---
+    async function renderPdfPage(num) {
+        const body = document.getElementById('viewer-body');
+        const canvasContainer = document.getElementById('viewer-canvas-container');
+        const watermark = document.getElementById('viewer-watermark');
+        const shield = document.getElementById('viewer-shield');
+        const pageDisplay = document.getElementById('page-num-display');
+
+        if (!currentPdfDoc || !canvasContainer) return;
+
+        try {
+            canvasContainer.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:14px;">페이지를 구성 중입니다...</div>';
+
+            const page = await currentPdfDoc.getPage(num);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const renderScale = isMobile ? 1.3 : 1.6; // 단일 페이지이므로 배율 상향
+            const viewport = page.getViewport({ scale: renderScale });
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page-canvas';
+            canvas.style.display = 'block';
+            canvas.style.margin = '20px auto';
+            canvas.style.width = isMobile ? '98%' : '85%';
+            canvas.style.maxWidth = '1200px';
+            canvas.style.boxShadow = '0 15px 40px rgba(0,0,0,0.6)';
+            canvas.style.background = 'white';
+
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            canvasContainer.innerHTML = '';
+            canvasContainer.appendChild(canvas);
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+            // 페이지 정보 업데이트
+            if (pageDisplay) pageDisplay.textContent = `${num} / ${totalPageCount}`;
+            currentPageNum = num;
+
+            // 스크롤 상단 이동
+            body.scrollTop = 0;
+
+            // 보안 레이어 동기화
+            const syncSecurityLayers = () => {
+                const contentHeight = Math.max(body.scrollHeight, body.offsetHeight, canvasContainer.scrollHeight);
+                if (watermark) watermark.style.height = contentHeight + 'px';
+                if (shield) {
+                    shield.style.height = contentHeight + 'px';
+                    shield.style.display = 'block';
+                }
+            };
+            setTimeout(syncSecurityLayers, 100);
+        } catch (e) {
+            console.error("페이지 렌더링 실패:", e);
+        }
+    }
+
+    // 페이징 버튼 이벤트 바인딩
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    if (prevPageBtn) {
+        prevPageBtn.onclick = () => {
+            if (currentPageNum <= 1) return;
+            renderPdfPage(currentPageNum - 1);
+        };
+    }
+    if (nextPageBtn) {
+        nextPageBtn.onclick = () => {
+            if (currentPageNum >= totalPageCount) return;
+            renderPdfPage(currentPageNum + 1);
+        };
+    }
+
     window.openSecureViewer = async (url) => {
         const modal = document.getElementById('doc-viewer-modal');
         const body = document.getElementById('viewer-body');
         const iframe = document.getElementById('viewer-iframe');
         const img = document.getElementById('viewer-img');
         const imgContainer = document.getElementById('viewer-img-container');
-        const shield = document.getElementById('viewer-shield');
-        const watermark = document.getElementById('viewer-watermark');
+        const paginationBar = document.getElementById('viewer-pagination');
         const canvasContainer = document.getElementById('viewer-canvas-container');
 
         if (!modal || !body || !iframe || !img) return;
 
-        // 1. 초기화
+        // 초기화
         iframe.style.display = 'none';
         iframe.src = '';
         if (imgContainer) imgContainer.style.display = 'none';
         img.src = '';
+        if (paginationBar) paginationBar.style.display = 'none';
 
         if (canvasContainer) {
             canvasContainer.innerHTML = '';
             canvasContainer.style.display = 'block';
-            canvasContainer.style.minHeight = '100%';
-            canvasContainer.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:14px;">보안 문서를 구성 중입니다...</div>';
         }
 
-        body.querySelectorAll('.pdf-page-canvas').forEach(c => c.remove());
         body.scrollTop = 0;
         modal.style.display = 'flex';
 
-        // PDF 판별 고도화
         const isPdf = url.toLowerCase().includes('.pdf') || url.includes('blob:') || url.includes('gs://') || url.includes('firebasestorage');
 
         if (isPdf) {
             const cleanUrl = url.split('#')[0];
-
             try {
+                if (canvasContainer) canvasContainer.innerHTML = '<div style="color:white; text-align:center; padding:50px;">문서를 불러오는 중입니다...</div>';
+
                 const loadingTask = pdfjsLib.getDocument(cleanUrl);
-                const pdf = await loadingTask.promise;
+                currentPdfDoc = await loadingTask.promise;
+                totalPageCount = currentPdfDoc.numPages;
+                currentPageNum = 1;
 
-                if (canvasContainer) canvasContainer.innerHTML = '';
+                if (paginationBar) paginationBar.style.display = 'flex';
 
-                // 모바일 여부 확인 및 배율 조정 (메모리 절약)
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                const renderScale = isMobile ? 1.2 : 1.5;
-
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: renderScale });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.className = 'pdf-page-canvas';
-                    canvas.style.display = 'block';
-                    canvas.style.margin = '20px auto';
-                    canvas.style.width = isMobile ? '95%' : '80%';
-                    canvas.style.maxWidth = '1200px';
-                    canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
-                    canvas.style.background = 'white';
-
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    if (canvasContainer) {
-                        canvasContainer.appendChild(canvas);
-                    } else {
-                        body.insertBefore(canvas, watermark);
-                    }
-
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-                    // 모바일에서는 매 페이지 렌더링 후 지연을 주어 브라우저 부하 경감
-                    if (isMobile && pageNum % 2 === 0) {
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-
-                    syncSecurityLayers();
-                }
-
-                // 최종 높이 재동기화
-                setTimeout(syncSecurityLayers, 500);
+                await renderPdfPage(1);
             } catch (e) {
-                console.error("PDF 렌더링 실패:", e);
-                if (canvasContainer) canvasContainer.style.display = 'none';
-                iframe.src = cleanUrl + '#toolbar=0&navpanes=0&zoom=80';
-                iframe.style.display = 'block';
+                console.error("PDF 로딩 실패:", e);
+                let errorMsg = "문서를 불러오는 데 실패했습니다.";
+                if (e.message.includes("fetch")) {
+                    errorMsg = "서버 보안 정책(CORS)으로 인해 파일을 불러올 수 없습니다. Firebase 설정을 확인해주세요.";
+                }
+                if (canvasContainer) {
+                    canvasContainer.innerHTML = `<div style="color:#f87171; text-align:center; padding:50px; font-size:14px; line-height:1.6;">
+                        <div style="font-size:30px; margin-bottom:15px;">⚠️</div>
+                        ${errorMsg}<br><br>
+                        <span style="color:#94a3b8; font-size:12px;">Error: ${e.message}</span>
+                    </div>`;
+                }
+                if (paginationBar) paginationBar.style.display = 'none';
             }
         } else {
             img.src = url;
             if (imgContainer) imgContainer.style.display = 'flex';
-        }
-
-        function syncSecurityLayers() {
-            // contentHeight를 계산할 때 canvasContainer의 높이도 명시적으로 확인
-            const contentHeight = Math.max(
-                body.scrollHeight,
-                body.offsetHeight,
-                canvasContainer ? canvasContainer.scrollHeight : 0
-            );
-
-            if (watermark) {
-                watermark.style.height = contentHeight + 'px';
-                watermark.style.minHeight = '100%';
-            }
-            if (shield) {
-                shield.style.height = contentHeight + 'px';
-                shield.style.display = 'block';
-                shield.style.pointerEvents = 'none';
-            }
         }
 
         body.oncontextmenu = (e) => {
