@@ -155,43 +155,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (canvasContainer) {
             canvasContainer.innerHTML = '';
-            canvasContainer.style.display = 'none';
+            canvasContainer.style.display = 'block';
+            canvasContainer.style.minHeight = '100%';
+            canvasContainer.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:14px;">보안 문서를 구성 중입니다...</div>';
         }
 
-        // 기존 직접 삽입된 캔버스들도 제거
         body.querySelectorAll('.pdf-page-canvas').forEach(c => c.remove());
-
         body.scrollTop = 0;
         modal.style.display = 'flex';
 
-        const isPdf = url.includes('.pdf') || url.includes('blob:');
+        // PDF 판별 고도화
+        const isPdf = url.toLowerCase().includes('.pdf') || url.includes('blob:') || url.includes('gs://') || url.includes('firebasestorage');
 
         if (isPdf) {
-            // URL에서 해시(#) 제거 (pdf.js 로딩 라이브러리용)
             const cleanUrl = url.split('#')[0];
 
             try {
-                if (canvasContainer) {
-                    canvasContainer.style.display = 'block';
-                    canvasContainer.innerHTML = '<div style="color:white; text-align:center; padding:50px;">문서를 불러오는 중입니다...</div>';
-                }
-
                 const loadingTask = pdfjsLib.getDocument(cleanUrl);
                 const pdf = await loadingTask.promise;
 
                 if (canvasContainer) canvasContainer.innerHTML = '';
 
+                // 모바일 여부 확인 및 배율 조정 (메모리 절약)
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const renderScale = isMobile ? 1.2 : 1.5;
+
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 1.5 });
+                    const viewport = page.getViewport({ scale: renderScale });
 
                     const canvas = document.createElement('canvas');
                     canvas.className = 'pdf-page-canvas';
                     canvas.style.display = 'block';
                     canvas.style.margin = '20px auto';
-                    canvas.style.maxWidth = '90%'; // 모바일 대응을 위해 약간 확대
-                    canvas.style.width = '80%';
-                    canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                    canvas.style.width = isMobile ? '95%' : '80%';
+                    canvas.style.maxWidth = '1200px';
+                    canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                     canvas.style.background = 'white';
 
                     const context = canvas.getContext('2d');
@@ -206,9 +205,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-                    // 각 페이지 렌더링 후 보안 레이어 크기 업데이트
+                    // 모바일에서는 매 페이지 렌더링 후 지연을 주어 브라우저 부하 경감
+                    if (isMobile && pageNum % 2 === 0) {
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+
                     syncSecurityLayers();
                 }
+
+                // 최종 높이 재동기화
+                setTimeout(syncSecurityLayers, 500);
             } catch (e) {
                 console.error("PDF 렌더링 실패:", e);
                 if (canvasContainer) canvasContainer.style.display = 'none';
@@ -221,22 +227,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function syncSecurityLayers() {
-            const h = Math.max(body.scrollHeight, body.offsetHeight);
-            const w = Math.max(body.scrollWidth, body.offsetWidth);
+            // contentHeight를 계산할 때 canvasContainer의 높이도 명시적으로 확인
+            const contentHeight = Math.max(
+                body.scrollHeight,
+                body.offsetHeight,
+                canvasContainer ? canvasContainer.scrollHeight : 0
+            );
+
             if (watermark) {
-                watermark.style.height = h + 'px';
-                watermark.style.width = w + 'px';
+                watermark.style.height = contentHeight + 'px';
+                watermark.style.minHeight = '100%';
             }
             if (shield) {
-                shield.style.height = h + 'px';
-                shield.style.width = w + 'px';
+                shield.style.height = contentHeight + 'px';
                 shield.style.display = 'block';
                 shield.style.pointerEvents = 'none';
             }
         }
-
-        setTimeout(syncSecurityLayers, 500);
-        setTimeout(syncSecurityLayers, 2000);
 
         body.oncontextmenu = (e) => {
             e.preventDefault();
