@@ -250,6 +250,96 @@ body.admin-mode button.admin-only {
     color: var(--text-muted);
 }
 
+/* Resin Quality Table Refined */
+#resin-data-card {
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+}
+
+.resin-table-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 24px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+#resin-quality-view .table-container {
+    padding: 0;
+}
+
+#resin-quality-view table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+#resin-quality-view th {
+    background: #1e3a8a;
+    color: #ffffff !important;
+    /* 글씨색 흰색으로 강제 적용 */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 14px;
+    padding: 16px;
+    border: none;
+    text-align: center;
+}
+
+#resin-quality-view td {
+    border-bottom: 1px solid #edf2f7;
+    border-right: 1px solid #edf2f7;
+    padding: 20px 24px;
+    vertical-align: middle !important;
+    /* 모든 셀 상하 중앙 정렬 */
+}
+
+#resin-quality-view td:last-child {
+    border-right: none;
+    text-align: left;
+    /* 합부 기준은 왼쪽 정렬 유지 */
+}
+
+/* Zebra Striping for Criteria Rows */
+#resin-quality-tbody tr:nth-child(even) {
+    background-color: #fcfdfe;
+}
+
+/* Bullet item style for long text */
+.criteria-item {
+    display: block;
+    position: relative;
+    padding-left: 18px;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.criteria-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--primary-light);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.highlight-blue {
+    color: #2563eb;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.note-text {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
 /* Content Container */
 .content-padding {
     padding: 32px;
@@ -1456,8 +1546,13 @@ body.admin-mode button.admin-only {
         margin-bottom: 16px;
     }
 
+    #resin-quality-view .page-header {
+        padding: 0 10px;
+        margin-bottom: 20px;
+    }
+
     #resin-quality-view .page-header h2 {
-        font-size: 17px;
+        font-size: 18px;
         line-height: 1.3;
     }
 
@@ -1467,51 +1562,86 @@ body.admin-mode button.admin-only {
     }
 
     #resin-quality-view .search-container {
-        padding: 14px;
-        margin: 0 0 16px 0 !important;
+        padding: 15px;
+        margin: 0 0 20px 0 !important;
         max-width: 100% !important;
         width: 100% !important;
+        border-radius: 12px;
     }
 
     #resin-quality-view .resin-grid {
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 6px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        /* 모바일에서 3열로 확대 */
+        gap: 8px;
     }
 
     #resin-quality-view .resin-btn {
-        height: 40px !important;
-        font-size: 11px !important;
-        padding: 6px 4px !important;
-        border-radius: 6px !important;
+        height: 44px !important;
+        font-size: 13px !important;
+        padding: 8px 4px !important;
+        font-weight: 700 !important;
     }
 
     #resin-data-card {
         margin: 0 !important;
-    }
-
-    #resin-data-card>div:first-child {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start !important;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
     #resin-data-card h3 {
-        font-size: 15px !important;
+        font-size: 16px !important;
+        text-align: center;
+        width: 100%;
     }
 
-    #resin-quality-view .table-container table {
-        min-width: 100%;
+    /* 테이블 모바일 스크롤 및 텍스트 최적화 */
+    #resin-quality-view .table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -15px;
+        /* 컨테이너 꽉 차게 */
+        padding: 0;
     }
 
-    #resin-quality-view .table-container th,
-    #resin-quality-view .table-container td {
-        padding: 10px 8px;
-        font-size: 12px;
+    #resin-quality-view table {
+        min-width: 750px;
+        /* 상세 정보를 위해 최소 너비 확보 (스크롤 유도) */
     }
 
-    #resin-quality-view .table-container th:first-child {
-        width: 100px !important;
-        min-width: 100px;
+    #resin-quality-view th {
+        font-size: 12px !important;
+        padding: 12px 8px !important;
+    }
+
+    #resin-quality-view td {
+        padding: 14px 10px !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+    }
+
+    #resin-quality-view td:first-child {
+        width: 90px !important;
+        min-width: 90px !important;
+        font-size: 12px !important;
+    }
+
+    #resin-quality-view td:nth-child(2) {
+        width: 130px !important;
+        min-width: 130px !important;
+    }
+
+    .criteria-item {
+        font-size: 13px !important;
+        padding-left: 15px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .criteria-item::before {
+        font-size: 14px !important;
+    }
+
+    .note-text {
+        font-size: 11px !important;
     }
 
     /* === 2. 품질 분석 대시보드 (Dashboard) === */
@@ -2025,19 +2155,53 @@ body.admin-mode button.admin-only {
     }
 }
 
-/* --- [보안: 인쇄 전면 차단] --- */
+/* --- [보안: 워터마크 및 인쇄 제어] --- */
+.viewer-watermark-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+    opacity: 0.12;
+    user-select: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><text x='50%' y='50%' font-size='22' font-weight='900' fill='black' transform='rotate(-30 200 150)' text-anchor='middle'>인쇄 및 저장 금지</text><text x='50%' y='70%' font-size='14' font-weight='700' fill='black' transform='rotate(-30 200 150)' text-anchor='middle'>DO NOT PRINT / SAVE</text></svg>");
+    background-repeat: repeat;
+}
+
 @media print {
+
+    /* 기존 body 숨김 대신 워터마크 강조 */
     body {
-        display: none !important;
+        position: relative;
     }
 
-    html::after {
-        content: "보안 정책에 따라 문서 인쇄가 전면 금지되어 있습니다. (Security Policy: No Printing)";
-        display: block;
+    /* 인쇄 시 모든 화면 요소 위에 워터마크 레이어 강제 표시 */
+    .viewer-watermark-overlay {
+        opacity: 0.35 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+        z-index: 99999 !important;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><text x='50%' y='50%' font-size='22' font-weight='900' fill='red' transform='rotate(-30 200 150)' text-anchor='middle'>인쇄 및 저장 금지</text><text x='50%' y='70%' font-size='14' font-weight='700' fill='red' transform='rotate(-30 200 150)' text-anchor='middle'>UNAUTHORIZED COPY PROHIBITED</text></svg>") !important;
+    }
+
+    /* 인쇄 하단 알림 */
+    body::after {
+        content: "본 문서는 세아씨엠 보안 정책에 의해 인쇄가 금지된 문서입니다. 무단 유출 시 법적 책임이 발생할 수 있습니다.";
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
         text-align: center;
-        margin-top: 50px;
-        font-size: 20px;
-        font-weight: bold;
+        font-size: 14px;
         color: #ef4444;
+        font-weight: bold;
+        z-index: 100000;
     }
 }

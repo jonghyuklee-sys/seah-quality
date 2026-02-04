@@ -938,7 +938,6 @@
                     <div
                         style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;">
                         <h3 id="selected-resin-title" style="margin: 0; color: var(--primary);">RMP 품질 기준</h3>
-                        <span class="badge badge-blue">표준 규격</span>
                     </div>
 
                     <div class="table-container">
@@ -946,10 +945,13 @@
                             <thead>
                                 <tr style="background: #f1f5f9; text-align: center;">
                                     <th
-                                        style="padding: 12px; font-size: 13px; color: #475569; width: 200px; text-align: center;">
-                                        품질 항목 (Criteria)</th>
-                                    <th style="padding: 12px; font-size: 13px; color: #475569; text-align: center;">검사
-                                        기준 및 규격</th>
+                                        style="padding: 12px; font-size: 13px; color: #475569; width: 120px; text-align: center; border-right:1px solid #e2e8f0;">
+                                        검사항목</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; color: #475569; width: 180px; text-align: center; border-right:1px solid #e2e8f0;">
+                                        조건</th>
+                                    <th style="padding: 12px; font-size: 13px; color: #475569; text-align: center;">합부
+                                        기준</th>
                                 </tr>
                             </thead>
                             <tbody id="resin-quality-tbody">
@@ -1172,9 +1174,9 @@
                             src=""></iframe>
 
                         <div id="viewer-img-container"
-                            style="display: none; width: 100%; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 10px;">
+                            style="display: none; width: 100%; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 40px;">
                             <img id="viewer-img"
-                                style="max-width: 100%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); background: white;"
+                                style="max-width: 80%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); background: white; border: 1px solid #e2e8f0;"
                                 src="">
                         </div>
 
@@ -1182,6 +1184,9 @@
                         <div id="viewer-canvas-container" style="display: none;"></div>
                         <div id="viewer-shield"
                             style="position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: -1;"></div>
+
+                        <!-- 🛡️ 보안 워터마크 오버레이 -->
+                        <div class="viewer-watermark-overlay" id="viewer-watermark"></div>
                     </div>
                     <!-- 뷰어 푸터 -->
                     <div
