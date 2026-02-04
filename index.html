@@ -22,6 +22,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function () {
@@ -216,7 +219,7 @@
                                 <p style="color: #64748b;">주요 국가별 표준 규격의 체계와 종류를 한눈에 비교할 수 있습니다.</p>
                             </div>
 
-                            <div class="standard-grid">
+                            <div class="standard-grid" style="grid-template-columns: repeat(2, 1fr);">
                                 <div class="standard-card">
                                     <div class="card-header">
                                         <h3>KS</h3>
@@ -592,7 +595,15 @@
 
                 <!-- [Top] Detailed Registration Form -->
                 <div class="search-container" style="margin: 0 auto 24px auto; max-width: 1100px;">
-                    <h4 class="section-title-line">📝 VOC 상세 정보 접수</h4>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">📝 VOC 상세 정보 접수
+                        </h4>
+                        <button type="submit" form="voc-form" class="btn-primary"
+                            style="padding: 10px 24px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 8px; font-weight: 700;">
+                            <i class="fas fa-check-circle"></i> VOC 접수완료
+                        </button>
+                    </div>
                     <form id="voc-form" class="search-form-grid">
                         <!-- Row 1: 기본 정보 -->
                         <div class="form-field">
@@ -663,7 +674,7 @@
                             <input type="date" id="voc-prod-date">
                         </div>
 
-                        <!-- Row 4: 수량 및 제목 -->
+                        <!-- Row 4: 수량 및 불량 유형, 사진 -->
                         <div class="form-field">
                             <label>납품 수량</label>
                             <input type="text" id="voc-delivery-qty" placeholder="수량">
@@ -672,25 +683,36 @@
                             <label>불만 수량</label>
                             <input type="text" id="voc-complaint-qty" placeholder="수량">
                         </div>
-                        <div class="form-field" style="grid-column: span 2;">
+                        <div class="form-field">
+                            <label>불량 유형</label>
+                            <select id="voc-defect-type">
+                                <option value="">유형 선택</option>
+                                <option value="도장박리">도장박리 (Peeling)</option>
+                                <option value="색차">색차 (Color Difference)</option>
+                                <option value="스크래치">스크래치 (Scratch)</option>
+                                <option value="오염">오염 (Contamination)</option>
+                                <option value="광택불량">광택불량 (Gloss Issue)</option>
+                                <option value="가공크랙">가공크랙 (Cracking)</option>
+                                <option value="형상불량">형상불량 (Shape Issue)</option>
+                                <option value="기타">기타 (Others)</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>📷 현장 사진</label>
+                            <input type="file" id="voc-photo" accept="image/*" style="font-size: 12px;">
+                        </div>
+
+                        <!-- Row 5: 불만명 -->
+                        <div class="form-field" style="grid-column: span 4;">
                             <label>불만명 (제목)</label>
                             <input type="text" id="voc-title" placeholder="불만 사항 요약" required>
                         </div>
 
-                        <!-- Row 5: 사진 및 제출 -->
-                        <div class="form-field" style="grid-column: span 3;">
-                            <label>현장 사진</label>
-                            <input type="file" id="voc-photo" accept="image/*">
-                        </div>
-                        <div class="form-field" style="grid-column: span 1; display: flex; align-items: flex-end;">
-                            <button type="submit" class="btn-primary"
-                                style="width: 100%; height: 42px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
-                                <i class="fas fa-check-circle"></i> VOC 접수완료
-                            </button>
-                        </div>
-
-                        <div class="form-field" style="display:none;">
-                            <input type="hidden" id="voc-desc" value="상세내용없음">
+                        <!-- Row 6: 불만 상세 현상 -->
+                        <div class="form-field" style="grid-column: span 4;">
+                            <label>불만 상세 현상</label>
+                            <textarea id="voc-desc" rows="2"
+                                placeholder="불만 사항의 구체적인 현상을 입력하세요 (예: 제품 표면에 긁힘 발생, 도장 벗겨짐 등)"></textarea>
                         </div>
                     </form>
                 </div>
@@ -711,8 +733,9 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="font-size: 11px; color: var(--text-muted); text-align: right;">* 행을 클릭하면 상세 내용 및 조치
-                            결과를 입력할 수 있습니다.
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-align: right;">* 행을 클릭하면 상세 내용 및
+                                조치 결과를 입력할 수 있습니다.</div>
                         </div>
                     </div>
 
@@ -766,8 +789,18 @@
                             <h3 id="modal-voc-title" style="margin: 0; font-size: 18px; color: var(--text-main);">
                                 VOC
                                 상세보기</h3>
-                            <button onclick="document.getElementById('voc-modal').style.display='none'"
-                                style="background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;">✕</button>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="display: flex; gap: 5px;">
+                                    <button onclick="exportVocPPT(event, 'kor')" class="btn-secondary"
+                                        style="font-size: 11px; padding: 4px 10px; height: 28px; border-color: #cbd5e1;">📥
+                                        국문 PPT</button>
+                                    <button onclick="exportVocPPT(event, 'eng')" class="btn-secondary"
+                                        style="font-size: 11px; padding: 4px 10px; height: 28px; border-color: #cbd5e1;">📥
+                                        영문 PPT</button>
+                                </div>
+                                <button onclick="document.getElementById('voc-modal').style.display='none'"
+                                    style="background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; padding: 0;">✕</button>
+                            </div>
                         </div>
                         <div style="padding: 24px; max-height: 80vh; overflow-y: auto;">
                             <!-- 1. 접수 정보 수정 구역 -->
@@ -834,15 +867,45 @@
                                         <input type="date" id="modal-edit-prodDate">
                                     </div>
                                 </div>
+                                <div class="voc-modal-grid"
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                                    <div class="form-field">
+                                        <label>불량 유형</label>
+                                        <select id="modal-edit-defect-type" onchange="updateRecommendedActions()">
+                                            <option value="">유형 선택</option>
+                                            <option value="도장박리">도장박리</option>
+                                            <option value="색차">색차</option>
+                                            <option value="스크래치">스크래치</option>
+                                            <option value="오염">오염</option>
+                                            <option value="광택불량">광택불량</option>
+                                            <option value="가공크랙">가공크랙</option>
+                                            <option value="형상불량">형상불량</option>
+                                            <option value="기타">기타</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>불만명 (제목)</label>
+                                        <input type="text" id="modal-edit-title">
+                                    </div>
+                                </div>
                                 <div class="form-field" style="margin-top: 12px;">
-                                    <label>불만명 (제목)</label>
-                                    <input type="text" id="modal-edit-title">
+                                    <label>불만 상세 현상</label>
+                                    <textarea id="modal-edit-description" rows="3"
+                                        placeholder="불만 사항의 구체적인 현상을 입력하세요"></textarea>
                                 </div>
                                 <div id="modal-edit-photo-container" style="margin-top: 12px; display: none;">
-                                    <label>현장 사진</label>
-                                    <img id="modal-edit-photo-preview" src=""
-                                        style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 5px; cursor: pointer;"
-                                        onclick="window.open(this.src)">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <label>현장 사진 (클릭하여 마킹)</label>
+                                        <button type="button" onclick="clearAnnotation()"
+                                            style="font-size: 10px; padding: 2px 6px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; border-radius: 4px;">지우기</button>
+                                    </div>
+                                    <div id="annotation-wrapper"
+                                        style="position: relative; cursor: crosshair; overflow: hidden; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                        <img id="modal-edit-photo-preview" src="" style="width: 100%; display: block;">
+                                        <canvas id="annotation-canvas"
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto;"></canvas>
+                                    </div>
                                     <div class="admin-only" style="margin-top: 10px;">
                                         <label
                                             style="display:block; font-size:12px; color:var(--primary); margin-bottom:5px; font-weight:700;">📸
@@ -876,6 +939,18 @@
                                     <label>근본(예상) 원인</label>
                                     <textarea id="modal-reply-cause" rows="2" placeholder="원인 분석 내용"></textarea>
                                 </div>
+                                <!-- [Idea #1] 지식 베이스: 추천 조치 -->
+                                <div id="recommended-actions-box"
+                                    style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-top: 15px;">
+                                    <h5
+                                        style="margin: 0 0 8px 0; font-size: 13px; color: #166534; display: flex; align-items: center; gap: 5px;">
+                                        ✨ 과거 유사 사례 추천 조치 (Best Practice)
+                                    </h5>
+                                    <div id="recommended-actions-content"
+                                        style="font-size: 12px; color: #15803d; line-height: 1.6;">
+                                        유형을 선택하면 추천 조치가 나타납니다.
+                                    </div>
+                                </div>
                                 <div class="form-field" style="margin-bottom: 12px;">
                                     <label>개선 대책</label>
                                     <textarea id="modal-reply-countermeasure" rows="2"
@@ -906,110 +981,111 @@
             <!-- 6. Quality Analysis Dashboard View -->
             <section id="dashboard-view" class="page-section" style="display: none;">
                 <div class="page-header" style="text-align: center; margin-bottom: 20px;">
-                    <h2>품질 분석 대시보드 (Quality Dashboard)</h2>
-                    <p>등록된 VOC 데이터를 분석하여 주요 품질 지표 및 실시간 현황을 시각화합니다.</p>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+                        <div style="flex: 1;"></div>
+                        <div style="flex: 2;">
+                            <h2>품질 분석 대시보드 (Quality Dashboard)</h2>
+                            <p>등록된 VOC 데이터를 분석하여 주요 품질 지표 및 실시간 현황을 시각화합니다.</p>
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                            <button onclick="exportDashboardReport(event)" class="btn-primary"
+                                style="padding: 10px 18px; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);">
+                                📥 품질 분석 리포트 다운로드 (PDF)
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- [Period Filter] -->
                 <div
-                    style="margin: 0 auto 24px auto; max-width: 1200px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
-                    <label style="font-size: 14px; font-weight: 700; color: #475569;">📊 분석 기간:</label>
+                    style="margin: 0 auto 16px auto; max-width: 1200px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                    <label style="font-size: 13px; font-weight: 700; color: #475569;">📊 분석 기간:</label>
                     <select id="dash-period-filter"
-                        style="padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; font-weight: 600; cursor: pointer; background: #fff; box-shadow: var(--shadow-sm);">
+                        style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; cursor: pointer; background: #fff;">
                         <!-- 동적으로 연도/월 선택지가 채워집니다 -->
                     </select>
                 </div>
 
                 <!-- [Row 1] Summary Widgets -->
-                <div class="stats-grid" style="margin: 0 auto 32px auto; max-width: 1200px;">
-                    <div class="stat-card" style="border-top: 4px solid var(--primary);">
+                <div class="stats-grid" style="margin: 0 auto 20px auto; max-width: 1200px; gap: 16px;">
+                    <div class="stat-card" style="border-top: 4px solid var(--primary); padding: 16px;">
                         <span class="stat-label">총 VOC 발생건수</span>
-                        <span id="dash-total-count" class="stat-value">0 EA</span>
+                        <span id="dash-total-count" class="stat-value" style="font-size: 24px;">0 EA</span>
                     </div>
-                    <div class="stat-card" style="border-top: 4px solid var(--warning);">
+                    <div class="stat-card" style="border-top: 4px solid var(--warning); padding: 16px;">
                         <span class="stat-label">미처리(접수/진행)</span>
-                        <span id="dash-pending-count" class="stat-value">0 EA</span>
+                        <span id="dash-pending-count" class="stat-value" style="font-size: 24px;">0 EA</span>
                     </div>
-                    <div class="stat-card" style="border-top: 4px solid var(--success);">
+                    <div class="stat-card" style="border-top: 4px solid var(--success); padding: 16px;">
                         <span class="stat-label">조치 완료율</span>
-                        <span id="dash-completion-rate" class="stat-value">0%</span>
+                        <span id="dash-completion-rate" class="stat-value" style="font-size: 24px;">0%</span>
                     </div>
-                    <div class="stat-card" style="border-top: 4px solid var(--danger);">
+                    <div class="stat-card" style="border-top: 4px solid var(--danger); padding: 16px;">
                         <span class="stat-label">총 예상 손실 비용</span>
-                        <span id="dash-total-cost" class="stat-value">₩0</span>
+                        <span id="dash-total-cost" class="stat-value" style="font-size: 24px;">₩0</span>
                     </div>
                 </div>
 
                 <!-- [Row 2] Visual Analytics with Chart.js -->
                 <div class="dashboard-charts-grid"
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin: 0 auto 32px auto; max-width: 1200px;">
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin: 0 auto 20px auto; max-width: 1200px;">
                     <!-- [1] 생산 라인별 발생 현황 -->
-                    <div class="search-container" style="margin-bottom: 0;">
-                        <h4 class="section-title-line">🏭 생산 라인별 발생 현황</h4>
-                        <div style="height: 280px;">
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">🏭 생산 라인별 발생 현황
+                        </h4>
+                        <div style="height: 290px;">
                             <canvas id="lineChart"></canvas>
                         </div>
                     </div>
                     <!-- [2] 클레임/컴플레인 비중 -->
-                    <div class="search-container" style="margin-bottom: 0;">
-                        <h4 class="section-title-line">⚖️ 클레임 vs 컴플레인 비중</h4>
-                        <div style="height: 280px; position: relative;">
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">⚖️ 클레임/컴플레인 비중
+                        </h4>
+                        <div style="height: 290px; position: relative;">
                             <canvas id="categoryChart"></canvas>
                         </div>
                     </div>
-                    <!-- [3] 월별 VOC 발생 추이 (신규) -->
-                    <div class="search-container" style="margin-bottom: 0;">
-                        <h4 class="section-title-line">📈 월별 VOC 발생 추이</h4>
-                        <div style="height: 280px;">
+                    <!-- [3] 월별 VOC 발생 추이 -->
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">📈 월별 VOC 발생 추이
+                        </h4>
+                        <div style="height: 290px;">
                             <canvas id="monthlyTrendChart"></canvas>
                         </div>
                     </div>
-                    <!-- [4] 내수 vs 수출 비중 (신규) -->
-                    <div class="search-container" style="margin-bottom: 0;">
-                        <h4 class="section-title-line">🌐 내수 vs 수출 시장 비중</h4>
-                        <div style="height: 280px; position: relative;">
+                    <!-- [4] 내수 vs 수출 비중 -->
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">🌐 내수 vs 수출 비중
+                        </h4>
+                        <div style="height: 290px; position: relative;">
                             <canvas id="marketShareChart"></canvas>
                         </div>
                     </div>
-                    <!-- [5] 담당 팀별 VOC 현황 (신규) -->
-                    <div class="search-container" style="margin-bottom: 0;">
-                        <h4 class="section-title-line">👥 담당 팀별 VOC 현황</h4>
-                        <div style="height: 280px;">
+                    <!-- [5] 담당 팀별 VOC 현황 -->
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">👥 담당 팀별 VOC 현황
+                        </h4>
+                        <div style="height: 290px;">
                             <canvas id="teamShareChart"></canvas>
                         </div>
                     </div>
-                    <!-- [6] 라인별 예상 손실 비용 (신규) -->
-                    <div class="search-container" style="margin-bottom: 0;">
-                        <h4 class="section-title-line">💰 라인별 예상 손실 비용</h4>
-                        <div style="height: 280px;">
+                    <!-- [6] 라인별 예상 손실 비용 -->
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">💰 라인별 예상 손실 비용
+                        </h4>
+                        <div style="height: 290px;">
                             <canvas id="lineCostChart"></canvas>
                         </div>
                     </div>
-                </div>
-
-                <!-- [Row 3] Recent High Priority -->
-                <div class="search-container" style="margin: 0 auto; max-width: 1200px; text-align: center;">
-                    <h4 class="section-title-line" style="text-align: center;">⏱️ 최근 주요 발생 내역 (Top 5)</h4>
-                    <div class="table-container">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: #f8fafc; text-align: center;">
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">고객사
-                                    </th>
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">불만명
-                                    </th>
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">상태
-                                    </th>
-                                    <th style="padding: 10px; font-size: 12px; color: #64748b; text-align: center;">발생일
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="dash-recent-list">
-                                <!-- Recent items injected here -->
-                            </tbody>
-                        </table>
+                    <!-- [7] 불량 유형별 비용 분석 -->
+                    <div class="search-container" style="margin-bottom: 0; padding: 16px;">
+                        <h4 class="section-title-line" style="margin-bottom: 12px; padding-bottom: 8px;">📊 불량 유형별 비용 분석
+                        </h4>
+                        <div style="height: 290px;">
+                            <canvas id="defectTypeChart"></canvas>
+                        </div>
                     </div>
-                </div>
+
             </section>
 
             <!-- 5. Resin Quality Standard View -->
@@ -1171,60 +1247,12 @@
 
             <!-- Settings View -->
             <section id="settings-view" class="page-section" style="display: none;">
-                <div class="page-header">
+                <div class="page-header" style="text-align: center;">
                     <h2>시스템 설정</h2>
-                    <p>사용자 환경 및 시스템 운영 정책을 설정합니다.</p>
+                    <p>VOC 알림 및 시스템 운영 정책을 설정합니다.</p>
                 </div>
 
-                <div class="settings-grid"
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
-                    <!-- UI & Display Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">🎨 인터페이스 및 표시</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field"
-                                style="flex-direction: row; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <label style="margin-bottom: 0;">다크 모드 적용</label>
-                                    <p style="font-size: 11px; color: var(--text-muted);">시스템 테마를 어둡게 변경합니다.</p>
-                                </div>
-                                <input type="checkbox" id="dark-mode-toggle"
-                                    style="width: 20px; height: 20px; cursor: pointer;">
-                            </div>
-                            <div class="form-field">
-                                <label>기본 표시 단위</label>
-                                <select id="setting-unit">
-                                    <option value="Metric">Metric (MPa, g/m², mm)</option>
-                                    <option value="Imperial">Imperial (ksi, oz/ft², in)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Data & Search Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">🔍 데이터 및 조회 정책</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field">
-                                <label>기본 우선 규격</label>
-                                <select id="setting-default-standard">
-                                    <option value="KS">KS (한국산업표준)</option>
-                                    <option value="JIS">JIS (일본공업규격)</option>
-                                    <option value="ASTM">ASTM (미국재료시험협회)</option>
-                                </select>
-                            </div>
-                            <div class="form-field"
-                                style="flex-direction: row; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <label style="margin-bottom: 0;">조회 이력 자동 저장</label>
-                                    <p style="font-size: 11px; color: var(--text-muted);">최근 검색한 10개의 강종을 로컬에 저장합니다.
-                                    </p>
-                                </div>
-                                <input type="checkbox" checked style="width: 20px; height: 20px; cursor: pointer;">
-                            </div>
-                        </div>
-                    </div>
-
+                <div style="max-width: 600px; margin: 0 auto;">
                     <!-- VOC Notification Settings -->
                     <div class="search-container admin-only">
                         <h3 class="section-title-line">✉️ VOC 알림 설정</h3>
@@ -1251,28 +1279,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- User Profile Settings -->
-                    <div class="search-container">
-                        <h3 class="section-title-line">👤 계정 및 보안</h3>
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="form-field">
-                                <label>현재 사용자</label>
-                                <p style="font-size: 14px; font-weight: 600; color: var(--primary);">품질경영팀 관리자
-                                    (admin_seah)</p>
-                            </div>
-                            <div class="form-field">
-                                <label>권한 등급</label>
-                                <span class="badge badge-orange" style="width: fit-content;">System
-                                    Administrator</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn-secondary" style="width: 120px;">초기화</button>
-                    <button class="btn-primary" id="save-settings-btn" style="width: 120px;">설정 저장</button>
                 </div>
             </section>
 

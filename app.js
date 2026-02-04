@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    let isAdmin = false; // 초기 접속 시 항상 게스트 모드로 시작
+    let isAdmin = sessionStorage.getItem('seahAdminMode') === 'true'; // 새로고침 시에도 관리자 상태 유지
     let localFiles = [];
     let localComplaints = [];
     let localDefects = [];
@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isAdmin) {
                 if (confirm('관리자 모드를 종료하시겠습니까?')) {
                     isAdmin = false;
+                    sessionStorage.removeItem('seahAdminMode');
                     updateAdminUI();
                     showSection('search-view');
                 }
@@ -99,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmAdminLoginBtn.onclick = () => {
             if (adminPasswordInput.value === '0000') {
                 isAdmin = true;
+                sessionStorage.setItem('seahAdminMode', 'true');
                 updateAdminUI();
                 adminModal.style.display = 'none';
                 alert('관리자 모드로 전환되었습니다.');
@@ -677,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function () {
         { title: '흑청/백청/적청', photo: null, reason: '습한 환경 또는 장기 보관으로 인한 소재 부식 발생', internal: '1. 제품 보관 환경 및 기간 확인\n2. 제품 포장 상태 점검\n3. 운송 중 수분 접촉 가능성 확인', external: '1. 고객사 보관 환경 조사' },
         { title: '형상불량 (WAVE)', photo: null, reason: 'Roll Crown 부적절 또는 Edge 빌드업', internal: '1. 텐션레벨러 및 롤 교정 상태 점검\n2. 연신율 설정 확인', external: '1. 고객사 가공 설비 정렬 확인' },
         { title: '스트레쳐 스트레인', photo: null, reason: '항복점 연신 현상에 의한 표면 줄무늬', internal: '1. YP, TS 기계적 특성 확인\n2. 스킨 패스 압연율 점검', external: '1. 프레스 성형 조건 확인' },
-        { title: '미도금 (Uncoated)', photo: null, reason: '전처리 불량, 도금액 조성 불균형 등', internal: '1. 전처리 온도/농도 분석\n2. 도금액 조성 점검', external: '샘플 확보 필요' },
+        { title: '미도금', photo: null, reason: '전처리 불량, 도금액 조성 불균형 등', internal: '1. 전처리 온도/농도 분석\n2. 도금액 조성 점검', external: '샘플 확보 필요' },
         { title: '도막 박리', photo: null, reason: '전처리 불량, 도장 경화 불량 등', internal: '1. 건조로 온도 프로파일 확인\n2. 하지층 부착력 테스트', external: '가공 시 충격 여부 확인' },
         { title: '필름 불량', photo: null, reason: '보호필름 점착력 편차 등', internal: '로트별 점착력 확인', external: '필름 유지 기간 확인' },
         { title: '색차', photo: null, reason: '도료 배치 간 편차, 도포량 불균일 등', internal: '색차계 교정 상태 확인', external: '조명 환경 확인' },
@@ -691,7 +693,17 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const snap = await db.collection("defects").get();
             let allDefects = [];
-            snap.forEach(doc => allDefects.push({ id: doc.id, ...doc.data() }));
+            snap.forEach(doc => {
+                let data = doc.data();
+                // 기존 '미도금 (Uncoated)' 명칭 변경 처리 (Migration)
+                if (data.title === '미도금 (Uncoated)') {
+                    data.title = '미도금';
+                    if (isAdmin) {
+                        db.collection("defects").doc(doc.id).update({ title: '미도금' });
+                    }
+                }
+                allDefects.push({ id: doc.id, ...data });
+            });
 
             // 데이터가 하나도 없는 경우 초기 데이터(defaultDefects)를 Firestore에 등록
             if (allDefects.length === 0) {
@@ -750,6 +762,32 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error("Error loading defects:", e);
             alert("불량 도감 로드 실패: " + e.message);
         }
+
+        // VOC 불량 유형 선택박스 동기화
+        const defectTypeSelects = [
+            document.getElementById('voc-defect-type'),
+            document.getElementById('modal-edit-defect-type')
+        ];
+
+        defectTypeSelects.forEach(select => {
+            if (!select) return;
+            const currentVal = select.value;
+            let html = '<option value="">유형 선택</option>';
+
+            // 도감에 등록된 타이틀로 옵션 생성
+            const titles = [...new Set(localDefects.map(d => d.title))].sort();
+            titles.forEach(title => {
+                html += `<option value="${title}">${title}</option>`;
+            });
+
+            // 기타 옵션 추가 (도감에 없더라도 선택 가능하도록)
+            if (!titles.includes('기타')) {
+                html += '<option value="기타">기타 (Others)</option>';
+            }
+
+            select.innerHTML = html;
+            select.value = currentVal; // 기존 선택값 유지 시도
+        });
     }
 
     function renderDefectGrid() {
@@ -904,7 +942,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const vocForm = document.getElementById('voc-form');
     const vocPaginationEl = document.getElementById('voc-pagination');
     const vocMonthFilterEl = document.getElementById('voc-month-filter');
-    let lineChart, catChart, monthlyChart, marketChart, teamChart, costChart;
+    let lineChart, catChart, monthlyChart, marketChart, teamChart, costChart, defectTypeChart;
+    let activeAnnotations = []; // [{x, y, color}] 
+
 
     if (vocMonthFilterEl) {
         vocMonthFilterEl.onchange = (e) => {
@@ -1006,19 +1046,19 @@ document.addEventListener('DOMContentLoaded', function () {
             tr.onclick = () => openVocModal(v.id);
 
             const rowColor = v.category === '클레임' ? '#ef4444' : '#f59e0b';
-            const managerDisplay = (v.team ? `<small style="color:#64748b">[${v.team}]</small> ` : '') + v.manager;
+            const managerDisplay = (v.team ? `<div style="color:#64748b; font-size:11px; margin-bottom:1px; line-height:1.2;">[${v.team}]</div>` : '') + `<div style="font-weight:600; color:#334155; line-height:1.2;">${v.manager}</div>`;
 
             tr.innerHTML = `
-                <td style="padding:14px; text-align:center;">
+                <td style="padding:10px 14px; text-align:center;">
                     <span style="background:${rowColor}10; color:${rowColor}; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; border:1px solid ${rowColor}20;">${v.category}</span>
                 </td>
-                <td style="padding:14px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
-                <td style="padding:14px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
-                <td style="padding:14px; text-align:center; font-size:13px; color:#475569;">${managerDisplay}</td>
-                <td style="padding:14px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
-                <td style="padding:14px; color:#334155; font-weight:500; text-align:center;">${v.title}</td>
-                <td style="padding:14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
-                <td style="padding:14px; text-align:center;">
+                <td style="padding:10px 14px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
+                <td style="padding:10px 14px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
+                <td style="padding:10px 14px; text-align:center; color:#475569; vertical-align:middle;">${managerDisplay}</td>
+                <td style="padding:10px 14px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
+                <td style="padding:10px 14px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.title}</td>
+                <td style="padding:10px 14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
+                <td style="padding:10px 14px; text-align:center;">
                     <button class="admin-only" style="border:none; background:#fee2e2; color:#ef4444; width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="event.stopPropagation(); deleteVoc('${v.id}')">
                         <i class="fas fa-trash-alt" style="font-size:12px;"></i>
                     </button>
@@ -1080,9 +1120,10 @@ document.addEventListener('DOMContentLoaded', function () {
             'modal-edit-spec': v.spec,
             'modal-edit-line': v.line,
             'modal-edit-prodDate': v.prodDate,
+            'modal-edit-defect-type': v.defectType || '',
             'modal-edit-title': v.title,
+            'modal-edit-description': v.description || '',
 
-            // 처리 결과 필드
             'modal-reply-manager': v.replyManager || '',
             'modal-reply-cost': v.cost || '',
             'modal-reply-cause': v.replyCause || '',
@@ -1096,26 +1137,29 @@ document.addEventListener('DOMContentLoaded', function () {
             if (el) el.value = val || '';
         }
 
-        // 사진 미리보기 및 수정 처리
+        // 사진 및 어노테이션 처리
         const photoContainer = document.getElementById('modal-edit-photo-container');
         const photoPreview = document.getElementById('modal-edit-photo-preview');
-        const photoInput = document.getElementById('modal-edit-photo-input');
-        if (photoInput) photoInput.value = ''; // 입력 필드 초기화
+        const canvas = document.getElementById('annotation-canvas');
+
+        activeAnnotations = v.annotations || [];
 
         if (photoContainer && photoPreview) {
             if (v.photo) {
                 photoPreview.src = v.photo;
-                photoPreview.style.display = 'block';
                 photoContainer.style.display = 'block';
+                photoPreview.onload = () => initAnnotationCanvas();
             } else {
-                photoPreview.style.display = 'none';
-                // 관리자면 사진이 없어도 업로드 필드 보여주기 위해 컨테이너 표시
                 photoContainer.style.display = isAdmin ? 'block' : 'none';
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
             }
         }
 
+        updateRecommendedActions();
         vocModal.style.display = 'flex';
-        // 방문객은 읽기 전용
         vocModal.querySelectorAll('input, select, textarea').forEach(i => i.disabled = !isAdmin);
         const saveBtn = document.getElementById('modal-voc-save-btn');
         if (saveBtn) saveBtn.style.display = isAdmin ? 'block' : 'none';
@@ -1146,14 +1190,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 batch: document.getElementById('voc-batch').value,
                 line: document.getElementById('voc-line').value,
                 prodDate: document.getElementById('voc-prod-date').value,
+                defectType: document.getElementById('voc-defect-type').value,
                 deliveryQty: document.getElementById('voc-delivery-qty').value,
                 complaintQty: document.getElementById('voc-complaint-qty').value,
                 title: document.getElementById('voc-title').value,
                 description: document.getElementById('voc-desc').value,
                 photo: photoUrl,
                 status: '접수',
-                createdAt: new Date().toISOString()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
+            // status: '접수',
+            // createdAt: new Date().toISOString()
+            // };
 
             db.collection("complaints").add(vocData).then(async (docRef) => {
                 alert('VOC가 성공적으로 접수되었습니다.');
@@ -1197,14 +1245,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     spec: document.getElementById('modal-edit-spec').value,
                     line: document.getElementById('modal-edit-line').value,
                     prodDate: document.getElementById('modal-edit-prodDate').value,
+                    defectType: document.getElementById('modal-edit-defect-type').value,
                     title: document.getElementById('modal-edit-title').value,
+                    description: document.getElementById('modal-edit-description').value,
 
                     replyManager: document.getElementById('modal-reply-manager').value,
                     cost: document.getElementById('modal-reply-cost').value,
                     replyCause: document.getElementById('modal-reply-cause').value,
                     replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
                     replyEvaluation: document.getElementById('modal-reply-evaluation').value,
-                    status: document.getElementById('modal-reply-status').value
+                    status: document.getElementById('modal-reply-status').value,
+                    annotations: activeAnnotations
                 };
 
                 if (newPhotoUrl) updatedData.photo = newPhotoUrl;
@@ -1510,15 +1561,63 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        // [7] 불량 유형별 비용 분석 (Idea #2)
+        // [7] 불량 유형별 비용 분석 (Idea #2)
+        // VOC 폼에서 사용하는 기본 불량 유형들을 먼저 포함
+        const defectMap = {
+            '도장박리': 0, '색차': 0, '스크래치': 0, '오염': 0,
+            '광택불량': 0, '가공크랙': 0, '형상불량': 0, '기타': 0
+        };
+        // 도감에 등록된 추가 유형도 포함
+        localDefects.forEach(d => { if (d.title && !defectMap.hasOwnProperty(d.title)) defectMap[d.title] = 0; });
+
+        displayData.forEach(v => {
+            const dType = v.defectType || '기타';
+            if (defectMap.hasOwnProperty(dType)) {
+                defectMap[dType] += (parseInt(v.cost) || 0);
+            } else {
+                // 도감에 없는 유형은 기타로 합산 또는 동적 추가
+                defectMap['기타'] += (parseInt(v.cost) || 0);
+            }
+        });
+
+        // 비용이 0보다 큰 항목만 필터링
+        const filteredDefectLabels = Object.keys(defectMap).filter(k => defectMap[k] > 0);
+        const filteredDefectValues = filteredDefectLabels.map(k => defectMap[k]);
+
+        const defectCtx = document.getElementById('defectTypeChart');
+        if (defectCtx) {
+            if (defectTypeChart) defectTypeChart.destroy();
+            defectTypeChart = new Chart(defectCtx, {
+                type: 'bar',
+                data: {
+                    labels: filteredDefectLabels,
+                    datasets: [{
+                        label: '손실 금액',
+                        data: filteredDefectValues,
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderColor: '#f59e0b',
+                        borderWidth: 1, borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#f59e0b', font: { weight: 'bold' }, formatter: (v) => v > 0 ? (v / 10000).toFixed(0) + '만' : '' } },
+                    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
+                }
+            });
+        }
+
         // Recent Top 5 List (필터링된 데이터 중 최근 5건)
         const recentList = document.getElementById('dash-recent-list');
         if (recentList) {
             recentList.innerHTML = displayData.slice(0, 5).map(v => `
                 <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:12px; font-size:13px; font-weight:600; text-align:center;">${v.customer}</td>
-                    <td style="padding:12px; font-size:13px; color:#475569; text-align:center;">${v.title}</td>
-                    <td style="padding:12px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="padding:2px 8px; font-size:10px;">${v.status}</span></td>
-                    <td style="padding:12px; font-size:12px; color:#94a3b8; text-align:center;">${v.receiptDate}</td>
+                    <td style="padding:8px; font-size:13px; font-weight:600; text-align:center;">${v.customer}</td>
+                    <td style="padding:8px; font-size:13px; color:#475569; text-align:center;">${v.title}</td>
+                    <td style="padding:8px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="padding:2px 8px; font-size:10px;">${v.status}</span></td>
+                    <td style="padding:8px; font-size:12px; color:#94a3b8; text-align:center;">${v.receiptDate}</td>
                 </tr>
             `).join('');
             if (displayData.length === 0) recentList.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">현황 없음</td></tr>';
@@ -1907,4 +2006,317 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
     };
+    // --- [10. 신규 고도화 기능 (Idea 1, 2, 4, 5)] ---
+
+    // Idea #1: 지식 베이스 - 추천 조치
+    window.updateRecommendedActions = () => {
+        const type = document.getElementById('modal-edit-defect-type')?.value;
+        const box = document.getElementById('recommended-actions-box');
+        const content = document.getElementById('recommended-actions-content');
+        if (!box || !content) return;
+
+        const bestPractices = {
+            '도장박리': '• 전처리 공정 농도 및 온도 전수 조사<br>• 도료 부착성(Cross-Cut) 테스트 주기 단축<br>• 소재 표면의 오일 및 이물질 제거 공정 강화',
+            '색차': '• 도료 조색(Matching) 데이터 재검증<br>• Line Speed별 소부 온도(PMT) 편차 관리 강화<br>• 표준 시편과 실제 생산품의 광택도 비교 필수',
+            '스크래치': '• 설비 Roll 표면 마모 상태 점검 및 교체<br>• 판간 이물질 유입 방지 패드 점검<br>• 권취 시 장력(Tension) 오버 슈팅 제어',
+            '오염': '• 작업장 내 청정도 관리(Ducting 시스템 점검)<br>• 도료 필터링 메쉬(Mesh) 사이즈 정밀화<br>• 도포실(Coating Room) 양압 유지 상태 확인',
+            '가공크랙': '• 소재 유연성 대비 가공 R값 적정성 검토<br>• 인장 강도 및 신율(Elongation) 성적서 재검토<br>• 가공 유(Oil) 도포량 증대',
+        };
+
+        if (type && bestPractices[type]) {
+            content.innerHTML = bestPractices[type];
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    };
+
+    // Idea #4: 사진 마킹 (Annotation)
+    window.initAnnotationCanvas = () => {
+        const canvas = document.getElementById('annotation-canvas');
+        const img = document.getElementById('modal-edit-photo-preview');
+        if (!canvas || !img) return;
+
+        canvas.width = img.clientWidth;
+        canvas.height = img.clientHeight;
+
+        redrawAnnotations();
+
+        canvas.onclick = (e) => {
+            if (!isAdmin) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / canvas.width;
+            const y = (e.clientY - rect.top) / canvas.height;
+            activeAnnotations.push({ x, y, color: '#ef4444' });
+            redrawAnnotations();
+        };
+    };
+
+    function redrawAnnotations() {
+        const canvas = document.getElementById('annotation-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        activeAnnotations.forEach(ann => {
+            ctx.beginPath();
+            ctx.arc(ann.x * canvas.width, ann.y * canvas.height, 10, 0, 2 * Math.PI);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = ann.color;
+            ctx.stroke();
+
+            // 외곽 흰색 테두리 (가독성용)
+            ctx.beginPath();
+            ctx.arc(ann.x * canvas.width, ann.y * canvas.height, 12, 0, 2 * Math.PI);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+        });
+    }
+
+    window.clearAnnotation = () => {
+        if (!isAdmin) return;
+        activeAnnotations = [];
+        redrawAnnotations();
+    };
+
+    // Idea #5: 대시보드 리포트 PDF 출력
+    window.exportDashboardReport = async (e) => {
+        const { jsPDF } = window.jspdf;
+        const dashboard = document.getElementById('dashboard-view');
+        const periodFilter = document.getElementById('dash-period-filter');
+        const dashBtn = e.target;
+
+        // 현재 선택된 필터 텍스트 (예: "2025년", "2025년 12월", "전체")
+        const selectedPeriodText = periodFilter ? periodFilter.options[periodFilter.selectedIndex].text : '전체';
+
+        const dashOrigText = dashBtn.textContent;
+        dashBtn.textContent = '리포트 생성 중...';
+        dashBtn.disabled = true;
+
+        try {
+            const canvas = await html2canvas(dashboard, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                ignoreElements: (el) => el.tagName === 'BUTTON' || el.id === 'dash-period-filter'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`세아씨엠_품질_분석_리포트(${selectedPeriodText})_${new Date().toLocaleDateString()}.pdf`);
+        } catch (err) {
+            console.error(err);
+            alert('리포트 생성 실패: ' + err.message);
+        } finally {
+            dashBtn.textContent = dashOrigText;
+            dashBtn.disabled = false;
+        }
+    };
+
+    // Idea: VOC 개별 항목 PPT 리포트 다운로드 (전용 양식 - 단일 슬라이드)
+    window.exportVocPPT = async (e, lang) => {
+        const PptxGen = window.PptxGenJS;
+        if (!PptxGen) {
+            alert('PPT 생성 라이브러리를 로드하지 못했습니다. 페이지를 새로고침(F5) 해주세요.');
+            return;
+        }
+        if (!currentVocId) return;
+        const voc = localComplaints.find(v => v.id === currentVocId);
+        if (!voc) return;
+
+        const pptBtn = e.target;
+        const pptOrigText = pptBtn.textContent;
+        pptBtn.textContent = lang === 'kor' ? 'PPT 생성 중...' : 'Translating...';
+        pptBtn.disabled = true;
+
+        try {
+            const pptx = new PptxGen();
+            // A4 가로 규격 정의 (11.69 x 8.27 인치)
+            pptx.defineLayout({ name: 'A4', width: 11.69, height: 8.27 });
+            pptx.layout = 'A4';
+            const isEng = lang === 'eng';
+            const fontName = 'Malgun Gothic';
+
+            const translate = async (text) => {
+                if (!isEng || !text || text === '-' || text === '0') return text;
+                try {
+                    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ko|en`);
+                    const data = await res.json();
+                    return data.responseData.translatedText;
+                } catch (err) { return text; }
+            };
+
+            const t = {
+                title: await translate(voc.title || '품질 부적합 조치 결과 보고서'),
+                customer: await translate(voc.customer || '-'),
+                description: await translate(voc.description || '-'),
+                cause: await translate(voc.replyCause || '-'),
+                countermeasure: await translate(voc.replyCountermeasure || '-'),
+                evaluation: await translate(voc.replyEvaluation || '-'),
+                defectType: await translate(voc.defectType || '기타'),
+                manager: await translate(voc.manager || '-'),
+                status: await translate(voc.status || '-'),
+                market: await translate(voc.market || '-'),
+                category: await translate(voc.category || '-')
+            };
+
+            let slide = pptx.addSlide();
+
+            // Header: Title (Company name removed as requested)
+            slide.addText(t.title, { x: 0.3, y: 0.3, w: 11.0, fontSize: 22, bold: true, fontFace: fontName, color: '333333' });
+
+            // 1. Basic Information Table (Widened for A4)
+            const infoRows = [
+                [
+                    { text: (isEng ? 'Client' : '고객사'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, t.customer,
+                    { text: (isEng ? 'Market' : '내수/수출'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, t.market,
+                    { text: (isEng ? 'Date' : '접수일'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.receiptDate || '-'
+                ],
+                [
+                    { text: (isEng ? 'Spec' : '제품규격'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.spec || '-',
+                    { text: (isEng ? 'Line' : '생산라인'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.line || '-',
+                    { text: (isEng ? 'Type' : '불량유형'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, t.defectType
+                ]
+            ];
+            slide.addTable(infoRows, { x: 0.3, y: 0.9, w: 11.0, colW: [1.2, 2.4, 1.2, 2.4, 1.3, 2.5], fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'middle' });
+
+            // 2. Complaint Details & Photo
+            slide.addText('■ ' + (isEng ? 'Symptom & Photo' : '불만 상세 현상 및 사진'), { x: 0.3, y: 1.9, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
+            slide.addText(t.description, { x: 0.3, y: 2.3, w: 6.5, h: 1.8, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+
+            if (voc.photo) {
+                slide.addImage({ data: voc.photo, x: 7.0, y: 2.3, w: 4.3, h: 1.8, sizing: { type: 'contain' } });
+            } else {
+                slide.addText(isEng ? 'No Photo' : '사진 없음', { x: 7.0, y: 2.3, w: 4.3, h: 1.8, align: 'center', fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
+            }
+
+            // 3. Cause Analysis
+            slide.addText('■ ' + (isEng ? 'Root Cause Analysis' : '예상 원인 및 근본 원인 분석'), { x: 0.3, y: 4.3, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
+            slide.addText(t.cause, { x: 0.3, y: 4.7, w: 11.0, h: 1.0, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+
+            // 4. Countermeasures
+            slide.addText('■ ' + (isEng ? 'Improvement & Prevention' : '개선 및 재발 방지 대책'), { x: 0.3, y: 5.9, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
+            slide.addText(`[개선 및 재발방지]\n${t.countermeasure}`, { x: 0.3, y: 6.3, w: 11.0, h: 1.2, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+
+            // Footer
+            slide.addText('(1)', { x: 10.5, y: 7.7, w: 0.8, align: 'right', fontSize: 9, fontFace: fontName, color: '666666' });
+
+            pptx.writeFile({ fileName: `SeAH_Report_${voc.customer}_${lang.toUpperCase()}` });
+        } catch (err) {
+            console.error(err);
+            alert('PPT 생성 실패: ' + err.message);
+        } finally {
+            pptBtn.textContent = pptOrigText;
+            pptBtn.disabled = false;
+        }
+    };
+
+    // Idea: VOC 처리 대장 전체 PPT 일괄 출력 (콤팩트 단일 슬라이드 반복)
+    // window.exportVocBatchPPT = async (e, lang) => {
+    //     const PptxGen = window.PptxGenJS;
+    //     if (!PptxGen) {
+    //         alert('PPT 생성 라이브러리를 로드하지 못했습니다. 페이지를 새로고침(F5) 해주세요.');
+    //         return;
+    //     }
+
+    //     if (localComplaints.length === 0) {
+    //         alert('출력할 데이터가 없습니다.');
+    //         return;
+    //     }
+
+    //     const monthFilter = document.getElementById('voc-month-filter')?.value || 'all';
+    //     let filtered = localComplaints;
+    //     if (monthFilter !== 'all') {
+    //         filtered = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(monthFilter));
+    //     }
+
+    //     if (filtered.length === 0) {
+    //         alert('선택된 기간에 출력할 데이터가 없습니다.');
+    //         return;
+    //     }
+
+    //     const batchBtn = e.target;
+    //     const batchOrigText = batchBtn.textContent;
+    //     batchBtn.disabled = true;
+
+    //     try {
+    //         const pptx = new PptxGen();
+    //         const isEng = lang === 'eng';
+    //         const fontName = 'Malgun Gothic';
+
+    //         const translate = async (text) => {
+    //             if (!isEng || !text || text === '-' || text === '0') return text;
+    //             try {
+    //                 const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ko|en`);
+    //                 const data = await res.json();
+    //                 return data.responseData.translatedText;
+    //             } catch (err) { return text; }
+    //         };
+
+    //         for (let i = 0; i < filtered.length; i++) {
+    //             const voc = filtered[i];
+    //             batchBtn.textContent = `${isEng ? 'Translating' : '번역 및 생성 중'} (${i + 1}/${filtered.length})...`;
+
+    //             const t = {
+    //                 title: await translate(voc.title || '품질 부적합 조치 결과 보고서'),
+    //                 customer: await translate(voc.customer || '-'),
+    //                 content: await translate(voc.content || '-'),
+    //                 cause: await translate(voc.cause || '-'),
+    //                 action: await translate(voc.countermeasures || '-'),
+    //                 evaluation: await translate(voc.evaluation || '-'),
+    //                 defectType: await translate(voc.defectType || '기타'),
+    //                 manager: await translate(voc.manager || '-'),
+    //                 status: await translate(voc.status || '-'),
+    //                 market: await translate(voc.market || '-'),
+    //             };
+
+    //             let slide = pptx.addSlide();
+
+    //             // Header (Single Slide Compact Mode)
+    //             slide.addText(t.title, { x: 0.3, y: 0.2, w: 6, fontSize: 18, bold: true, fontFace: fontName });
+    //             slide.addText('SeAH 세아씨엠', { x: 7, y: 0.2, w: 2.7, align: 'right', fontSize: 16, bold: true, color: '1e3a8a', fontFace: fontName });
+    //             slide.addShape(pptx.ShapeType.line, { x: 0.3, y: 0.6, w: 9.4, line: { color: '333333', width: 1.0 } });
+    //             slide.addShape(pptx.ShapeType.line, { x: 8, y: 0.63, w: 1.7, line: { color: 'f15a22', width: 2.0 } });
+
+    //             // Information Table
+    //             const infoRows = [[
+    //                 { text: (isEng ? 'Client' : '고객사'), options: { fill: 'F0F0F0', bold: true } }, t.customer,
+    //                 { text: (isEng ? 'Date' : '접수일'), options: { fill: 'F0F0F0', bold: true } }, voc.receiptDate,
+    //                 { text: (isEng ? 'Line' : '라인'), options: { fill: 'F0F0F0', bold: true } }, voc.line
+    //             ]];
+    //             slide.addTable(infoRows, { x: 0.3, y: 0.8, w: 9.4, colW: [1, 2.1, 1, 2.1, 1, 2.1], fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
+
+    //             // Sections
+    //             slide.addText('■ ' + (isEng ? 'Details' : '불만 상세 현상'), { x: 0.3, y: 1.5, fontSize: 10, bold: true, fontFace: fontName });
+    //             slide.addText(t.content, { x: 0.3, y: 1.8, w: 6.2, h: 1.8, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+
+    //             if (voc.photo) {
+    //                 slide.addImage({ data: voc.photo, x: 6.7, y: 1.8, w: 3.0, h: 1.8, sizing: { type: 'contain' } });
+    //             }
+
+    //             slide.addText('■ ' + (isEng ? 'Analysis' : '사고 원인 분석'), { x: 0.3, y: 3.8, fontSize: 10, bold: true, fontFace: fontName });
+    //             slide.addText(t.cause, { x: 0.3, y: 4.1, w: 9.4, h: 1.2, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+
+    //             slide.addText('■ ' + (isEng ? 'Action/Result' : '조치 내용 및 결과'), { x: 0.3, y: 5.5, fontSize: 10, bold: true, fontFace: fontName });
+    //             slide.addText(`${t.action}\n\n[평가] ${t.evaluation}`, { x: 0.3, y: 5.8, w: 9.4, h: 1.4, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+
+    //             // Footer
+    //             slide.addText(`(${i + 1})`, { x: 9.2, y: 7.3, fontSize: 8, fontFace: fontName, color: '999999' });
+    //         }
+
+    //         pptx.writeFile({ fileName: `SeAH_VOC_Full_Ledger_${monthFilter}_${lang.toUpperCase()}` });
+    //     } catch (err) {
+    //         console.error(err);
+    //         alert('PPT 생성 실패: ' + err.message);
+    //     } finally {
+    //         batchBtn.textContent = batchOrigText;
+    //         batchBtn.disabled = false;
+    //     }
+    // };
 });
