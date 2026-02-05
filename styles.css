@@ -787,6 +787,33 @@ body.admin-mode button.admin-only {
     font-weight: 700;
 }
 
+@media (max-width: 768px) {
+
+    #voc-log-view .table-container table th,
+    #voc-log-view .table-container table td {
+        padding: 6px 4px !important;
+        font-size: 11px !important;
+        width: auto !important;
+    }
+
+    #voc-list-body span {
+        font-size: 10px !important;
+        padding: 2px 4px !important;
+    }
+
+    #voc-list-body div {
+        font-size: 10px !important;
+    }
+
+    .voc-manager-name {
+        font-size: 11px !important;
+    }
+
+    .voc-title-cell {
+        max-width: 100px !important;
+    }
+}
+
 .status-pending {
     background: #fff7ed;
     color: #9a3412;

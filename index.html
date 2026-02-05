@@ -53,17 +53,21 @@
                 <a href="#search-view" class="active nav-link">
                     <span>🔍</span> 품질 규격 조회
                 </a>
-                <a href="#resin-quality-view" class="nav-link">
-                    <span>🧪</span> 수지별 품질 기준
-                </a>
+
                 <a href="#dashboard-view" class="nav-link">
                     <span>📊</span> 품질 분석 대시보드
                 </a>
-                <a href="#complaint-view" class="nav-link">
-                    <span>📢</span> 고객 불만 관리
+                <a href="#complaint-view" class="nav-link" data-menu="voc-management">
+                    <span>📢</span> 고객 불만 접수
+                </a>
+                <a href="#voc-log-view" class="nav-link" data-menu="voc-log">
+                    <span>📋</span> 고객 불만 관리
                 </a>
 
                 <p class="nav-group-title" style="margin-top: 24px;">Support</p>
+                <a href="#resin-quality-view" class="nav-link">
+                    <span>🧪</span> 수지별 품질 기준
+                </a>
                 <a href="#defect-view" class="nav-link">
                     <span class="icon">📖</span> 불량 유형 도감
                 </a>
@@ -72,6 +76,9 @@
                 </a>
                 <a href="#line-spec-view" class="nav-link">
                     <span class="icon">📐</span> 라인별 생산 가능 SPEC
+                </a>
+                <a href="#certification-view" class="nav-link">
+                    <span>🏆</span> 품질 인증 현황
                 </a>
                 <a href="#management-view" class="nav-link admin-only">
                     <span class="icon">📁</span> 규격 데이터 관리
@@ -1648,21 +1655,33 @@
                                     <h3>🏭 CPL <small>산세라인 (Pickling Line)</small></h3>
                                     <p class="line-spec-subtitle">열연코일의 산화스케일 제거 후 냉연/도금 공정 투입용 원판 생산</p>
                                 </div>
-                                <div class="spec-chart-container"
-                                    style="background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                                    <div
-                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                        <h4 style="margin: 0; font-size: 18px; color: #1e3a8a;">CPL 생산 가능 범위</h4>
-                                        <div style="display: flex; gap: 16px; font-size: 12px;">
-                                            <span style="display: flex; align-items: center; gap: 6px;"><span
-                                                    style="width: 16px; height: 16px; background: rgba(59, 130, 246, 0.7); border-radius: 3px;"></span>
-                                                생산 가능 영역</span>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px;">
+                                            <h4 style="margin: 0; border: none; padding: 0;">CPL 생산 가능 범위</h4>
+                                            <div style="display: flex; gap: 16px; font-size: 12px;">
+                                                <span style="display: flex; align-items: center; gap: 6px;">
+                                                    <span
+                                                        style="width: 16px; height: 16px; background: rgba(239, 68, 68, 0.7); border-radius: 3px;"></span>
+                                                    생산 가능 영역
+                                                </span>
+                                                <span style="display: flex; align-items: center; gap: 6px;">
+                                                    <span
+                                                        style="width: 16px; height: 16px; background: repeating-linear-gradient(45deg, #cbd5e1, #cbd5e1 2px, #fff 2px, #fff 4px); border: 1px solid #cbd5e1; border-radius: 3px;"></span>
+                                                    협의 영역
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="chart-wrapper" style="height: 350px;">
+                                            <canvas id="chart-cpl"></canvas>
+                                        </div>
+                                        <div class="chart-note"
+                                            style="display:flex; justify-content:space-between; font-size:12px; color:#64748b;">
+                                            <span>• 두께 Range: 1.60 ~ 4.00mm</span>
+                                            <span>• 폭 Range: 600 ~ 1320mm (협의 : ~1350mm)</span>
                                         </div>
                                     </div>
-                                    <div style="position: relative; height: 400px;"><canvas id="chart-cpl"></canvas>
-                                    </div>
-                                    <div class="spec-note" style="margin-top: 16px;"><small>• 두께 Range: 1.20 ~ 5.00mm /
-                                            폭 Range: 600 ~ 1350mm</small></div>
                                 </div>
                             </div>
 
@@ -1672,21 +1691,33 @@
                                     <h3>🏭 CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
                                     <p class="line-spec-subtitle">산세강판을 냉간압연하여 목표 두께로 압연</p>
                                 </div>
-                                <div class="spec-chart-container"
-                                    style="background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                                    <div
-                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                        <h4 style="margin: 0; font-size: 18px; color: #1e3a8a;">CRM 생산 가능 범위</h4>
-                                        <div style="display: flex; gap: 16px; font-size: 12px;">
-                                            <span style="display: flex; align-items: center; gap: 6px;"><span
-                                                    style="width: 16px; height: 16px; background: rgba(16, 185, 129, 0.7); border-radius: 3px;"></span>
-                                                생산 가능 영역</span>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px;">
+                                            <h4 style="margin: 0; border: none; padding: 0;">CRM 생산 가능 범위</h4>
+                                            <div style="display: flex; gap: 16px; font-size: 12px;">
+                                                <span style="display: flex; align-items: center; gap: 6px;">
+                                                    <span
+                                                        style="width: 16px; height: 16px; background: rgba(239, 68, 68, 0.7); border-radius: 3px;"></span>
+                                                    생산 가능 영역
+                                                </span>
+                                                <span style="display: flex; align-items: center; gap: 6px;">
+                                                    <span
+                                                        style="width: 16px; height: 16px; background: repeating-linear-gradient(45deg, #cbd5e1, #cbd5e1 2px, #fff 2px, #fff 4px); border: 1px solid #cbd5e1; border-radius: 3px;"></span>
+                                                    협의 영역
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="chart-wrapper" style="height: 350px;">
+                                            <canvas id="chart-crm"></canvas>
+                                        </div>
+                                        <div class="chart-note"
+                                            style="display:flex; justify-content:space-between; font-size:12px; color:#64748b;">
+                                            <span>• 두께 Range: 0.23 ~ 1.60mm</span>
+                                            <span>• 폭 Range: 600 ~ 1320mm (협의 : ~1350mm)</span>
                                         </div>
                                     </div>
-                                    <div style="position: relative; height: 400px;"><canvas id="chart-crm"></canvas>
-                                    </div>
-                                    <div class="spec-note" style="margin-top: 16px;"><small>• 두께 Range: 0.20 ~ 1.60mm /
-                                            폭 Range: 600 ~ 1350mm</small></div>
                                 </div>
                             </div>
 
@@ -1699,26 +1730,66 @@
                                 <div class="spec-charts-grid">
                                     <div class="spec-chart-box">
                                         <h4>CQ (SAE1008)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gi-cq"></canvas></div>
                                         <p class="chart-note">• 두께 가공여력 기준: 0.4% 아연부(편) / 0.40%~0.80%(양면)</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>DQ (POSHRD2)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gi-dq"></canvas></div>
                                         <p class="chart-note">• 드로잉용 강판으로 가공성 우수</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>DDQ (POSHRD3)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gi-ddq"></canvas></div>
                                         <p class="chart-note">• 심가공용 강판으로 딥드로잉 가공에 적합</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>구조용 (SAE1017)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gi-struct"></canvas></div>
                                         <p class="chart-note">• 구조용 강판으로 강도 우수</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>Gr.E</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gi-gre"></canvas></div>
                                         <p class="chart-note">• 후판 Gr.E 생산 이력 없음, 향후 확대 검토 예정</p>
                                     </div>
@@ -1735,26 +1806,66 @@
                                 <div class="spec-charts-grid">
                                     <div class="spec-chart-box">
                                         <h4>CQ (SAE1008)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gl-cq"></canvas></div>
                                         <p class="chart-note">• 0.8T 이하 박판 사양 양산라인 검토 필요</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>DQ - POSHRD2</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gl-dq"></canvas></div>
                                         <p class="chart-note">• 가전용 제외</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>DDQ - POSHRD3</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gl-ddq"></canvas></div>
                                         <p class="chart-note">• 가전용 제외</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>구조용 (SAE1017)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gl-struct"></canvas></div>
                                         <p class="chart-note">• 구조용 강판으로 강도 우수</p>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>Gr.E</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-gl-gre"></canvas></div>
                                         <p class="chart-note">• 후판 Gr.E 생산 이력 없음</p>
                                     </div>
@@ -1770,10 +1881,26 @@
                                 <div class="spec-charts-grid">
                                     <div class="spec-chart-box">
                                         <h4>PPGI 및 PPGL</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(147, 51, 234, 0.8); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-1ccl-ppgi"></canvas></div>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>PPAL</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(147, 51, 234, 0.8); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-1ccl-ppal"></canvas></div>
                                     </div>
                                 </div>
@@ -1788,14 +1915,38 @@
                                 <div class="spec-charts-grid">
                                     <div class="spec-chart-box">
                                         <h4>PPAL (1000계열)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(79, 70, 229, 0.8); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-2ccl-ppal-1000"></canvas></div>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>PPAL (1000계열 외)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(79, 70, 229, 0.8); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-2ccl-ppal-others"></canvas></div>
                                     </div>
                                     <div class="spec-chart-box">
                                         <h4>PPGI/GL</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(79, 70, 229, 0.8); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper"><canvas id="chart-2ccl-ppgi-gl"></canvas></div>
                                     </div>
                                 </div>
@@ -1810,25 +1961,56 @@
                                 <div class="spec-charts-grid">
                                     <div class="spec-chart-box">
                                         <h4>PPGI 및 PPGL</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(13, 148, 136, 0.8); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
                                         <div class="chart-wrapper" style="height: 350px;">
                                             <canvas id="chart-3ccl-ppgi-gl"></canvas>
                                         </div>
                                         <p class="chart-note">• 질감이 강한 클리어 등 특수 제품의 경우 품질 협의 필요</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>스타코 엠보 (Stucco Embossed)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(239, 68, 68, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                        </div>
+                                        <div class="chart-wrapper"><canvas id="chart-3ccl-stucco"></canvas></div>
+                                        <p class="chart-note">• 두께: 0.27~0.85mm / 폭: 700~1270mm</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>가죽무늬 엠보 (Leather Embossed)</h4>
+                                        <div
+                                            style="display: flex; justify-content: flex-end; margin-bottom: 5px; gap: 10px; font-size: 11px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: rgba(239, 68, 68, 0.7); border-radius: 2px;"></span>
+                                                생산 가능
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span
+                                                    style="width: 12px; height: 12px; background: repeating-linear-gradient(45deg, #cbd5e1, #cbd5e1 2px, #fff 2px, #fff 4px); border: 1px solid #cbd5e1; border-radius: 2px;"></span>
+                                                협의가능
+                                            </span>
+                                        </div>
+                                        <div class="chart-wrapper"><canvas id="chart-3ccl-leather"></canvas></div>
+                                        <p class="chart-note">• 두께: 0.27~1.05mm / 폭: 700~1270mm</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- 참고 사항 배너 -->
-                    <div class="info-banner" style="margin-top: 30px; background: #f8fafc;">
-                        <h5>📌 참고 사항</h5>
-                        <ul
-                            style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.8;">
-                            <li>상기 스펙은 표준 제조 범위이며, 특수 사양은 품질경영팀에 별도 문의 바랍니다.</li>
-                            <li>폭 범위는 두께에 따라 달라질 수 있으며, 상세 그래프는 원본 자료를 참조하세요.</li>
-                            <li><strong>빨간색 영역</strong>: 생산 가능 영역 / <strong>회색 영역</strong>: 생산 불가</li>
-                        </ul>
-                    </div>
+
                 </div>
             </section>
 
@@ -1895,7 +2077,7 @@
             <!-- 4. Complaint Management View -->
             <section id="complaint-view" class="page-section" style="display: none;">
                 <div class="page-header" style="text-align: center;">
-                    <h2>고객 불만 관리 (VOC)</h2>
+                    <h2>고객 불만 접수 (VOC)</h2>
                     <p>본사/영업소의 고객 불만을 체계적으로 기록하고 처리 현황을 실시간으로 관리합니다.</p>
                 </div>
 
@@ -2023,12 +2205,21 @@
                     </form>
                 </div>
 
-                <!-- [Bottom] VOC List Table -->
-                <div class="search-container" style="margin: 0 auto; max-width: 1100px;">
+                <!-- VOC List Table Section (Moved to new view) -->
+            </section>
+
+            <!-- 4-1. VOC Processing Log View (Main Menu Item) -->
+            <section id="voc-log-view" class="page-section" style="display: none;">
+                <div class="page-header" style="text-align: center;">
+                    <h2>고객 불만 관리</h2>
+                    <p>접수된 VOC 내역을 조회하고 처리 결과를 관리합니다.</p>
+                </div>
+
+                <div class="search-container" style="margin: 0 auto; max-width: 1400px;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">📋 VOC 처리 대장
+                            <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">📋 VOC 내역 조회
                             </h4>
                             <div class="filter-box" style="display: flex; align-items: center; gap: 8px;">
                                 <label style="font-size: 13px; font-weight: 700; color: #475569;">월별 조회:</label>
@@ -2040,6 +2231,10 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="exportVocToExcel()" class="btn-secondary"
+                                style="background: #fff; border: 1px solid #cbd5e1; color: #1e293b; font-size: 13px; padding: 6px 12px;">
+                                <i class="fas fa-file-excel" style="color: #10b981;"></i> 엑셀 다운로드
+                            </button>
                             <div style="font-size: 11px; color: var(--text-muted); text-align: right;">* 행을 클릭하면 상세 내용 및
                                 조치 결과를 입력할 수 있습니다.</div>
                         </div>
@@ -2070,6 +2265,9 @@
                                         style="padding: 12px; font-size: 13px; color: #475569; width: 90px; text-align: center;">
                                         상태</th>
                                     <th
+                                        style="padding: 12px; font-size: 13px; color: #475569; width: 100px; text-align: center;">
+                                        보고서</th>
+                                    <th
                                         style="padding: 12px; font-size: 13px; color: #475569; width: 70px; text-align: center;">
                                         관리</th>
                                 </tr>
@@ -2097,12 +2295,6 @@
                                 상세보기</h3>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <div style="display: flex; gap: 5px;">
-                                    <button onclick="exportVocPPT(event, 'kor')" class="btn-secondary"
-                                        style="font-size: 11px; padding: 4px 10px; height: 28px; border-color: #cbd5e1;">📥
-                                        국문 PPT</button>
-                                    <button onclick="exportVocPPT(event, 'eng')" class="btn-secondary"
-                                        style="font-size: 11px; padding: 4px 10px; height: 28px; border-color: #cbd5e1;">📥
-                                        영문 PPT</button>
                                 </div>
                                 <button onclick="document.getElementById('voc-modal').style.display='none'"
                                     style="background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; padding: 0;">✕</button>
@@ -2588,83 +2780,254 @@
                 </div>
             </section>
 
-            <!-- 📄 전용 보안 뷰어 모달 (문서 유출 방지용) -->
-            <div id="doc-viewer-modal" class="modal" style="display: none; z-index: 10000;">
-                <div class="modal-content"
-                    style="width: 95%; height: 95%; max-width: 1400px; padding: 0; position: relative; display: flex; flex-direction: column;">
-                    <!-- 뷰어 헤더 -->
-                    <div
-                        style="background: #0f172a; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
-                        <h3
-                            style="margin: 0; font-size: 15px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px;">
-                            <span>📋</span> 보안 문서 통합 뷰어
-                        </h3>
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <span
-                                style="font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px;">보안
-                                모드 가동 중</span>
-                            <button onclick="document.getElementById('doc-viewer-modal').style.display='none'"
-                                style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                        </div>
-                    </div>
-                    <!-- 뷰어 본문 -->
-                    <div id="viewer-body"
-                        style="flex: 1; background: #525659; overflow: auto; position: relative; -webkit-overflow-scrolling: touch;">
-                        <!-- 실제 콘텐츠 (PDF/IMG) -->
-                        <iframe id="viewer-iframe"
-                            style="width: 100%; height: 100%; border: none; background: white; display: none;"
-                            src=""></iframe>
+            <!-- 8. Certification Status View -->
+            <section id="certification-view" class="page-section" style="display: none;">
+                <div class="page-header" style="text-align: center; position: relative;">
+                    <h2>세아씨엠 품질인증 현황</h2>
+                    <p>보유 중인 품질 경영 시스템 및 제품 인증 현황을 확인합니다.</p>
+                    <button id="add-cert-btn" class="btn-primary admin-only"
+                        style="position: absolute; right: 20px; bottom: 0; width: auto; padding: 10px 20px;">
+                        <span>➕</span> 인증 등록
+                    </button>
+                </div>
 
-                        <div id="viewer-img-container"
-                            style="display: none; width: 100%; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 40px;">
-                            <img id="viewer-img"
-                                style="max-width: 80%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); background: white; border: 1px solid #e2e8f0;"
-                                src="">
-                        </div>
-
-                        <!-- 스크립트 오류 방지용 유지 -->
-                        <div id="viewer-canvas-container" style="display: none;"></div>
-                        <div id="viewer-shield"
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: -1;"></div>
-
-                        <!-- 🛡️ 보안 워터마크 오버레이 -->
-                        <div class="viewer-watermark-overlay" id="viewer-watermark"></div>
-                    </div>
-                    <!-- 뷰어 푸터 및 페이지 컨트롤러 -->
-                    <div id="viewer-footer"
-                        style="background: #f8fafc; padding: 12px 25px; border-top: 1px solid #e2e8f0; z-index: 20;">
-                        <!-- 페이지 컨트롤러 (PDF인 경우 app.js에서 표시함) -->
-                        <div id="viewer-pagination"
-                            style="display: none; justify-content: center; align-items: center; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; padding: 5px 0;">
-                            <!-- 페이지 이동 -->
-                            <div
-                                style="display: flex; align-items: center; gap: 10px; background: #fff; padding: 4px 10px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                                <button id="prev-page"
-                                    style="background: none; border: none; color: #1e3a8a; font-weight: 800; cursor: pointer; padding: 5px 10px; font-size: 16px;">◀</button>
-                                <span id="page-num-display"
-                                    style="font-weight: 700; color: #334155; font-size: 14px; min-width: 60px; text-align: center;">1
-                                    / 1</span>
-                                <button id="next-page"
-                                    style="background: none; border: none; color: #1e3a8a; font-weight: 800; cursor: pointer; padding: 5px 10px; font-size: 16px;">▶</button>
-                            </div>
-
-                            <!-- 확대/축소 -->
-                            <div
-                                style="display: flex; align-items: center; gap: 8px; background: #fff; padding: 4px 12px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                                <button id="zoom-out-btn"
-                                    style="background: #f1f5f9; border: none; color: #475569; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; cursor: pointer; font-size: 18px; line-height: 1;">-</button>
-                                <span id="zoom-level-display"
-                                    style="font-weight: 700; color: #334155; font-size: 13px; min-width: 45px; text-align: center;">120%</span>
-                                <button id="zoom-in-btn"
-                                    style="background: #f1f5f9; border: none; color: #475569; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; cursor: pointer; font-size: 18px; line-height: 1;">+</button>
-                            </div>
-                        </div>
-                        <p style="margin: 0; font-size: 11px; color: #94a3b8; text-align: center;">본 문서는 세아씨엠 보안 정책에 의해
-                            보호받고 있습니다. 캡처 및 무단 배포 시 법적 책임을 물을 수 있습니다.</p>
+                <div class="search-container" style="margin: 0 auto; max-width: 1400px;">
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
+                            <thead>
+                                <tr
+                                    style="background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); color: white; text-align: center;">
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 50px;">
+                                        구분</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 150px;">
+                                        인증명</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">
+                                        인증 품목</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 120px;">
+                                        인증 기관</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 100px;">
+                                        최초 인증일</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 100px;">
+                                        최근 발행일</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 180px;">
+                                        유효기간</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 100px;">
+                                        잔여 기간</th>
+                                    <th
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 150px;">
+                                        비고</th>
+                                    <th class="admin-only"
+                                        style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 80px;">
+                                        관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="certification-tbody">
+                                <!-- Data rows injected by JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-            </div>
+                <!-- Certification Modal -->
+                <div id="cert-modal" class="modal"
+                    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+                    <div class="modal-content"
+                        style="width:90%; max-width:500px; background:white; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
+                        <div
+                            style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 id="cert-modal-title" style="margin:0; color:white; font-size:18px; font-weight:600;">
+                                🏆 인증 정보 수정</h3>
+                            <span onclick="document.getElementById('cert-modal').style.display='none'"
+                                style="color:white; font-size:24px; cursor:pointer; opacity:0.8; transition:opacity 0.2s;"
+                                onmouseover="this.style.opacity='1'"
+                                onmouseout="this.style.opacity='0.8'">&times;</span>
+                        </div>
+                        <form id="cert-form" style="padding:24px;">
+                            <input type="hidden" id="cert-id-hidden">
+
+                            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-bottom:16px;">
+                                <div>
+                                    <label
+                                        style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">No.</label>
+                                    <input type="number" id="cert-no" placeholder="번호" required readonly
+                                        style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; background-color: #f1f5f9; cursor: not-allowed;">
+                                </div>
+                                <div>
+                                    <label
+                                        style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">인증명</label>
+                                    <input type="text" id="cert-name" placeholder="예: KS D 3506" required
+                                        style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">인증
+                                    품목</label>
+                                <input type="text" id="cert-item" placeholder="품목명 입력" required
+                                    style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+                            </div>
+
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">인증
+                                    기관</label>
+                                <input type="text" id="cert-org" placeholder="기관명 입력" required
+                                    style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+                            </div>
+
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                                <div>
+                                    <label
+                                        style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">최초
+                                        인증일</label>
+                                    <div style="display:flex; gap:4px;">
+                                        <input type="text" id="cert-first-date" placeholder="-"
+                                            style="width:70px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; text-align:center;">
+                                        <input type="date" id="cert-first-date-picker"
+                                            onchange="document.getElementById('cert-first-date').value = this.value"
+                                            style="flex:1; padding:10px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">최근
+                                        발행일</label>
+                                    <div style="display:flex; gap:4px;">
+                                        <input type="text" id="cert-recent-date" placeholder="-" required
+                                            style="width:70px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; text-align:center;">
+                                        <input type="date" id="cert-recent-date-picker"
+                                            onchange="document.getElementById('cert-recent-date').value = this.value"
+                                            style="flex:1; padding:10px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:16px;">
+                                <label
+                                    style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">유효기간</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="cert-valid-date" placeholder="상태" required
+                                        style="width:100px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; text-align:center;">
+                                    <input type="date" id="cert-valid-date-picker"
+                                        onchange="document.getElementById('cert-valid-date').value = this.value"
+                                        style="flex:1; padding:10px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                                    <select id="cert-valid-preset"
+                                        onchange="if(this.value) document.getElementById('cert-valid-date').value = this.value;"
+                                        style="width:100px; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;">
+                                        <option value="">직접입력</option>
+                                        <option value="Infinite">Infinite</option>
+                                        <option value="Pending">Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:20px;">
+                                <label
+                                    style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">비고</label>
+                                <textarea id="cert-note" rows="2" placeholder="주기, 특이사항 등"
+                                    style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; resize:vertical;"></textarea>
+                            </div>
+
+                            <div
+                                style="display:flex; gap:12px; justify-content:flex-end; padding-top:8px; border-top:1px solid #f3f4f6;">
+                                <button type="button"
+                                    onclick="document.getElementById('cert-modal').style.display='none'"
+                                    style="padding:10px 20px; border:1px solid #d1d5db; background:white; color:#374151; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer;">취소</button>
+                                <button type="submit"
+                                    style="padding:10px 24px; border:none; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">저장</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+                <!-- 📄 전용 보안 뷰어 모달 (문서 유출 방지용) -->
+                <div id="doc-viewer-modal" class="modal" style="display: none; z-index: 10000;">
+                    <div class="modal-content"
+                        style="width: 95%; height: 95%; max-width: 1400px; padding: 0; position: relative; display: flex; flex-direction: column;">
+                        <!-- 뷰어 헤더 -->
+                        <div
+                            style="background: #0f172a; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
+                            <h3
+                                style="margin: 0; font-size: 15px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px;">
+                                <span>📋</span> 보안 문서 통합 뷰어
+                            </h3>
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <span
+                                    style="font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px;">보안
+                                    모드 가동 중</span>
+                                <button onclick="document.getElementById('doc-viewer-modal').style.display='none'"
+                                    style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                            </div>
+                        </div>
+                        <!-- 뷰어 본문 -->
+                        <div id="viewer-body"
+                            style="flex: 1; background: #525659; overflow: auto; position: relative; -webkit-overflow-scrolling: touch;">
+                            <!-- 실제 콘텐츠 (PDF/IMG) -->
+                            <iframe id="viewer-iframe"
+                                style="width: 100%; height: 100%; border: none; background: white; display: none;"
+                                src=""></iframe>
+
+                            <div id="viewer-img-container"
+                                style="display: none; width: 100%; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 40px;">
+                                <img id="viewer-img"
+                                    style="max-width: 80%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); background: white; border: 1px solid #e2e8f0;"
+                                    src="">
+                            </div>
+
+                            <!-- 스크립트 오류 방지용 유지 -->
+                            <div id="viewer-canvas-container" style="display: none;"></div>
+                            <div id="viewer-shield"
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: -1;"></div>
+
+                            <!-- 🛡️ 보안 워터마크 오버레이 -->
+                            <div class="viewer-watermark-overlay" id="viewer-watermark"></div>
+                        </div>
+                        <!-- 뷰어 푸터 및 페이지 컨트롤러 -->
+                        <div id="viewer-footer"
+                            style="background: #f8fafc; padding: 12px 25px; border-top: 1px solid #e2e8f0; z-index: 20;">
+                            <!-- 페이지 컨트롤러 (PDF인 경우 app.js에서 표시함) -->
+                            <div id="viewer-pagination"
+                                style="display: none; justify-content: center; align-items: center; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; padding: 5px 0;">
+                                <!-- 페이지 이동 -->
+                                <div
+                                    style="display: flex; align-items: center; gap: 10px; background: #fff; padding: 4px 10px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <button id="prev-page"
+                                        style="background: none; border: none; color: #1e3a8a; font-weight: 800; cursor: pointer; padding: 5px 10px; font-size: 16px;">◀</button>
+                                    <span id="page-num-display"
+                                        style="font-weight: 700; color: #334155; font-size: 14px; min-width: 60px; text-align: center;">1
+                                        / 1</span>
+                                    <button id="next-page"
+                                        style="background: none; border: none; color: #1e3a8a; font-weight: 800; cursor: pointer; padding: 5px 10px; font-size: 16px;">▶</button>
+                                </div>
+
+                                <!-- 확대/축소 -->
+                                <div
+                                    style="display: flex; align-items: center; gap: 8px; background: #fff; padding: 4px 12px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <button id="zoom-out-btn"
+                                        style="background: #f1f5f9; border: none; color: #475569; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; cursor: pointer; font-size: 18px; line-height: 1;">-</button>
+                                    <span id="zoom-level-display"
+                                        style="font-weight: 700; color: #334155; font-size: 13px; min-width: 45px; text-align: center;">120%</span>
+                                    <button id="zoom-in-btn"
+                                        style="background: #f1f5f9; border: none; color: #475569; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; cursor: pointer; font-size: 18px; line-height: 1;">+</button>
+                                </div>
+                            </div>
+                            <p style="margin: 0; font-size: 11px; color: #94a3b8; text-align: center;">본 문서는 세아씨엠 보안 정책에
+                                의해
+                                보호받고 있습니다. 캡처 및 무단 배포 시 법적 책임을 물을 수 있습니다.</p>
+                        </div>
+                    </div>
+
+                </div>
     </div>
     </main>
     </div>
@@ -2682,7 +3045,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <script src="data.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=3"></script>
     <!-- Image Modal for Process Diagram -->
     <div id="image-modal" class="image-modal" onclick="closeImageModal()">
         <span class="close-modal">&times;</span>

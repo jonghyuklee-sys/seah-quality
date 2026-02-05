@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    let isAdmin = sessionStorage.getItem('seahAdminMode') === 'true'; // 새로고침 시에도 관리자 상태 유지
+    window.isAdmin = sessionStorage.getItem('seahAdminMode') === 'true'; // 전역 스코프로 확장
+    let isAdmin = window.isAdmin;
     let localFiles = [];
     let localComplaints = [];
     let localDefects = [];
@@ -74,6 +75,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 userAvatar.style.background = '#e2e8f0';
                 userAvatar.style.color = '#64748b';
             }
+        }
+        window.isAdmin = isAdmin; // Sync with global
+        if (typeof renderCertification === 'function') {
+            renderCertification();
         }
     }
     updateAdminUI();
@@ -158,6 +163,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 const activeTab = document.querySelector('#line-spec-tabs .tab-btn.active');
                 if (activeTab) activeTab.click();
             }, 200);
+        }
+        if (targetId === 'certification-view') {
+            try {
+                renderCertification();
+            } catch (err) {
+                console.error("renderCertification failed:", err);
+            }
         }
 
         sidebar.classList.remove('open');
@@ -369,6 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'process-spec': 'process-spec-view',
                 'line-spec': 'line-spec-view',
                 'voc-management': 'complaint-view',
+                'voc-log': 'voc-log-view',
                 'defect-gallery': 'defect-view'
             };
 
@@ -1081,22 +1094,37 @@ document.addEventListener('DOMContentLoaded', function () {
             tr.onclick = () => openVocModal(v.id);
 
             const rowColor = v.category === '클레임' ? '#ef4444' : '#f59e0b';
-            const managerDisplay = (v.team ? `<div style="color:#64748b; font-size:11px; margin-bottom:1px; line-height:1.2;">[${v.team}]</div>` : '') + `<div style="font-weight:600; color:#334155; line-height:1.2;">${v.manager}</div>`;
+            const managerDisplay = (v.team ? `<div class="voc-manager-team" style="color:#64748b; font-size:11px; margin-bottom:1px; line-height:1.2;">[${v.team}]</div>` : '') + `<div class="voc-manager-name" style="font-weight:600; color:#334155; line-height:1.2;">${v.manager}</div>`;
 
             tr.innerHTML = `
-                <td style="padding:10px 14px; text-align:center;">
+                <td style="padding:10px 8px; text-align:center;">
                     <span style="background:${rowColor}10; color:${rowColor}; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; border:1px solid ${rowColor}20;">${v.category}</span>
                 </td>
-                <td style="padding:10px 14px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
-                <td style="padding:10px 14px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
-                <td style="padding:10px 14px; text-align:center; color:#475569; vertical-align:middle;">${managerDisplay}</td>
-                <td style="padding:10px 14px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
-                <td style="padding:10px 14px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.title}</td>
+                <td style="padding:10px 8px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
+                <td style="padding:10px 8px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
+                <td style="padding:10px 8px; text-align:center; color:#475569; vertical-align:middle;">${managerDisplay}</td>
+                <td style="padding:10px 8px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
+                <td class="voc-title-cell" style="padding:10px 8px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.title}</td>
                 <td style="padding:10px 14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
                 <td style="padding:10px 14px; text-align:center;">
-                    <button class="admin-only" style="border:none; background:#fee2e2; color:#ef4444; width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="event.stopPropagation(); deleteVoc('${v.id}')">
-                        <i class="fas fa-trash-alt" style="font-size:12px;"></i>
-                    </button>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <button title="국문 리포트(PPT)" style="border:1px solid #cbd5e1; background:#fff; color:#1e293b; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'" onclick="event.stopPropagation(); exportVocPPT(event, 'kor', '${v.id}')">
+                            <span style="font-size:10px; font-weight:700;">KR</span>
+                        </button>
+                        <button title="영문 리포트(PPT)" style="border:1px solid #cbd5e1; background:#fff; color:#1e293b; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'" onclick="event.stopPropagation(); exportVocPPT(event, 'eng', '${v.id}')">
+                            <span style="font-size:10px; font-weight:700;">EN</span>
+                        </button>
+                    </div>
+                </td>
+                <td style="padding:10px 14px; text-align:center;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <button class="admin-only" style="border:none; background:#e0f2fe; color:#0284c7; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" onclick="event.stopPropagation(); openVocModal('${v.id}')">
+                            <i class="fas fa-edit" style="font-size:12px;"></i>
+                        </button>
+                        <button class="admin-only" style="border:none; background:#fee2e2; color:#ef4444; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="event.stopPropagation(); deleteVoc('${v.id}')">
+                            <i class="fas fa-trash-alt" style="font-size:12px;"></i>
+                        </button>
+                    </div>
                 </td>`;
             vocListBody.appendChild(tr);
         });
@@ -1148,13 +1176,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const fields = {
             'modal-edit-category': v.category,
             'modal-edit-market': v.market,
-            'modal-edit-receiptDate': v.receiptDate,
+            // Normalize dates for input type="date"
+            'modal-edit-receiptDate': (v.receiptDate || '').replace(/\./g, '-'),
             'modal-edit-customer': v.customer,
             'modal-edit-team': v.team || '',
             'modal-edit-manager': v.manager,
             'modal-edit-spec': v.spec,
             'modal-edit-line': v.line,
-            'modal-edit-prodDate': v.prodDate,
+            'modal-edit-prodDate': (v.prodDate || '').replace(/\./g, '-'),
             'modal-edit-defect-type': v.defectType || '',
             'modal-edit-title': v.title,
             'modal-edit-description': v.description || '',
@@ -2155,14 +2184,18 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // Idea: VOC 개별 항목 PPT 리포트 다운로드 (전용 양식 - 단일 슬라이드)
-    window.exportVocPPT = async (e, lang) => {
+    window.exportVocPPT = async (e, lang, targetId) => {
         const PptxGen = window.PptxGenJS;
         if (!PptxGen) {
             alert('PPT 생성 라이브러리를 로드하지 못했습니다. 페이지를 새로고침(F5) 해주세요.');
             return;
         }
-        if (!currentVocId) return;
-        const voc = localComplaints.find(v => v.id === currentVocId);
+
+        // 테이블에서 호출 시 targetId 사용, 모달에서 호출 시 currentVocId 사용
+        const vocId = targetId || currentVocId;
+        if (!vocId) return;
+
+        const voc = localComplaints.find(v => v.id === vocId);
         if (!voc) return;
 
         const pptBtn = e.target;
@@ -2237,7 +2270,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 4. Countermeasures
             slide.addText('■ ' + (isEng ? 'Improvement & Prevention' : '개선 및 재발 방지 대책'), { x: 0.3, y: 5.9, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
-            slide.addText(`[개선 및 재발방지]\n${t.countermeasure}`, { x: 0.3, y: 6.3, w: 11.0, h: 1.2, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+            slide.addText(`${isEng ? '[Improvement & Prevention]' : '[개선 및 재발방지]'}\n${t.countermeasure}`, { x: 0.3, y: 6.3, w: 11.0, h: 1.2, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
 
             // Footer
             slide.addText('(1)', { x: 10.5, y: 7.7, w: 0.8, align: 'right', fontSize: 9, fontFace: fontName, color: '666666' });
@@ -2252,108 +2285,151 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    // 엑셀(CSV) 다운로드 기능
+    window.exportVocToExcel = () => {
+        if (localComplaints.length === 0) return alert('다운로드할 데이터가 없습니다.');
+
+        const monthFilter = document.getElementById('voc-month-filter')?.value || 'all';
+        let filtered = localComplaints;
+        if (monthFilter !== 'all') {
+            filtered = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(monthFilter));
+        }
+
+        if (filtered.length === 0) return alert('선택된 기간에 데이터가 없습니다.');
+
+        // CSV BOM for Excel (UTF-8)
+        let csvContent = "\uFEFF";
+        // Header
+        csvContent += "구분,접수일,고객사,담당자,라인,제품규격,색상,배치번호,생산일자,납품수량,불만수량,불량유형,불만명,상태,예상손실비용,원인분석,조치내용\n";
+
+        filtered.forEach(row => {
+            const escapeCsv = (txt) => {
+                if (!txt) return "";
+                return '"' + String(txt).replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+            };
+
+            const line = [
+                row.category, row.receiptDate, row.customer, row.manager,
+                row.line, row.spec, row.color, row.batch,
+                row.prodDate, row.deliveryQty, row.complaintQty, row.defectType,
+                row.title, row.status, row.cost,
+                row.replyCause || '', row.replyCountermeasure || ''
+            ].map(escapeCsv).join(",");
+            csvContent += line + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `VOC_처리대장_${monthFilter}_${new Date().toLocaleDateString()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // Idea: VOC 처리 대장 전체 PPT 일괄 출력 (콤팩트 단일 슬라이드 반복)
-    // window.exportVocBatchPPT = async (e, lang) => {
-    //     const PptxGen = window.PptxGenJS;
-    //     if (!PptxGen) {
-    //         alert('PPT 생성 라이브러리를 로드하지 못했습니다. 페이지를 새로고침(F5) 해주세요.');
-    //         return;
-    //     }
+    window.exportVocBatchPPT = async (e, lang) => {
+        const PptxGen = window.PptxGenJS;
+        if (!PptxGen) {
+            alert('PPT 생성 라이브러리를 로드하지 못했습니다. 페이지를 새로고침(F5) 해주세요.');
+            return;
+        }
 
-    //     if (localComplaints.length === 0) {
-    //         alert('출력할 데이터가 없습니다.');
-    //         return;
-    //     }
+        if (localComplaints.length === 0) {
+            alert('출력할 데이터가 없습니다.');
+            return;
+        }
 
-    //     const monthFilter = document.getElementById('voc-month-filter')?.value || 'all';
-    //     let filtered = localComplaints;
-    //     if (monthFilter !== 'all') {
-    //         filtered = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(monthFilter));
-    //     }
+        const monthFilter = document.getElementById('voc-month-filter')?.value || 'all';
+        let filtered = localComplaints;
+        if (monthFilter !== 'all') {
+            filtered = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(monthFilter));
+        }
 
-    //     if (filtered.length === 0) {
-    //         alert('선택된 기간에 출력할 데이터가 없습니다.');
-    //         return;
-    //     }
+        if (filtered.length === 0) {
+            alert('선택된 기간에 출력할 데이터가 없습니다.');
+            return;
+        }
 
-    //     const batchBtn = e.target;
-    //     const batchOrigText = batchBtn.textContent;
-    //     batchBtn.disabled = true;
+        const batchBtn = e.target;
+        const batchOrigText = batchBtn.textContent;
+        batchBtn.disabled = true;
 
-    //     try {
-    //         const pptx = new PptxGen();
-    //         const isEng = lang === 'eng';
-    //         const fontName = 'Malgun Gothic';
+        try {
+            const pptx = new PptxGen();
+            const isEng = lang === 'eng';
+            const fontName = 'Malgun Gothic';
 
-    //         const translate = async (text) => {
-    //             if (!isEng || !text || text === '-' || text === '0') return text;
-    //             try {
-    //                 const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ko|en`);
-    //                 const data = await res.json();
-    //                 return data.responseData.translatedText;
-    //             } catch (err) { return text; }
-    //         };
+            const translate = async (text) => {
+                if (!isEng || !text || text === '-' || text === '0') return text;
+                try {
+                    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ko|en`);
+                    const data = await res.json();
+                    return data.responseData.translatedText;
+                } catch (err) { return text; }
+            };
 
-    //         for (let i = 0; i < filtered.length; i++) {
-    //             const voc = filtered[i];
-    //             batchBtn.textContent = `${isEng ? 'Translating' : '번역 및 생성 중'} (${i + 1}/${filtered.length})...`;
+            for (let i = 0; i < filtered.length; i++) {
+                const voc = filtered[i];
+                batchBtn.textContent = `${isEng ? 'Translating' : '번역 및 생성 중'} (${i + 1}/${filtered.length})...`;
 
-    //             const t = {
-    //                 title: await translate(voc.title || '품질 부적합 조치 결과 보고서'),
-    //                 customer: await translate(voc.customer || '-'),
-    //                 content: await translate(voc.content || '-'),
-    //                 cause: await translate(voc.cause || '-'),
-    //                 action: await translate(voc.countermeasures || '-'),
-    //                 evaluation: await translate(voc.evaluation || '-'),
-    //                 defectType: await translate(voc.defectType || '기타'),
-    //                 manager: await translate(voc.manager || '-'),
-    //                 status: await translate(voc.status || '-'),
-    //                 market: await translate(voc.market || '-'),
-    //             };
+                const t = {
+                    title: await translate(voc.title || '품질 부적합 조치 결과 보고서'),
+                    customer: await translate(voc.customer || '-'),
+                    content: await translate(voc.description || '-'), // Fixed: content -> description
+                    cause: await translate(voc.replyCause || '-'), // Fixed: cause -> replyCause
+                    action: await translate(voc.replyCountermeasure || '-'), // Fixed: countermeasures -> replyCountermeasure
+                    evaluation: await translate(voc.replyEvaluation || '-'), // Fixed: evaluation -> replyEvaluation
+                    defectType: await translate(voc.defectType || '기타'),
+                    manager: await translate(voc.manager || '-'),
+                    status: await translate(voc.status || '-'),
+                    market: await translate(voc.market || '-'),
+                };
 
-    //             let slide = pptx.addSlide();
+                let slide = pptx.addSlide();
 
-    //             // Header (Single Slide Compact Mode)
-    //             slide.addText(t.title, { x: 0.3, y: 0.2, w: 6, fontSize: 18, bold: true, fontFace: fontName });
-    //             slide.addText('SeAH 세아씨엠', { x: 7, y: 0.2, w: 2.7, align: 'right', fontSize: 16, bold: true, color: '1e3a8a', fontFace: fontName });
-    //             slide.addShape(pptx.ShapeType.line, { x: 0.3, y: 0.6, w: 9.4, line: { color: '333333', width: 1.0 } });
-    //             slide.addShape(pptx.ShapeType.line, { x: 8, y: 0.63, w: 1.7, line: { color: 'f15a22', width: 2.0 } });
+                // Header (Single Slide Compact Mode)
+                slide.addText(t.title, { x: 0.3, y: 0.2, w: 6, fontSize: 18, bold: true, fontFace: fontName });
+                slide.addText('SeAH 세아씨엠', { x: 7, y: 0.2, w: 2.7, align: 'right', fontSize: 16, bold: true, color: '1e3a8a', fontFace: fontName });
+                slide.addShape(pptx.ShapeType.line, { x: 0.3, y: 0.6, w: 9.4, line: { color: '333333', width: 1.0 } });
+                slide.addShape(pptx.ShapeType.line, { x: 8, y: 0.63, w: 1.7, line: { color: 'f15a22', width: 2.0 } });
 
-    //             // Information Table
-    //             const infoRows = [[
-    //                 { text: (isEng ? 'Client' : '고객사'), options: { fill: 'F0F0F0', bold: true } }, t.customer,
-    //                 { text: (isEng ? 'Date' : '접수일'), options: { fill: 'F0F0F0', bold: true } }, voc.receiptDate,
-    //                 { text: (isEng ? 'Line' : '라인'), options: { fill: 'F0F0F0', bold: true } }, voc.line
-    //             ]];
-    //             slide.addTable(infoRows, { x: 0.3, y: 0.8, w: 9.4, colW: [1, 2.1, 1, 2.1, 1, 2.1], fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
+                // Information Table
+                const infoRows = [[
+                    { text: (isEng ? 'Client' : '고객사'), options: { fill: 'F0F0F0', bold: true } }, t.customer,
+                    { text: (isEng ? 'Date' : '접수일'), options: { fill: 'F0F0F0', bold: true } }, voc.receiptDate,
+                    { text: (isEng ? 'Line' : '라인'), options: { fill: 'F0F0F0', bold: true } }, voc.line
+                ]];
+                slide.addTable(infoRows, { x: 0.3, y: 0.8, w: 9.4, colW: [1, 2.1, 1, 2.1, 1, 2.1], fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
 
-    //             // Sections
-    //             slide.addText('■ ' + (isEng ? 'Details' : '불만 상세 현상'), { x: 0.3, y: 1.5, fontSize: 10, bold: true, fontFace: fontName });
-    //             slide.addText(t.content, { x: 0.3, y: 1.8, w: 6.2, h: 1.8, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+                // Sections
+                slide.addText('■ ' + (isEng ? 'Details' : '불만 상세 현상'), { x: 0.3, y: 1.5, fontSize: 10, bold: true, fontFace: fontName });
+                slide.addText(t.content, { x: 0.3, y: 1.8, w: 6.2, h: 1.8, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
 
-    //             if (voc.photo) {
-    //                 slide.addImage({ data: voc.photo, x: 6.7, y: 1.8, w: 3.0, h: 1.8, sizing: { type: 'contain' } });
-    //             }
+                if (voc.photo) {
+                    slide.addImage({ data: voc.photo, x: 6.7, y: 1.8, w: 3.0, h: 1.8, sizing: { type: 'contain' } });
+                }
 
-    //             slide.addText('■ ' + (isEng ? 'Analysis' : '사고 원인 분석'), { x: 0.3, y: 3.8, fontSize: 10, bold: true, fontFace: fontName });
-    //             slide.addText(t.cause, { x: 0.3, y: 4.1, w: 9.4, h: 1.2, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+                slide.addText('■ ' + (isEng ? 'Analysis' : '사고 원인 분석'), { x: 0.3, y: 3.8, fontSize: 10, bold: true, fontFace: fontName });
+                slide.addText(t.cause, { x: 0.3, y: 4.1, w: 9.4, h: 1.2, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
 
-    //             slide.addText('■ ' + (isEng ? 'Action/Result' : '조치 내용 및 결과'), { x: 0.3, y: 5.5, fontSize: 10, bold: true, fontFace: fontName });
-    //             slide.addText(`${t.action}\n\n[평가] ${t.evaluation}`, { x: 0.3, y: 5.8, w: 9.4, h: 1.4, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+                slide.addText('■ ' + (isEng ? 'Action/Result' : '조치 내용 및 결과'), { x: 0.3, y: 5.5, fontSize: 10, bold: true, fontFace: fontName });
+                slide.addText(`${t.action}\n\n[평가] ${t.evaluation}`, { x: 0.3, y: 5.8, w: 9.4, h: 1.4, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
 
-    //             // Footer
-    //             slide.addText(`(${i + 1})`, { x: 9.2, y: 7.3, fontSize: 8, fontFace: fontName, color: '999999' });
-    //         }
+                // Footer
+                slide.addText(`(${i + 1})`, { x: 9.2, y: 7.3, fontSize: 8, fontFace: fontName, color: '999999' });
+            }
 
-    //         pptx.writeFile({ fileName: `SeAH_VOC_Full_Ledger_${monthFilter}_${lang.toUpperCase()}` });
-    //     } catch (err) {
-    //         console.error(err);
-    //         alert('PPT 생성 실패: ' + err.message);
-    //     } finally {
-    //         batchBtn.textContent = batchOrigText;
-    //         batchBtn.disabled = false;
-    //     }
-    // };
+            pptx.writeFile({ fileName: `SeAH_VOC_Full_Ledger_${monthFilter}_${lang.toUpperCase()}` });
+        } catch (err) {
+            console.error(err);
+            alert('PPT 생성 실패: ' + err.message);
+        } finally {
+            batchBtn.textContent = batchOrigText;
+            batchBtn.disabled = false;
+        }
+    };
 
 
     // --- [CGL GI 그래프 구현 - 막대 그래프] ---
@@ -2362,13 +2438,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // 강종별 데이터 (원본 이미지 기반)
     const cglGiData = {
         cq: {
-            // [두께, 최대폭]
+            // Image analysis: [두께, 생산폭, 협의폭]
             data: [
-                [0.25, 1270], [0.27, 1285], [0.30, 1285], [0.35, 1270],
-                [0.40, 1550], [0.50, 1550], [0.60, 1550], [0.70, 1550],
-                [0.80, 1550], [0.90, 1550], [1.00, 1550], [1.10, 1550],
-                [1.20, 1550], [1.40, 1550], [1.60, 1550], [1.80, 1400],
-                [2.00, 1350], [2.20, 1270]
+                [0.25, 1219, 1270], [0.27, 1219, 1270], [0.30, 1320, 1350], [0.35, 1320, 1350],
+                [0.40, 1320, 1350], [0.50, 1320, 1350], [0.60, 1320, 1350], [0.70, 1320, 1350],
+                [0.80, 1320, 1350], [0.90, 1320, 1350], [1.00, 1320, 1350], [1.10, 1320, 1350],
+                [1.20, 1290, 1320], [1.40, 1270, 1290], [1.60, 1270, 1290], [1.80, 1250, null],
+                [2.00, 1250, null]
             ]
         },
         dq: {
@@ -2421,42 +2497,97 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!chartData) return;
 
         const ctx = canvas.getContext('2d');
-        const labels = chartData.data.map(d => d[0].toString());
-        const widthData = chartData.data.map(d => d[1]);
+        const rawData = chartData.data;
+        const startVal = rawData[0][0];
+        const endVal = rawData[rawData.length - 1][0];
 
-        // 기존 차트 삭제
+        // Create padded dataset
+        const paddedData = [
+            [(startVal - 0.1).toFixed(2), 0, null],
+            ...rawData,
+            [(endVal + 0.1).toFixed(2), 0, null]
+        ];
+
+        const labels = paddedData.map(d => parseFloat(d[0]).toString());
+        const prodData = paddedData.map(d => d[1]);
+        const negData = paddedData.map(d => (d[2] !== undefined && d[2] !== null) ? d[2] : null);
+        const hasNeg = negData.some(v => v !== null && v > 0);
+
+        const datasets = [];
+
+        if (hasNeg) {
+            datasets.push({
+                label: '협의 영역',
+                data: negData,
+                backgroundColor: getHatchPattern(ctx),
+                borderColor: '#94a3b8',
+                borderWidth: 1,
+                barPercentage: 1.0,
+                categoryPercentage: 1.0,
+                order: 1
+            });
+        }
+
+        datasets.push({
+            label: '생산 가능 폭',
+            data: prodData,
+            backgroundColor: 'rgba(220, 38, 38, 0.8)',
+            borderColor: 'rgba(180, 30, 30, 1)',
+            borderWidth: 1,
+            borderSkipped: 'bottom',
+            barPercentage: 1.0,
+            categoryPercentage: 1.0,
+            order: 2
+        });
+
         if (cglGiCharts[type]) {
             cglGiCharts[type].destroy();
         }
 
         cglGiCharts[type] = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '생산 가능 폭',
-                    data: widthData,
-                    backgroundColor: 'rgba(220, 38, 38, 0.8)',
-                    borderColor: 'rgba(180, 30, 30, 1)',
-                    borderWidth: 1,
-                    borderSkipped: 'bottom',
-                    barPercentage: 1.0,
-                    categoryPercentage: 1.0
-                }]
-            },
+            data: { labels, datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'x',
                 plugins: {
                     legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        offset: -2,
+                        clip: false,
+                        color: '#991b1b',
+                        font: { weight: 'bold', size: 10 },
+                        display: function (context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            if (!val || val === 0) return false;
+
+                            const idx = context.dataIndex;
+                            if (idx > 0 && context.dataset.data[idx - 1] === val) return false;
+
+                            // Always show negotiation labels if distinct
+                            if (context.dataset.label === '협의 영역') return true;
+
+                            return true;
+                        },
+                        formatter: function (value, context) {
+                            if (context.dataset.label === '협의 영역') return '협의\\n' + value;
+                            return value;
+                        }
+                    },
                     tooltip: {
                         callbacks: {
-                            label: ctx => `폭: ${ctx.raw} mm`,
+                            label: ctx => {
+                                const l = ctx.dataset.label || '';
+                                return `${l}: ${ctx.raw} mm`;
+                            },
                             title: ctx => `두께: ${ctx[0].label} mm`
                         }
                     }
                 },
+                layout: { padding: { top: 25 } },
                 scales: {
                     x: {
                         title: {
@@ -2468,8 +2599,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         ticks: { font: { size: 9 } }
                     },
                     y: {
-                        min: 600,
-                        max: 1600,
+                        min: 500,
+                        max: 1800,
                         title: {
                             display: true,
                             text: '폭 (mm)',
@@ -2546,8 +2677,19 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!chartData) return;
 
         const ctx = canvas.getContext('2d');
-        const labels = chartData.data.map(d => d[0].toFixed(2));
-        const widthData = chartData.data.map(d => d[1]);
+        // Pad data with 0 values
+        const rawData = chartData.data;
+        const startVal = rawData[0][0];
+        const endVal = rawData[rawData.length - 1][0];
+
+        const paddedData = [
+            [(startVal - 0.1).toFixed(2), 0],
+            ...rawData,
+            [(endVal + 0.1).toFixed(2), 0]
+        ];
+
+        const labels = paddedData.map(d => parseFloat(d[0]).toString());
+        const widthData = paddedData.map(d => d[1]);
 
         if (cglGlCharts[type]) {
             cglGlCharts[type].destroy();
@@ -2573,6 +2715,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 indexAxis: 'x',
                 plugins: {
                     legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        offset: -2,
+                        clip: false,
+                        color: '#c2410c',
+                        font: { weight: 'bold', size: 10 },
+                        display: function (context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            if (val === 0) return false;
+                            const idx = context.dataIndex;
+                            if (idx > 0 && context.dataset.data[idx - 1] === val) return false;
+                            return true;
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: ctx => `폭: ${ctx.raw} mm`,
@@ -2580,6 +2737,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 },
+                layout: { padding: { top: 25 } },
                 scales: {
                     x: {
                         title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
@@ -2587,8 +2745,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         ticks: { font: { size: 9 } }
                     },
                     y: {
-                        min: 600,
-                        max: 1600,
+                        min: 500,
+                        max: 1800,
                         title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
                         grid: { color: '#e5e7eb' },
                         ticks: { stepSize: 100, font: { size: 9 } }
@@ -2602,6 +2760,21 @@ document.addEventListener('DOMContentLoaded', function () {
     let cplChart = null;
     let crmChart = null;
 
+    // Helper for hatch pattern
+    function getHatchPattern(ctx, color = '#cbd5e1') {
+        const shape = document.createElement('canvas');
+        shape.width = 10;
+        shape.height = 10;
+        const c = shape.getContext('2d');
+        c.strokeStyle = color;
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(0, 10);
+        c.lineTo(10, 0);
+        c.stroke();
+        return ctx.createPattern(shape, 'repeat');
+    }
+
     function initCplChart() {
         const canvas = document.getElementById('chart-cpl');
         if (!canvas) return;
@@ -2609,39 +2782,111 @@ document.addEventListener('DOMContentLoaded', function () {
         const ctx = canvas.getContext('2d');
         if (cplChart) cplChart.destroy();
 
-        // CPL Data: 1.2~5.0mm (전구간 폭 1350 가능한 것으로 가정하되, 실제로는 다를 수 있음. 여기서는 Full Box로 표현)
-        // 시각적 표현을 위해 주요 두께 포인트 생성
-        const labels = ['1.2', '1.6', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'];
-        const data = Array(labels.length).fill(1350);
+        // CPL Data
+        // Range: 1.50 ~ 5.00 (Production 1.60 ~ 4.00)
+        // Production: 600 ~ 1320
+        // Negotiation: 1320 ~ 1350
+        const labels = ['1.50', '1.60', '1.80', '2.00', '2.20', '2.40', '2.60', '2.80', '3.00', '3.20', '3.40', '3.60', '3.80', '4.00', '4.50', '5.00'];
+
+        const prodData = labels.map(l => {
+            const val = parseFloat(l);
+            return (val >= 1.60 && val <= 4.00) ? [600, 1320] : null;
+        });
+
+        const negData = labels.map(l => {
+            const val = parseFloat(l);
+            return (val >= 1.60 && val <= 4.00) ? [1320, 1350] : null;
+        });
 
         cplChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: '생산 가능 폭',
-                    data: data,
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                    borderColor: 'rgba(37, 99, 235, 1)',
-                    borderWidth: 1,
-                    barPercentage: 1.0,
-                    categoryPercentage: 1.0
-                }]
+                datasets: [
+                    {
+                        label: '생산 가능',
+                        data: prodData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: 'rgba(185, 28, 28, 1)',
+                        borderWidth: 1,
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0,
+                        grouped: false, // Ensure they overlap/stack visually without axis stacking logic
+                        order: 2
+                    },
+                    {
+                        label: '협의 영역',
+                        data: negData,
+                        backgroundColor: getHatchPattern(ctx),
+                        borderColor: '#94a3b8',
+                        borderWidth: 1,
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0,
+                        grouped: false,
+                        order: 1 // Ensure hatch renders on top if overlaps occur
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'x',
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        offset: -5,
+                        clip: false,
+                        color: function (context) {
+                            return context.datasetIndex === 0 ? '#b91c1c' : '#475569';
+                        },
+                        font: { weight: 'bold', size: 11 },
+                        textAlign: 'center',
+                        formatter: function (value, context) {
+                            if (!value) return '';
+                            // value is [min, max]
+                            if (context.datasetIndex === 0) return value[1]; // 1320
+                            return '협의\n' + value[1]; // 1350
+                        },
+                        display: function (context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            if (!val) return false;
+
+                            // Hide duplicates to avoid clutter
+                            const idx = context.dataIndex;
+                            const prevVal = context.dataset.data[idx - 1];
+                            if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
+
+                            // For negotiation bar, show only for first valid
+                            if (context.datasetIndex === 1) {
+                                return true;
+                            }
+                            return true;
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const val = context.raw;
+                                if (!val) return '';
+                                return `${context.dataset.label}: ${val[0]} ~ ${val[1]} mm`;
+                            }
+                        }
+                    }
+                },
+                layout: { padding: { top: 40 } },
                 scales: {
                     x: {
                         title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
                         grid: { display: false }
                     },
                     y: {
-                        min: 600,
-                        max: 1600,
-                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } }
+                        min: 600, // Starts from 600
+                        max: 1400, // Max 1400
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } },
+                        grid: { color: '#e5e7eb' },
+                        ticks: { stepSize: 100, font: { size: 9 } }
                     }
                 }
             }
@@ -2655,29 +2900,82 @@ document.addEventListener('DOMContentLoaded', function () {
         const ctx = canvas.getContext('2d');
         if (crmChart) crmChart.destroy();
 
-        // CRM Data: 0.2~1.6mm
-        const labels = ['0.2', '0.4', '0.6', '0.8', '1.0', '1.2', '1.4', '1.6'];
-        const data = Array(labels.length).fill(1350);
+        // CRM Data based on user image with padding for empty zones
+        // X-Axis: 0.15 (Empty), 0.20 (Empty), 0.23 (Start) ... 1.60 (End), 1.80 (Empty), 4.20 (Empty)
+        // Production Area: 600 ~ 1320 (Red)
+        // Negotiation Area: 1320 ~ 1350 (Hatched)
+        const labels = ['0.15', '0.20', '0.23', '0.30', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '4.20'];
+
+        const prodData = labels.map(l => {
+            const val = parseFloat(l);
+            // Production from 0.23 to 1.60 inclusive
+            return (val >= 0.23 && val <= 1.60) ? [600, 1320] : null;
+        });
+
+
 
         crmChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: '생산 가능 폭',
-                    data: data,
-                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                    borderColor: 'rgba(5, 150, 105, 1)',
-                    borderWidth: 1,
-                    barPercentage: 1.0,
-                    categoryPercentage: 1.0
-                }]
+                datasets: [
+                    {
+                        label: '생산 가능',
+                        data: prodData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)', // Red like CPL
+                        borderColor: 'rgba(185, 28, 28, 1)',
+                        borderWidth: 1,
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0,
+                        grouped: false,
+                        order: 1
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'x',
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        offset: -5,
+                        clip: false,
+                        color: function (context) {
+                            return context.datasetIndex === 0 ? '#b91c1c' : '#475569';
+                        },
+                        font: { weight: 'bold', size: 11 },
+                        textAlign: 'center',
+                        formatter: function (value, context) {
+                            if (!value) return '';
+                            if (context.datasetIndex === 0) return value[1];
+                            return '협의\n' + value[1];
+                        },
+                        display: function (context) {
+                            const val = context.dataset.data[context.dataIndex];
+                            if (!val) return false;
+
+                            const idx = context.dataIndex;
+                            const prevVal = context.dataset.data[idx - 1];
+                            if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
+
+                            if (context.datasetIndex === 1) return true;
+                            return true;
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const val = context.raw;
+                                if (!val) return '';
+                                return `${context.dataset.label}: ${val[0]} ~ ${val[1]} mm`;
+                            }
+                        }
+                    }
+                },
+                layout: { padding: { top: 40 } },
                 scales: {
                     x: {
                         title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
@@ -2685,13 +2983,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     y: {
                         min: 600,
-                        max: 1600,
-                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } }
+                        max: 1400,
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } },
+                        grid: { color: '#e5e7eb' },
+                        ticks: { stepSize: 100, font: { size: 9 } }
                     }
                 }
             }
         });
     }
+
+
 
     // 초기 로드 시 CPL 차트 렌더링 (단, 섹션이 표시될 때 다시 그려지므로 지연 후 실행)
     if (document.getElementById('chart-cpl')) {
@@ -2816,9 +3118,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const ctx = canvas.getContext('2d');
             const chartData = dataset[key];
 
-            // 데이터 필터링 (값이 0인 것 제외)
+            // Filter existing valid data
             const validData = chartData.data.filter(d => d[1] > 0);
-            const labels = validData.map(d => d[0].toFixed(2));
+
+            // Pad data
+            if (validData.length > 0) {
+                const startVal = validData[0][0];
+                const endVal = validData[validData.length - 1][0];
+                validData.unshift([(startVal - 0.1).toFixed(2), 0]);
+                validData.push([(endVal + 0.1).toFixed(2), 0]);
+            }
+
+            const labels = validData.map(d => parseFloat(d[0]).toString());
             const widthData = validData.map(d => d[1]);
 
             if (cclCharts[prefix + key]) {
@@ -2844,13 +3155,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     maintainAspectRatio: false,
                     indexAxis: 'x',
                     plugins: {
-                        legend: { display: false }, tooltip: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            offset: -2,
+                            clip: false,
+                            color: borderColor || '#333',
+                            font: { weight: 'bold', size: 10 },
+                            display: function (context) {
+                                const val = context.dataset.data[context.dataIndex];
+                                if (val === 0) return false;
+                                const idx = context.dataIndex;
+                                if (idx > 0 && context.dataset.data[idx - 1] === val) return false;
+                                return true;
+                            }
+                        },
+                        tooltip: {
                             callbacks: {
                                 label: ctx => `폭: ${ctx.raw} mm`,
                                 title: ctx => `두께: ${ctx[0].label} mm`
                             }
                         }
                     },
+                    layout: { padding: { top: 25 } },
                     scales: {
                         x: {
                             title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
@@ -2858,8 +3186,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             ticks: { font: { size: 9 } }
                         },
                         y: {
-                            min: 600,
-                            max: 1800, // 2CCL은 최대 1700까지 있으므로 여유있게
+                            min: 500,
+                            max: 1800,
                             title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
                             grid: { color: '#e5e7eb' },
                             ticks: { stepSize: 100, font: { size: 9 } }
@@ -2905,13 +3233,149 @@ document.addEventListener('DOMContentLoaded', function () {
                         else if (tabId === 'crm') initCrmChart();
                         else if (tabId === 'cgl') initAllCglGiCharts();
                         else if (tabId === 'cgl-gl') initAllCglGlCharts();
-                        else if (tabId === '1ccl' || tabId === '2ccl' || tabId === '3ccl') {
+                        else if (tabId === '1ccl' || tabId === '2ccl') {
                             initCclCharts(tabId);
+                        } else if (tabId === '3ccl') {
+                            initCclCharts(tabId);
+                            setTimeout(initCcl3SpecialCharts, 100);
                         }
                     }, 50);
                 });
             });
         });
+    }
+
+    // --- 3CCL Special Charts (Stucco & Leather) ---
+    function initCcl3SpecialCharts() {
+        const createSpecialChart = (canvasId, dataFunc, negFunc, labels) => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // Check if chart instance exists on canvas property or global map if needed
+            // For simplicity, we just create new one, assuming simple lifecycle or managed elsewhere if needed.
+            // But to avoid overlap, we store in a global object if we want standard management, 
+            // strictly speaking we should track these.
+            if (canvas.chart) canvas.chart.destroy();
+
+            const prodData = labels.map(dataFunc);
+            const negData = negFunc ? labels.map(negFunc) : [];
+
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '생산 가능',
+                            data: prodData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgba(185, 28, 28, 1)',
+                            borderWidth: 1,
+                            barPercentage: 1.0,
+                            categoryPercentage: 1.0,
+                            grouped: false,
+                            order: 2
+                        },
+                        {
+                            label: '협의 영역',
+                            data: negData,
+                            backgroundColor: getHatchPattern(ctx),
+                            borderColor: '#94a3b8',
+                            borderWidth: 1,
+                            barPercentage: 1.0,
+                            categoryPercentage: 1.0,
+                            grouped: false,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'x',
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            offset: -5,
+                            clip: false,
+                            color: function (context) {
+                                return context.datasetIndex === 0 ? '#b91c1c' : '#475569';
+                            },
+                            font: { weight: 'bold', size: 10 },
+                            formatter: function (value, context) {
+                                if (!value) return '';
+                                if (context.datasetIndex === 0) return value[1];
+                                return '협의\n' + value[1];
+                            },
+                            display: function (context) {
+                                const val = context.dataset.data[context.dataIndex];
+                                if (!val) return false;
+                                // Basic duplicate filter
+                                const idx = context.dataIndex;
+                                const prevVal = context.dataset.data[idx - 1];
+                                if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
+                                return true;
+                            }
+                        }
+                    },
+                    layout: { padding: { top: 30 } },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            min: 600,
+                            max: 1400,
+                            title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } },
+                            grid: { color: '#e5e7eb' }
+                        }
+                    }
+                }
+            });
+        };
+
+        // Labels covering all critical points
+        const labels = ['0.20', '0.27', '0.30', '0.32', '0.40', '0.50', '0.55', '0.60', '0.65', '0.70', '0.80', '0.85', '0.90', '1.00', '1.05', '1.10'];
+
+        // Stucco Logic
+        // 0.27~0.32: [700, 1219]
+        // 0.32~0.55: [700, 1270]
+        // 0.55~0.65: [700, 1020]
+        // 0.65~0.85: [700, 914]
+        createSpecialChart('chart-3ccl-stucco', (l) => {
+            const v = parseFloat(l);
+            if (v < 0.27) return null;
+            if (v <= 0.32) return [700, 1219];
+            if (v <= 0.55) return [700, 1270];
+            if (v <= 0.65) return [700, 1020];
+            if (v <= 0.85) return [700, 914];
+            return null;
+        }, null, labels);
+
+        // Leather Logic
+        // 0.27~0.32: [700, 1020]
+        // 0.32~0.65: [700, 1270]
+        // 0.65~0.85: Prod [700, 1100], Neg [1100, 1220] (approx)
+        // 0.85~1.05: Neg [700, 914]
+        createSpecialChart('chart-3ccl-leather', (l) => {
+            // Prod
+            const v = parseFloat(l);
+            if (v < 0.27) return null;
+            if (v <= 0.32) return [700, 1020];
+            if (v <= 0.65) return [700, 1270];
+            if (v <= 0.85) return [700, 1100];
+            return null;
+        }, (l) => {
+            // Neg
+            const v = parseFloat(l);
+            if (v >= 0.65 && v <= 0.85) return [1100, 1220]; // Stacked on top of prod
+            if (v > 0.85 && v <= 1.05) return [700, 914]; // Full neg
+            return null;
+        }, labels);
     }
 
     // --- [New] Process Spec Tab Logic ---
@@ -2963,3 +3427,259 @@ document.addEventListener('keydown', function (event) {
         closeImageModal();
     }
 });
+
+// --- [14. Certification Status Logic] ---
+// --- [14. Certification Status Logic (Dynamic)] ---
+let localCertifications = [];
+// Initial Seed Data (Only used if DB is empty)
+const initialCertData = [
+    { id: 1, name: "ISO 9001", item: "품질경영시스템 (ISO 9001:2015)", org: "한국표준협회", firstDate: "2000-12-01", recentDate: "2024.10.10", validDate: "2027.10.09", note: "3년 주기\n(1년 정기 심사)" },
+    { id: 2, name: "ISO 14001", item: "환경경영시스템 (ISO 14001:2015)", org: "크레비즈인증원", firstDate: "2013.05.24", recentDate: "2025.05.24", validDate: "2028.05.23", note: "3년 주기" },
+    { id: 3, name: "ISO 45001", item: "안전보건경영시스템 (ISO 45001:2018)", org: "크레비즈인증원", firstDate: "2017-12-01", recentDate: "2023.12.01", validDate: "2026.11.30", note: "3년 주기" },
+    { id: 4, name: "KS D 3506", item: "용융아연도금강판 및 강대", org: "한국표준협회", firstDate: "2007-04-11", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
+    { id: 5, name: "KS D 3520", item: "도장 용융 아연 도금 강판 및 강대", org: "한국표준협회", firstDate: "1999-11-25", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
+    { id: 6, name: "KS D 3770", item: "용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2021-09-15", recentDate: "2024.09.14", validDate: "2027.09.14", note: "3년 주기" },
+    { id: 7, name: "KS D 3862", item: "도장용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2020-04-01", recentDate: "2023.04.12", validDate: "2026.03.31", note: "3년 주기" },
+    { id: 8, name: "KS D 6711", item: "알루미늄 및 알루미늄 합금의 도장판 및 띠", org: "한국표준협회", firstDate: "2015-12-23", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
+    { id: 9, name: "JIS G 3302", item: "용융아연도금강판 및 강대", org: "한국표준협회", firstDate: "2009-10-22", recentDate: "2024.10.21", validDate: "2027.10.21", note: "3년 주기" },
+    { id: 10, name: "JIS G 3312", item: "도장용융아연도금강판 및 강대 1류,2류", org: "한국표준협회", firstDate: "2009-10-22", recentDate: "2024.10.21", validDate: "2027.10.21", note: "3년 주기" },
+    { id: 11, name: "JIS G 3321", item: "용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2022-02-11", recentDate: "2025.03.21", validDate: "2028.02.10", note: "3년 주기" },
+    { id: 12, name: "JIS G 3322", item: "도장용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2017-06-02", recentDate: "2023.06.25", validDate: "2026.06.01", note: "3년 주기" },
+    { id: 13, name: "BIS", item: "Continuously Pre-Painted Galvanized Steel Sheets", org: "인도표준협회", firstDate: "2020-09-28", recentDate: "2025.09.28", validDate: "2026.09.27", note: "1년 주기" },
+    { id: 14, name: "MED Module B", item: "That the surface materials and floor coverings whith low flame-spread characteristics : decorative veneers", org: "DNV", firstDate: "2018-12-28", recentDate: "2023.12.11", validDate: "2028.12.10", note: "5년 주기" },
+    { id: 15, name: "MED Module D", item: "That the Quality system for the products.", org: "DNV", firstDate: "2019-10-10", recentDate: "2024.12.19", validDate: "2029.12.18", note: "5년 주기\n(1년 정기 심사)" },
+    { id: 16, name: "HB 인증", item: "도장용융아연도금강판 및 강대(KS D 3520)", org: "한국공기청정협회", firstDate: "2018.09.28", recentDate: "2024.09.27", validDate: "2027.09.27", note: "3년 주기" },
+    { id: 17, name: "HB 인증", item: "컬러 알루미늄 강판(KS D 6711 A3003 H22)", org: "한국공기청정협회", firstDate: "2021.01.29", recentDate: "2024.01.28", validDate: "2027.01.28", note: "3년 주기" },
+    { id: 18, name: "HB 인증", item: "컬러 알루미늄 강판(KS D 6711 A1100 H16)", org: "한국공기청정협회", firstDate: "2021.01.29", recentDate: "2024.01.28", validDate: "2027.01.28", note: "3년 주기" },
+    { id: 19, name: "HB 인증", item: "도장 용융 55%알루미늄-아연 합금 도금 강판 및 강대\n(KS D 3862)", org: "한국공기청정협회", firstDate: "2023.02.28", recentDate: "2023.02.28", validDate: "2026.02.27", note: "3년 주기" },
+    { id: 20, name: "C3", item: "독일 건자재 품목", org: "MPA", firstDate: "2023.01.03", recentDate: "2025.12.22", validDate: "2027.01.31", note: "1년 주기" },
+    { id: 21, name: "ISO 37301", item: "규범준수 경영시스템", org: "KCCA", firstDate: "2023.03.24", recentDate: "2023.03.24", validDate: "2028.03.23", note: "5년 주기\n(1년 정기 심사)" },
+    { id: 22, name: "TISI", item: "태국 수출 (수입자 : 킴텍) 품목", org: "태국산업표준원", firstDate: "2023.05.09", recentDate: "2023.05.09", validDate: "Infinite", note: "주기 없음" },
+    { id: 23, name: "EPD", item: "GI/GL/PPGI/PPGL 등", org: "EPD International", firstDate: "2023.08.22", recentDate: "2023.08.22", validDate: "2028.08.22", note: "5년 주기" },
+    { id: 24, name: "일본 불연 인증", item: "PPGI/PPGL/PPAL", org: "일본 국토교통성", firstDate: "2023.12.07", recentDate: "2023.12.07", validDate: "Infinite", note: "주기 없음" },
+    { id: 25, name: "일본 불연 인증", item: "GL", org: "일본 국토교통성", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 진행 중" },
+    { id: 26, name: "KS D 3034", item: "도장 용융 아연 알루미늄 마그네슘 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" },
+    { id: 27, name: "KS D 3501", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" },
+    { id: 28, name: "JIS G 3131", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" }
+];
+
+async function loadCertifications() {
+    if (!db) return;
+    try {
+        const snap = await db.collection("certifications").get();
+        let loaded = [];
+        snap.forEach(doc => loaded.push({ docId: doc.id, ...doc.data() }));
+
+        const currentIsAdmin = window.isAdmin || false;
+
+        if (loaded.length !== initialCertData.length && currentIsAdmin) {
+            try {
+                const batchDelete = db.batch();
+                snap.forEach(doc => batchDelete.delete(doc.ref));
+                await batchDelete.commit();
+
+                const batch = db.batch();
+                initialCertData.forEach(d => {
+                    const ref = db.collection("certifications").doc();
+                    batch.set(ref, { ...d, createdAt: new Date().toISOString() });
+                });
+                await batch.commit();
+
+                const newSnap = await db.collection("certifications").get();
+                loaded = [];
+                newSnap.forEach(doc => loaded.push({ docId: doc.id, ...doc.data() }));
+            } catch (seedErr) {
+                console.warn("Seeding failed (permissions?):", seedErr);
+            }
+        }
+
+        if (loaded.length === 0) {
+            localCertifications = [...initialCertData];
+        } else {
+            localCertifications = loaded.sort((a, b) => a.id - b.id);
+        }
+        renderCertification();
+    } catch (e) {
+        console.error("Failed to load certifications:", e);
+        localCertifications = [...initialCertData];
+        renderCertification();
+    }
+}
+
+function renderCertification() {
+    const tbody = document.getElementById('certification-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const today = new Date();
+
+    localCertifications.forEach(row => {
+        let remainHtml = '';
+        let validDateDisplay = row.validDate;
+
+        if (row.validDate === 'Infinite') {
+            validDateDisplay = '유효기간 없음';
+            remainHtml = '<span class="status-badge" style="background:#10b981;">Permanent</span>';
+        } else if (row.validDate === 'Pending') {
+            validDateDisplay = '-';
+            remainHtml = '<span class="status-badge" style="background:#64748b;">Pending</span>';
+        } else {
+            validDateDisplay = '~ ' + (row.validDate || '').replace(/-/g, '.');
+            // D-Day Calc
+            const normalizedDate = (row.validDate || '').replace(/\./g, '-');
+            const endDate = new Date(normalizedDate);
+
+            if (!isNaN(endDate.getTime())) {
+                const diffTime = endDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 365) {
+                    remainHtml = `<span class="status-badge" style="background:#3b82f6;">D-${diffDays}</span>`;
+                } else if (diffDays > 0) {
+                    remainHtml = `<span class="status-badge" style="background:#f59e0b;">D-${diffDays}</span>`;
+                } else {
+                    remainHtml = `<span class="status-badge" style="background:#ef4444;">Expired</span>`;
+                }
+            } else {
+                remainHtml = '<span class="status-badge" style="background:#64748b;">-</span>';
+            }
+        }
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #e2e8f0';
+        tr.style.height = '48px';
+
+        // Hover effect
+        tr.onmouseover = () => tr.style.background = '#f8fafc';
+        tr.onmouseout = () => tr.style.background = 'white';
+
+        let adminActionHtml = '';
+        const currentIsAdmin = window.isAdmin;
+        if (currentIsAdmin) {
+            adminActionHtml = `
+                    <td class="admin-only" style="text-align:center;">
+                        <button class="btn-icon" onclick="openCertModal('${row.docId}')" style="color:#3b82f6;">✏️</button>
+                        <button class="btn-icon" onclick="deleteCertification('${row.docId}')" style="color:#ef4444;">🗑️</button>
+                    </td>
+                `;
+        } else {
+            adminActionHtml = `<td class="admin-only" style="text-align:center; color:#94a3b8;">-</td>`;
+        }
+
+
+        tr.innerHTML = `
+                <td style="text-align:center; padding:10px; font-weight:bold; color:#64748b;">${row.id}</td>
+                <td style="text-align:center; padding:10px; font-weight:700; color:#1e3a8a;">${row.name}</td>
+                <td style="text-align:left; padding:10px; font-size:13px;">${row.item}</td>
+                <td style="text-align:center; padding:10px; font-size:13px;">${row.org}</td>
+                <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.firstDate}</td>
+                <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.recentDate}</td>
+                <td style="text-align:center; padding:10px; font-size:13px; font-weight:bold;">${validDateDisplay}</td>
+                <td style="text-align:center; padding:10px;">${remainHtml}</td>
+                <td style="text-align:center; padding:10px; font-size:12px; white-space:pre-line; color:#64748b;">${row.note}</td>
+                ${adminActionHtml}
+            `;
+        tbody.appendChild(tr);
+    });
+
+    // Hide 'admin-only' columns if not admin
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = window.isAdmin ? '' : 'none';
+    });
+}
+
+// Modal & Form Logic
+const certModal = document.getElementById('cert-modal');
+const certForm = document.getElementById('cert-form');
+const addCertBtn = document.getElementById('add-cert-btn');
+
+if (addCertBtn) addCertBtn.onclick = () => openCertModal();
+
+window.openCertModal = (docId = null) => {
+    if (!certModal) return;
+    document.getElementById('cert-id-hidden').value = docId || '';
+    document.getElementById('cert-modal-title').textContent = docId ? '🏆 인증 정보 수정' : '🏆 신규 인증 등록';
+
+    if (docId) {
+        const row = localCertifications.find(c => c.docId === docId);
+        if (row) {
+            document.getElementById('cert-no').value = row.id;
+            document.getElementById('cert-name').value = row.name;
+            document.getElementById('cert-item').value = row.item;
+            document.getElementById('cert-org').value = row.org;
+            // Handle text-based dates (allow '-')
+            const fDate = row.firstDate || '';
+            const rDate = row.recentDate || '';
+            document.getElementById('cert-first-date').value = fDate;
+            document.getElementById('cert-recent-date').value = rDate;
+
+            // Sync pickers if they look like valid dates
+            const fPicker = document.getElementById('cert-first-date-picker');
+            const rPicker = document.getElementById('cert-recent-date-picker');
+            if (fPicker) fPicker.value = fDate.includes('.') ? fDate.replace(/\./g, '-') : (fDate.length === 10 ? fDate : '');
+            if (rPicker) rPicker.value = rDate.includes('.') ? rDate.replace(/\./g, '-') : (rDate.length === 10 ? rDate : '');
+
+            const vDate = row.validDate || '';
+            document.getElementById('cert-valid-date').value = vDate;
+            const vDatePicker = document.getElementById('cert-valid-date-picker');
+            if (vDatePicker) vDatePicker.value = vDate.includes('.') ? vDate.replace(/\./g, '-') : (vDate.length === 10 ? vDate : '');
+
+            document.getElementById('cert-note').value = row.note;
+        }
+    } else {
+        certForm.reset();
+        // Clear all pickers
+        ['cert-first-date-picker', 'cert-recent-date-picker', 'cert-valid-date-picker'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        // Auto number
+        const maxId = localCertifications.length > 0 ? Math.max(...localCertifications.map(c => c.id)) : 0;
+        document.getElementById('cert-no').value = maxId + 1;
+    }
+    certModal.style.display = 'flex';
+};
+
+if (certForm) {
+    certForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const docId = document.getElementById('cert-id-hidden').value;
+        const data = {
+            id: parseInt(document.getElementById('cert-no').value) || 0,
+            name: document.getElementById('cert-name').value,
+            item: document.getElementById('cert-item').value,
+            org: document.getElementById('cert-org').value,
+            firstDate: document.getElementById('cert-first-date').value,
+            recentDate: document.getElementById('cert-recent-date').value,
+            validDate: document.getElementById('cert-valid-date').value,
+            note: document.getElementById('cert-note').value
+        };
+
+        try {
+            if (docId) {
+                await db.collection("certifications").doc(docId).update(data);
+            } else {
+                await db.collection("certifications").add({ ...data, createdAt: new Date().toISOString() });
+            }
+            certModal.style.display = 'none';
+            loadCertifications();
+        } catch (err) {
+            alert("저장 실패: " + err.message);
+        }
+    };
+}
+
+window.deleteCertification = async (docId) => {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+    try {
+        await db.collection("certifications").doc(docId).delete();
+        loadCertifications();
+    } catch (err) {
+        alert("삭제 실패: " + err.message);
+    }
+};
+
+// Initialize
+loadCertifications();
+
+
