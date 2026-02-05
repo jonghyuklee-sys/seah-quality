@@ -727,7 +727,7 @@
                                                 </div>
 
                                                 <!-- 왕복 작업 구간 -->
-                                                <div
+                                                <div class="process-reversing-zone"
                                                     style="display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(59, 130, 246, 0.04); border: 2px dashed #3b82f6; border-radius: 20px; position: relative; margin: 0 5px;">
                                                     <div
                                                         style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 1px 12px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; z-index: 2;">
@@ -2287,15 +2287,15 @@
             <!-- 6. Quality Analysis Dashboard View -->
             <section id="dashboard-view" class="page-section" style="display: none;">
                 <div class="page-header" style="text-align: center; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
-                        <div style="flex: 1;"></div>
-                        <div style="flex: 2;">
+                    <div class="dashboard-header-layout">
+                        <div class="dash-header-spacer"></div>
+                        <div class="dash-header-title">
                             <h2>품질 분석 대시보드 (Quality Dashboard)</h2>
                             <p>등록된 VOC 데이터를 분석하여 주요 품질 지표 및 실시간 현황을 시각화합니다.</p>
                         </div>
-                        <div style="flex: 1; text-align: right;">
-                            <button onclick="exportDashboardReport(event)" class="btn-primary"
-                                style="padding: 10px 18px; font-size: 13px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);">
+                        <div class="dash-header-action">
+                            <button id="dashboard-file-down-btn" onclick="exportDashboardReport(event)"
+                                class="btn-primary custom-down-btn">
                                 📥 품질 분석 리포트 다운로드 (PDF)
                             </button>
                         </div>

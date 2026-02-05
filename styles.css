@@ -3418,3 +3418,228 @@ body.admin-mode button.admin-only {
     max-width: 700px;
     margin: 0 auto;
 }
+
+/* Dashboard Header Layout for Responsive Design */
+.dashboard-header-layout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.dash-header-spacer {
+    flex: 1;
+}
+
+.dash-header-title {
+    flex: 2;
+    text-align: center;
+}
+
+.dash-header-title h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.dash-header-title p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dash-header-action {
+    flex: 1;
+    text-align: right;
+}
+
+.custom-down-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+}
+
+@media (max-width: 768px) {
+    .dashboard-header-layout {
+        flex-direction: column;
+        gap: 16px;
+        padding-bottom: 10px;
+    }
+
+    .dash-header-spacer {
+        display: none;
+        /* Hide spacer on mobile to save space */
+    }
+
+    .dash-header-title {
+        flex: auto;
+        width: 100%;
+        text-align: center;
+    }
+
+    .dash-header-title h2 {
+        font-size: 20px;
+        /* Reduce title size slightly on mobile */
+    }
+
+    .dash-header-action {
+        flex: auto;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .custom-down-btn {
+        /* On mobile, ensure it fits but isn't too large */
+        padding: 8px 16px;
+        font-size: 12px;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Mobile Fixes for Process Diagram and Spec Grid */
+@media (max-width: 768px) {
+
+    /* Process Diagram: Flatten structure and use Grid for continuous flow */
+    .process-map-container {
+        padding: 15px;
+        overflow-x: visible;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px 10px;
+    }
+
+    .process-row {
+        display: contents;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Hide the horizontal line behind stations on mobile as it breaks with wrapping */
+    .process-row::before {
+        display: none;
+    }
+
+    /* Hide the U-turn connector between rows */
+    .row-connector {
+        display: none;
+    }
+
+    /* Process stations adjustment */
+    .process-station {
+        width: auto;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .station-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+
+    .station-label {
+        font-size: 9px;
+        height: auto;
+        min-height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        word-break: keep-all;
+    }
+
+    .station-sub {
+        font-size: 8px;
+        padding: 2px 4px;
+        white-space: normal;
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Spec Grid: Stack items vertically for better readability */
+    .spec-grid {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        /* Remove horizontal scroll */
+        gap: 12px;
+        padding-bottom: 0;
+        display: flex;
+        /* Ensure flex is active */
+    }
+
+    .spec-item {
+        flex: 1 1 100% !important;
+        /* Force full width on mobile */
+        min-width: 100% !important;
+        width: 100%;
+        margin-right: 0 !important;
+    }
+
+    /* Adjust spec item internal layout for mobile if needed */
+    .spec-item .spec-label-group {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .spec-item .spec-value-group {
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    /* CRM Reversing Zone Fix for Mobile */
+    .process-reversing-zone {
+        grid-column: 1 / -1;
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px 10px !important;
+        margin: 20px 0 !important;
+        width: 100% !important;
+        padding-top: 30px !important;
+        /* Make room for the absolute badge */
+        box-sizing: border-box;
+    }
+
+    /* Ensure immediate children (stations) of reversing zone behave like grid items */
+    .process-reversing-zone .process-station {
+        width: auto !important;
+    }
+
+    /* Auto-numbering for Process Stations on Mobile (Excluding CRM) */
+    .line-spec-panel:not(#process-panel-crm) .process-map-container {
+        counter-reset: station-counter;
+    }
+
+    .line-spec-panel:not(#process-panel-crm) .process-station::before {
+        counter-increment: station-counter;
+        content: counter(station-counter);
+        position: absolute;
+        top: -5px;
+        /* Position slightly above the icon */
+        left: 5px;
+        /* Position to the left */
+        width: 16px;
+        height: 16px;
+        background-color: #64748b;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 700;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #fff;
+    }
+}
