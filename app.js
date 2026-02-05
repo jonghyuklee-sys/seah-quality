@@ -145,6 +145,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // [수정] 탭 기반 뷰 진입 시 활성 탭 강제 리트리거 (CPL 미표시 및 차트 깨짐 방지)
+        // 렌더링 완료를 위해 지연 시간을 약간 늘림 (50ms -> 200ms)
+        if (targetId === 'process-spec-view') {
+            setTimeout(() => {
+                const activeTab = document.querySelector('#process-spec-tabs .process-tab-btn.active');
+                if (activeTab) activeTab.click();
+            }, 200);
+        }
+        if (targetId === 'line-spec-view') {
+            setTimeout(() => {
+                const activeTab = document.querySelector('#line-spec-tabs .tab-btn.active');
+                if (activeTab) activeTab.click();
+            }, 200);
+        }
+
         sidebar.classList.remove('open');
         if (sidebarOverlay) sidebarOverlay.classList.remove('open');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -346,8 +361,28 @@ document.addEventListener('DOMContentLoaded', function () {
     navLinks.forEach(link => {
         link.onclick = (e) => {
             e.preventDefault();
-            const id = link.getAttribute('href').substring(1);
-            showSection(id);
+            const menu = link.getAttribute('data-menu');
+            let targetId = '';
+
+            // 메뉴별 섹션 ID 매핑
+            const menuMap = {
+                'process-spec': 'process-spec-view',
+                'line-spec': 'line-spec-view',
+                'voc-management': 'complaint-view',
+                'defect-gallery': 'defect-view'
+            };
+
+            if (menu && menuMap[menu]) {
+                targetId = menuMap[menu];
+            } else {
+                // 기존 href 방식 Fallback
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('#') && href.length > 1) {
+                    targetId = href.substring(1);
+                }
+            }
+
+            if (targetId) showSection(targetId);
         };
     });
 
@@ -2319,4 +2354,612 @@ document.addEventListener('DOMContentLoaded', function () {
     //         batchBtn.disabled = false;
     //     }
     // };
+
+
+    // --- [CGL GI 그래프 구현 - 막대 그래프] ---
+    const cglGiCharts = {};
+
+    // 강종별 데이터 (원본 이미지 기반)
+    const cglGiData = {
+        cq: {
+            // [두께, 최대폭]
+            data: [
+                [0.25, 1270], [0.27, 1285], [0.30, 1285], [0.35, 1270],
+                [0.40, 1550], [0.50, 1550], [0.60, 1550], [0.70, 1550],
+                [0.80, 1550], [0.90, 1550], [1.00, 1550], [1.10, 1550],
+                [1.20, 1550], [1.40, 1550], [1.60, 1550], [1.80, 1400],
+                [2.00, 1350], [2.20, 1270]
+            ]
+        },
+        dq: {
+            data: [
+                [0.20, 1170], [0.25, 1250], [0.30, 1270], [0.35, 1285],
+                [0.40, 1550], [0.50, 1550], [0.60, 1550], [0.70, 1550],
+                [0.80, 1550], [0.90, 1550], [1.00, 1550], [1.10, 1550],
+                [1.20, 1500], [1.40, 1400], [1.60, 1300], [1.80, 1200],
+                [2.00, 1150], [2.20, 1100]
+            ]
+        },
+        ddq: {
+            data: [
+                [0.20, 1170], [0.25, 1200], [0.30, 1250], [0.35, 1270],
+                [0.40, 1285], [0.50, 1550], [0.60, 1550], [0.70, 1550],
+                [0.80, 1550], [0.90, 1500], [1.00, 1400], [1.10, 1300],
+                [1.20, 1200], [1.40, 1100], [1.60, 1100]
+            ]
+        },
+        struct: {
+            data: [
+                [0.20, 1200], [0.25, 1270], [0.30, 1285], [0.35, 1300],
+                [0.40, 1550], [0.50, 1550], [0.60, 1550], [0.70, 1550],
+                [0.80, 1550], [0.90, 1550], [1.00, 1550], [1.10, 1500],
+                [1.20, 1400], [1.40, 1350], [1.60, 1300]
+            ]
+        },
+        gre: {
+            data: [
+                [0.30, 1270], [0.35, 1270], [0.40, 1270], [0.45, 1270],
+                [0.50, 1270], [0.55, 1270], [0.60, 1200], [0.70, 1170],
+                [0.80, 1140], [0.90, 1100], [1.00, 1050], [1.10, 1000],
+                [1.15, 950], [1.20, 914], [1.25, 850], [1.30, 800], [1.35, 800]
+            ]
+        }
+    };
+
+    function initAllCglGiCharts() {
+        const chartTypes = ['cq', 'dq', 'ddq', 'struct', 'gre'];
+        chartTypes.forEach(type => {
+            const canvas = document.getElementById(`chart-gi-${type}`);
+            if (canvas) {
+                createBarChart(canvas, type);
+            }
+        });
+    }
+
+    function createBarChart(canvas, type) {
+        const chartData = cglGiData[type];
+        if (!chartData) return;
+
+        const ctx = canvas.getContext('2d');
+        const labels = chartData.data.map(d => d[0].toString());
+        const widthData = chartData.data.map(d => d[1]);
+
+        // 기존 차트 삭제
+        if (cglGiCharts[type]) {
+            cglGiCharts[type].destroy();
+        }
+
+        cglGiCharts[type] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '생산 가능 폭',
+                    data: widthData,
+                    backgroundColor: 'rgba(220, 38, 38, 0.8)',
+                    borderColor: 'rgba(180, 30, 30, 1)',
+                    borderWidth: 1,
+                    borderSkipped: 'bottom',
+                    barPercentage: 1.0,
+                    categoryPercentage: 1.0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `폭: ${ctx.raw} mm`,
+                            title: ctx => `두께: ${ctx[0].label} mm`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '두께 (mm)',
+                            font: { weight: 'bold', size: 11 }
+                        },
+                        grid: { display: false },
+                        ticks: { font: { size: 9 } }
+                    },
+                    y: {
+                        min: 600,
+                        max: 1600,
+                        title: {
+                            display: true,
+                            text: '폭 (mm)',
+                            font: { weight: 'bold', size: 11 }
+                        },
+                        grid: { color: '#e5e7eb' },
+                        ticks: {
+                            stepSize: 100,
+                            font: { size: 9 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // CGL GI 탭 클릭 시 통합 리스너에서 처리됨
+    window.cglGiChartsInitialized = false;
+
+    // --- [CGL GL 그래프 구현 - 막대 그래프] ---
+    const cglGlCharts = {};
+
+    // CGL GL 데이터 (추정치)
+    const cglGlData = {
+        cq: {
+            data: [
+                [0.25, 1100], [0.30, 1200], [0.40, 1285],
+                [0.50, 1350], [0.60, 1350], [0.80, 1350],
+                [1.00, 1350], [1.20, 1285], [1.40, 1250], [1.60, 1219]
+            ]
+        },
+        dq: {
+            data: [
+                [0.25, 1100], [0.30, 1150], [0.40, 1250],
+                [0.50, 1300], [0.60, 1300], [0.80, 1300],
+                [1.00, 1250], [1.20, 1200], [1.40, 1150], [1.60, 1100]
+            ]
+        },
+        ddq: {
+            data: [
+                [0.30, 1100], [0.35, 1150], [0.40, 1200],
+                [0.50, 1250], [0.60, 1250], [0.80, 1250],
+                [1.00, 1200], [1.20, 1150], [1.40, 1100], [1.60, 1000]
+            ]
+        },
+        struct: {
+            data: [
+                [0.20, 914], [0.25, 1000], [0.30, 1100], [0.40, 1219],
+                [0.50, 1250], [0.60, 1250], [0.80, 1250], [1.00, 1250],
+                [1.20, 1219], [1.40, 1150], [1.60, 1100]
+            ]
+        },
+        gre: {
+            data: [
+                [0.30, 1000], [0.40, 1100], [0.50, 1200],
+                [0.60, 1219], [0.80, 1219], [1.00, 1200],
+                [1.20, 1100], [1.30, 1000]
+            ]
+        }
+    };
+
+    function initAllCglGlCharts() {
+        const chartTypes = ['cq', 'dq', 'ddq', 'struct', 'gre'];
+        chartTypes.forEach(type => {
+            const canvas = document.getElementById(`chart-gl-${type}`);
+            if (canvas) {
+                createGlBarChart(canvas, type);
+            }
+        });
+    }
+
+    function createGlBarChart(canvas, type) {
+        const chartData = cglGlData[type];
+        if (!chartData) return;
+
+        const ctx = canvas.getContext('2d');
+        const labels = chartData.data.map(d => d[0].toFixed(2));
+        const widthData = chartData.data.map(d => d[1]);
+
+        if (cglGlCharts[type]) {
+            cglGlCharts[type].destroy();
+        }
+
+        cglGlCharts[type] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '생산 가능 폭',
+                    data: widthData,
+                    backgroundColor: 'rgba(234, 88, 12, 0.8)', // 주황색
+                    borderColor: 'rgba(194, 65, 12, 1)',
+                    borderWidth: 1,
+                    barPercentage: 1.0,
+                    categoryPercentage: 1.0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `폭: ${ctx.raw} mm`,
+                            title: ctx => `두께: ${ctx[0].label} mm`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
+                        grid: { display: false },
+                        ticks: { font: { size: 9 } }
+                    },
+                    y: {
+                        min: 600,
+                        max: 1600,
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
+                        grid: { color: '#e5e7eb' },
+                        ticks: { stepSize: 100, font: { size: 9 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- [CPL/CRM 그래프 구현] ---
+    let cplChart = null;
+    let crmChart = null;
+
+    function initCplChart() {
+        const canvas = document.getElementById('chart-cpl');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (cplChart) cplChart.destroy();
+
+        // CPL Data: 1.2~5.0mm (전구간 폭 1350 가능한 것으로 가정하되, 실제로는 다를 수 있음. 여기서는 Full Box로 표현)
+        // 시각적 표현을 위해 주요 두께 포인트 생성
+        const labels = ['1.2', '1.6', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'];
+        const data = Array(labels.length).fill(1350);
+
+        cplChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '생산 가능 폭',
+                    data: data,
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1,
+                    barPercentage: 1.0,
+                    categoryPercentage: 1.0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: 600,
+                        max: 1600,
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+    }
+
+    function initCrmChart() {
+        const canvas = document.getElementById('chart-crm');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (crmChart) crmChart.destroy();
+
+        // CRM Data: 0.2~1.6mm
+        const labels = ['0.2', '0.4', '0.6', '0.8', '1.0', '1.2', '1.4', '1.6'];
+        const data = Array(labels.length).fill(1350);
+
+        crmChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '생산 가능 폭',
+                    data: data,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(5, 150, 105, 1)',
+                    borderWidth: 1,
+                    barPercentage: 1.0,
+                    categoryPercentage: 1.0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: 600,
+                        max: 1600,
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+    }
+
+    // 초기 로드 시 CPL 차트 렌더링 (단, 섹션이 표시될 때 다시 그려지므로 지연 후 실행)
+    if (document.getElementById('chart-cpl')) {
+        setTimeout(() => {
+            const section = document.getElementById('line-spec-view');
+            if (section && section.style.display !== 'none') {
+                initCplChart();
+            }
+        }, 500);
+    }
+
+    // --- [1CCL/2CCL 그래프 구현] ---
+    const cclCharts = {};
+
+    // 1CCL 데이터
+    const ccl1Data = {
+        ppgi: {
+            // [두께, 폭] - 이미지 근사치
+            data: [
+                [0.27, 1270], [0.30, 1350], [0.40, 1350], [0.50, 1350],
+                [0.80, 1350], [1.00, 1350], [1.20, 1350], [1.40, 1350],
+                [1.60, 1350], [1.70, 1250], [1.80, 1250]
+            ]
+        },
+        ppal: {
+            data: [
+                [0.30, 1270], [0.35, 1300], [0.40, 1300], [0.50, 1300],
+                [0.80, 1300], [1.00, 1300], [1.20, 1300], [1.40, 1300],
+                [1.70, 1300]
+            ]
+        }
+    };
+
+    // 2CCL 데이터
+    const ccl2Data = {
+        'ppal-1000': {
+            data: [
+                [0.30, 1200], [0.35, 1270], [0.45, 1700], [0.80, 1700],
+                [1.00, 1700], [1.20, 1700], [1.25, 1700], [1.40, 1250],
+                [1.80, 1250], [2.00, 1250], [2.10, 1200]
+            ]
+        },
+        'ppal-others': {
+            data: [
+                [0.30, 1270], [0.45, 1700], [0.80, 1700], [1.00, 1700],
+                [1.25, 1700], [1.40, 1600], [2.00, 1600], [2.20, 1400], [2.50, 1400]
+            ]
+        },
+        'ppgi-gl': {
+            data: [
+                [0.30, 1600], [0.35, 1600], [0.40, 1600], [0.80, 1600],
+                [1.00, 1600], [1.20, 1600], [1.25, 1500], [1.40, 1000]
+            ]
+        },
+        'ppgi-print': {
+            data: [
+                [0.30, 1450], [0.35, 1450], [0.40, 1600], [0.80, 1600],
+                [1.00, 1600], [1.20, 1600], [1.25, 1600], [1.30, 1000], [1.40, 1000]
+            ]
+        },
+        'pet': {
+            data: [
+                [0.30, 1350], [0.40, 1350], [0.80, 1350], [1.00, 1350],
+                [1.10, 1350], [1.20, 1250], [1.30, 1250]
+            ]
+        },
+        'ppal-print': {
+            data: [
+                [0.30, 1250], [0.40, 1250], [0.45, 1650], [0.80, 1650],
+                [1.00, 1650], [1.10, 1650], [1.20, 1400], [1.60, 1400], [2.00, 1400]
+            ]
+        },
+        'snow': {
+            data: [
+                [0.35, 1250], [0.40, 1250], [0.60, 1250], [0.80, 1250], [0.85, 1250],
+                // 0.85 이후는 데이터 없음 (이미지상 회색 구간)
+                [1.00, 0]
+            ]
+        }
+    };
+
+    // 3CCL 데이터
+    const ccl3Data = {
+        'ppgi-gl': {
+            data: [
+                [0.27, 1270], [0.30, 1270], [0.35, 1350], [0.40, 1350],
+                [0.50, 1350], [0.80, 1350], [1.00, 1350], [1.20, 1350],
+                [1.25, 1270], [1.30, 1270]
+            ]
+        }
+    };
+
+    function initCclCharts(tabId) {
+        let dataset;
+        let prefix;
+        let baseColor;
+        let borderColor;
+
+        if (tabId === '1ccl') {
+            dataset = ccl1Data;
+            prefix = 'chart-1ccl-';
+            baseColor = 'rgba(147, 51, 234, 0.8)';
+            borderColor = 'rgba(126, 34, 206, 1)';
+        } else if (tabId === '2ccl') {
+            dataset = ccl2Data;
+            prefix = 'chart-2ccl-';
+            baseColor = 'rgba(79, 70, 229, 0.8)';
+            borderColor = 'rgba(67, 56, 202, 1)';
+        } else if (tabId === '3ccl') {
+            dataset = ccl3Data;
+            prefix = 'chart-3ccl-';
+            baseColor = 'rgba(13, 148, 136, 0.8)'; // Teal
+            borderColor = 'rgba(15, 118, 110, 1)';
+        } else {
+            return;
+        }
+
+        Object.keys(dataset).forEach(key => {
+            const canvas = document.getElementById(prefix + key);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const chartData = dataset[key];
+
+            // 데이터 필터링 (값이 0인 것 제외)
+            const validData = chartData.data.filter(d => d[1] > 0);
+            const labels = validData.map(d => d[0].toFixed(2));
+            const widthData = validData.map(d => d[1]);
+
+            if (cclCharts[prefix + key]) {
+                cclCharts[prefix + key].destroy();
+            }
+
+            cclCharts[prefix + key] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '생산 가능 폭',
+                        data: widthData,
+                        backgroundColor: baseColor,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'x',
+                    plugins: {
+                        legend: { display: false }, tooltip: {
+                            callbacks: {
+                                label: ctx => `폭: ${ctx.raw} mm`,
+                                title: ctx => `두께: ${ctx[0].label} mm`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
+                            grid: { display: false },
+                            ticks: { font: { size: 9 } }
+                        },
+                        y: {
+                            min: 600,
+                            max: 1800, // 2CCL은 최대 1700까지 있으므로 여유있게
+                            title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
+                            grid: { color: '#e5e7eb' },
+                            ticks: { stepSize: 100, font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // 라인별 생산 가능 SPEC 전용 탭 클릭 이벤트 통합 관리
+    const lineSpecTabContainer = document.getElementById('line-spec-tabs');
+    if (lineSpecTabContainer) {
+        const lineSpecTabs = lineSpecTabContainer.querySelectorAll('.tab-btn');
+        lineSpecTabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-line-tab');
+                if (!tabId) return;
+
+                // 1. 버튼 활성 상태 즉시 변경
+                lineSpecTabs.forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+
+                // 2. 모든 패널 숨기기
+                document.querySelectorAll('.line-spec-panel').forEach(panel => {
+                    panel.style.display = 'none';
+                    panel.classList.remove('active');
+                });
+
+                // 3. 선택된 패널 보이기
+                const targetPanel = document.getElementById(tabId === 'cgl-gl' ? 'panel-line-cgl-gl' : (tabId === 'cgl' ? 'panel-line-cgl' : `panel-line-${tabId}`));
+                if (targetPanel) {
+                    targetPanel.style.display = 'block';
+                    // 브라우저 리플로우 강제 유도 후 active 클래스 추가 (애니메이션 최적화)
+                    targetPanel.offsetHeight;
+                    targetPanel.classList.add('active');
+                }
+
+                // 4. 차트 초기화 (브라우저가 패널을 그리자마자 실행 - 지연시간 추가로 안정성 확보)
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        if (tabId === 'cpl') initCplChart();
+                        else if (tabId === 'crm') initCrmChart();
+                        else if (tabId === 'cgl') initAllCglGiCharts();
+                        else if (tabId === 'cgl-gl') initAllCglGlCharts();
+                        else if (tabId === '1ccl' || tabId === '2ccl' || tabId === '3ccl') {
+                            initCclCharts(tabId);
+                        }
+                    }, 50);
+                });
+            });
+        });
+    }
+
+    // --- [New] Process Spec Tab Logic ---
+    const processTabs = document.querySelectorAll('.process-tab-btn');
+    processTabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            processTabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.process-panel').forEach(p => {
+                p.style.display = 'none';
+                p.classList.remove('active');
+            });
+            const target = btn.getAttribute('data-process-tab');
+            const panel = document.getElementById(`process-panel-${target}`);
+            if (panel) {
+                panel.style.display = 'block';
+                setTimeout(() => panel.classList.add('active'), 10);
+            }
+        });
+    });
+});
+
+// --- 전역 함수: 이미지 확대 모달 (Lightbox) ---
+function openImageModal(src, caption) {
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-image');
+    const captionText = document.getElementById('modal-caption');
+
+    if (modal && modalImg) {
+        modal.style.display = "block";
+        modalImg.src = src;
+        if (captionText) captionText.innerHTML = caption || '';
+        document.body.style.overflow = "hidden"; // 배경 스크롤 방지
+    }
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('image-modal');
+    if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = ""; // 스크롤 복원
+    }
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', function (event) {
+    if (event.key === "Escape") {
+        closeImageModal();
+    }
 });

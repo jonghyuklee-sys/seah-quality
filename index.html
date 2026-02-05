@@ -65,13 +65,16 @@
 
                 <p class="nav-group-title" style="margin-top: 24px;">Support</p>
                 <a href="#defect-view" class="nav-link">
-                    <span>🖼️</span> 불량 유형 도감
+                    <span class="icon">📖</span> 불량 유형 도감
                 </a>
-                <a href="#info-view" class="nav-link">
-                    <span>📖</span> 강종 정보
+                <a href="#process-spec-view" class="nav-link">
+                    <span class="icon">🏭</span> 라인별 공정도 및 스펙
                 </a>
-                <a href="#management-view" class="nav-link">
-                    <span>📋</span> 규격 데이터 관리
+                <a href="#line-spec-view" class="nav-link">
+                    <span class="icon">📐</span> 라인별 생산 가능 SPEC
+                </a>
+                <a href="#management-view" class="nav-link admin-only">
+                    <span class="icon">📁</span> 규격 데이터 관리
                 </a>
                 <a href="#settings-view" class="nav-link admin-only">
                     <span>⚙️</span> 시스템 설정
@@ -292,8 +295,6 @@
                         </div>
                     </div>
                 </section>
-
-
 
                 <section id="info-view" class="page-section" style="display: none;">
                     <div style="max-width: 1000px; margin: 0 auto;">
@@ -524,6 +525,1311 @@
                         </div>
                     </div>
             </div>
+            </section>
+
+            <!-- Process Spec View (라인별 공정도 및 스펙) -->
+            <section id="process-spec-view" class="page-section" style="display: none;">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <div class="page-header" style="text-align: center;">
+                        <h2>🏭 라인별 공정도 및 스펙</h2>
+                        <p>각 생산 라인의 공정 흐름도와 상세 제원을 확인합니다.</p>
+                    </div>
+
+                    <!-- 탭 헤더 -->
+                    <div class="tab-container">
+                        <div class="tab-header" id="process-spec-tabs">
+                            <button class="tab-btn process-tab-btn active" data-process-tab="cpl">CPL</button>
+                            <button class="tab-btn process-tab-btn" data-process-tab="crm">CRM</button>
+                            <button class="tab-btn process-tab-btn" data-process-tab="cgl">CGL</button>
+                            <button class="tab-btn process-tab-btn" data-process-tab="1ccl">1CCL</button>
+                            <button class="tab-btn process-tab-btn" data-process-tab="2ccl">2CCL</button>
+                            <button class="tab-btn process-tab-btn" data-process-tab="3ccl">3CCL</button>
+                        </div>
+
+                        <div class="tab-content">
+                            <!-- CPL 패널 (연속 산세 라인) -->
+                            <div class="line-spec-panel process-panel active" id="process-panel-cpl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CPL <small>산세라인 (Pickling Line)</small></h3>
+                                    <p class="line-spec-subtitle">열연코일의 산화스케일 제거 후 냉연/도금 공정 투입용 원판 생산</p>
+                                </div>
+                                <div class="modern-process-grid"
+                                    style="display: flex; flex-direction: column; gap: 30px;">
+                                    <div class="process-visual-side">
+                                        <div class="process-map-container">
+                                            <div class="process-row" style="margin-bottom: 50px;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Pay-off Reel</div>
+                                                    <div class="station-sub">제품 입측</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">선단 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f59e0b;"><i
+                                                            class="fas fa-bolt"></i></div>
+                                                    <div class="station-label">Welder</div>
+                                                    <div class="station-sub">코일 접합</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Entry Loop</div>
+                                                    <div class="station-sub">입측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-vial"></i></div>
+                                                    <div class="station-label">Pickling Tank #1</div>
+                                                    <div class="station-sub">No.1 산세조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-vial"></i></div>
+                                                    <div class="station-label">Pickling Tank #2</div>
+                                                    <div class="station-sub">No.2 산세조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-vial"></i></div>
+                                                    <div class="station-label">Pickling Tank #3</div>
+                                                    <div class="station-sub">No.3 산세조</div>
+                                                </div>
+                                            </div>
+                                            <div class="process-row" style="margin-bottom: 0;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-shower"></i></div>
+                                                    <div class="station-label">Rinse Tank</div>
+                                                    <div class="station-sub">표면 세척</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-wind"></i></div>
+                                                    <div class="station-label">Hot Air Dryer</div>
+                                                    <div class="station-sub">열풍 건조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Exit Loop</div>
+                                                    <div class="station-sub">출측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-scissors"></i></div>
+                                                    <div class="station-label">Side Trimmer</div>
+                                                    <div class="station-sub">사이드 트림</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-oil-can"></i></div>
+                                                    <div class="station-label">Oiler</div>
+                                                    <div class="station-sub">도유 공정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">출측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Tension Reel</div>
+                                                    <div class="station-sub">제품 권취</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="process-spec-side" style="width: 100%;">
+                                        <div class="spec-side-title">📊 CPL 라인 상세 제원</div>
+                                        <div class="spec-grid">
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Capacity</span><span class="spec-title-ko">생산
+                                                        용량</span></div>
+                                                <div class="spec-value-group"><span
+                                                        class="spec-value">500,000</span><span
+                                                        class="spec-unit">톤/년</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 120px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Thickness</span><span
+                                                        class="spec-title-ko">두께 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">1.2 ~
+                                                        4.0</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span class="spec-label">Width</span><span
+                                                        class="spec-title-ko">폭 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">600 ~
+                                                        1,300</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 110px;">
+                                                <div class="spec-label-group"><span class="spec-label">Speed</span><span
+                                                        class="spec-title-ko">라인 속도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">80</span><span
+                                                        class="spec-unit">mpm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.5; min-width: 250px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coil
+                                                        Weight</span><span class="spec-title-ko">Coil 단중</span>
+                                                </div>
+                                                <div class="spec-value-group"><span class="spec-value">입측 : 5~40톤 / 출측 :
+                                                        3~25톤</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 130px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Product</span><span class="spec-title-ko">생산 제품</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">PO 강판</span>
+                                                </div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.2; min-width: 160px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Usage</span><span class="spec-title-ko">주요 용도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">가전/건자재/자동차</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CRM 패널 (냉간 압연 라인) -->
+                            <div class="line-spec-panel process-panel" id="process-panel-crm" style="display: none;">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
+                                    <p class="line-spec-subtitle">산세강판을 냉간압연하여 목표 두께로 압연 (왕복식 압연 방식)</p>
+                                </div>
+                                <div class="modern-process-grid"
+                                    style="display: flex; flex-direction: column; gap: 30px;">
+                                    <div class="process-visual-side">
+                                        <div class="process-map-container">
+                                            <div class="process-row" style="margin-bottom: 0;">
+                                                <!-- 입측 -->
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Pay-off Reel</div>
+                                                    <div class="station-sub" style="font-size: 11px;">제품 입측</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-align-justify"></i></div>
+                                                    <div class="station-label">Flattener</div>
+                                                    <div class="station-sub" style="font-size: 11px;">곡률 교정</div>
+                                                </div>
+
+                                                <!-- 왕복 작업 구간 -->
+                                                <div
+                                                    style="display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(59, 130, 246, 0.04); border: 2px dashed #3b82f6; border-radius: 20px; position: relative; margin: 0 5px;">
+                                                    <div
+                                                        style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 1px 12px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; z-index: 2;">
+                                                        <i class="fas fa-exchange-alt"></i> 왕복 작업 구간 (Reversing)
+                                                    </div>
+
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                                class="fas fa-compact-disc"></i></div>
+                                                        <div class="station-label">L.H. Reel</div>
+                                                        <div class="station-sub" style="font-size: 11px;">좌측 텐션릴</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                                class="fas fa-gauge-high"></i></div>
+                                                        <div class="station-label">Shape Meter</div>
+                                                        <div class="station-sub" style="font-size: 11px;">형상 측정 L</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #475569;"><i
+                                                                class="fas fa-cut"></i></div>
+                                                        <div class="station-label">Shear</div>
+                                                        <div class="station-sub" style="font-size: 11px;">절단 작업</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #64748b;"><i
+                                                                class="fas fa-ruler-vertical"></i></div>
+                                                        <div class="station-label">T. Gauge</div>
+                                                        <div class="station-sub" style="font-size: 11px;">두께 측정 L</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                                class="fas fa-industry"></i></div>
+                                                        <div class="station-label"
+                                                            style="font-weight: 900; color: #1e3a8a;">6-High Stand</div>
+                                                        <div class="station-sub"
+                                                            style="font-weight: 700; font-size: 11px;">압연기(핵심)</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #64748b;"><i
+                                                                class="fas fa-ruler-vertical"></i></div>
+                                                        <div class="station-label">T. Gauge</div>
+                                                        <div class="station-sub" style="font-size: 11px;">두께 측정 R</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                                class="fas fa-gauge-high"></i></div>
+                                                        <div class="station-label">Shape Meter</div>
+                                                        <div class="station-sub" style="font-size: 11px;">형상 측정 R</div>
+                                                    </div>
+                                                    <div class="process-station">
+                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                                class="fas fa-compact-disc"></i></div>
+                                                        <div class="station-label">R.H. Reel</div>
+                                                        <div class="station-sub" style="font-size: 11px;">우측 텐션릴</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="process-spec-side" style="width: 100%;">
+                                        <div class="spec-side-title">📊 CRM 라인 상세 제원</div>
+                                        <div class="spec-grid">
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Capacity</span><span class="spec-title-ko">생산
+                                                        용량</span></div>
+                                                <div class="spec-value-group"><span
+                                                        class="spec-value">300,000</span><span
+                                                        class="spec-unit">톤/년</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 120px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Thickness</span><span
+                                                        class="spec-title-ko">두께 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">0.23 ~
+                                                        1.6</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span class="spec-label">Width</span><span
+                                                        class="spec-title-ko">폭 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">600 ~
+                                                        1,300</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 110px;">
+                                                <div class="spec-label-group"><span class="spec-label">Speed</span><span
+                                                        class="spec-title-ko">라인 속도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">1,400</span><span
+                                                        class="spec-unit">mpm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.5; min-width: 250px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coil
+                                                        Weight</span><span class="spec-title-ko">Coil 단중</span>
+                                                </div>
+                                                <div class="spec-value-group"><span class="spec-value">입측 : 5~25톤 / 출측 :
+                                                        25톤</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 130px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Product</span><span class="spec-title-ko">생산 제품</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">F/H 강판</span>
+                                                </div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.2; min-width: 160px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Usage</span><span class="spec-title-ko">주요 용도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">도금소재/포장밴드</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CGL 패널 (용융아연/갈바륨도금라인) -->
+                            <div class="line-spec-panel process-panel" id="process-panel-cgl" style="display: none;">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CGL <small>용융아연/갈바륨도금라인 (Galvanizing & Galvalume)</small></h3>
+                                    <p class="line-spec-subtitle">GI(용융아연도금) 및 GL(용융갈바륨도금) 제품을 생산하는 연속 도금 라인</p>
+                                </div>
+                                <div class="modern-process-grid"
+                                    style="display: flex; flex-direction: column; gap: 30px;">
+                                    <div class="process-visual-side">
+                                        <div class="process-map-container">
+                                            <div class="process-row" style="margin-bottom: 50px;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Pay-off Reel</div>
+                                                    <div class="station-sub">제품 입측</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">입측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f59e0b;"><i
+                                                            class="fas fa-bolt"></i></div>
+                                                    <div class="station-label">Welder</div>
+                                                    <div class="station-sub">코일 접합</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-shower"></i></div>
+                                                    <div class="station-label">Pre-cleaning</div>
+                                                    <div class="station-sub">예비 세척</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Entry Accum.</div>
+                                                    <div class="station-sub">입측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-soap"></i></div>
+                                                    <div class="station-label">Cleaning Zone</div>
+                                                    <div class="station-sub">표면 청정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire"></i></div>
+                                                    <div class="station-label">Furnace</div>
+                                                    <div class="station-sub">소둔로</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-fill-drip"></i></div>
+                                                    <div class="station-label">Zinc Pot</div>
+                                                    <div class="station-sub">도금욕</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #06b6d4;"><i
+                                                            class="fas fa-wind"></i></div>
+                                                    <div class="station-label">Air Knife</div>
+                                                    <div class="station-sub">도금량 제어</div>
+                                                </div>
+                                            </div>
+                                            <div class="process-row" style="margin-bottom: 0;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Exit Accum.</div>
+                                                    <div class="station-sub">출측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-weight-hanging"></i></div>
+                                                    <div class="station-label">Skin Pass</div>
+                                                    <div class="station-sub">스킨패스</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-align-center"></i></div>
+                                                    <div class="station-label">Tension Leveller</div>
+                                                    <div class="station-sub">형상 교정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-fill-drip"></i></div>
+                                                    <div class="station-label">Chemical Coater</div>
+                                                    <div class="station-sub">후처리 도포</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-temperature-high"></i></div>
+                                                    <div class="station-label">Chemical Dryer</div>
+                                                    <div class="station-sub">후처리 건조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-oil-can"></i></div>
+                                                    <div class="station-label">Oiler</div>
+                                                    <div class="station-sub">도유 공정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">출측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Tension Reel</div>
+                                                    <div class="station-sub">제품 권취</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="process-spec-side" style="width: 100%;">
+                                        <div class="spec-side-title">📊 CGL 라인 상세 제원</div>
+                                        <div class="spec-grid">
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Capacity</span><span class="spec-title-ko">생산
+                                                        용량</span></div>
+                                                <div class="spec-value-group"><span
+                                                        class="spec-value">300,000</span><span
+                                                        class="spec-unit">톤/년</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 120px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Thickness</span><span
+                                                        class="spec-title-ko">두께 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">0.23 ~
+                                                        1.6</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span class="spec-label">Width</span><span
+                                                        class="spec-title-ko">폭 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">600 ~
+                                                        1,300</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 110px;">
+                                                <div class="spec-label-group"><span class="spec-label">Speed</span><span
+                                                        class="spec-title-ko">라인 속도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">180</span><span
+                                                        class="spec-unit">mpm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.5; min-width: 250px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coil
+                                                        Weight</span><span class="spec-title-ko">Coil 단중</span>
+                                                </div>
+                                                <div class="spec-value-group"><span class="spec-value">입측 : 10~25톤 / 출측
+                                                        : 3~25톤</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 130px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Product</span><span class="spec-title-ko">생산 제품</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">GI / GL 강판</span>
+                                                </div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.2; min-width: 160px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Usage</span><span class="spec-title-ko">주요 용도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">가전/칼라소재/건축</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 1CCL 패널 (Color Coating Line No.1) -->
+                            <div class="line-spec-panel process-panel" id="process-panel-1ccl" style="display: none;">
+                                <div class="line-spec-header">
+                                    <h3>🏭 1CCL <small>연속도장라인 1호기 (Color Coating Line No.1)</small></h3>
+                                    <p class="line-spec-subtitle">아연도금강판 및 알루미늄 강판에 다양한 색상의 도료를 코팅하는 라인</p>
+                                </div>
+                                <div class="modern-process-grid"
+                                    style="display: flex; flex-direction: column; gap: 30px;">
+                                    <div class="process-visual-side">
+                                        <div class="process-map-container">
+                                            <div class="process-row" style="margin-bottom: 50px;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Pay-off Reel</div>
+                                                    <div class="station-sub">제품 입측</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">입측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f59e0b;"><i
+                                                            class="fas fa-link"></i></div>
+                                                    <div class="station-label">Joiner</div>
+                                                    <div class="station-sub">코일 접합</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-shower"></i></div>
+                                                    <div class="station-label">Pre-cleaning</div>
+                                                    <div class="station-sub">예비 세척</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Entry Accum.</div>
+                                                    <div class="station-sub">입측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-soap"></i></div>
+                                                    <div class="station-label">Cleaning Zone</div>
+                                                    <div class="station-sub">표면 세척</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-fill-drip"></i></div>
+                                                    <div class="station-label">Chemical Coater</div>
+                                                    <div class="station-sub">전처리 도포</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-wind"></i></div>
+                                                    <div class="station-label">Chemical Dryer</div>
+                                                    <div class="station-sub">전처리 건조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #6366f1;"><i
+                                                            class="fas fa-paint-roller"></i></div>
+                                                    <div class="station-label">Primer Coater</div>
+                                                    <div class="station-sub">하도 도장</div>
+                                                </div>
+                                            </div>
+                                            <div class="process-row" style="margin-bottom: 0;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Primer Oven</div>
+                                                    <div class="station-sub">하도 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #8b5cf6;"><i
+                                                            class="fas fa-brush"></i></div>
+                                                    <div class="station-label">Finish Coater</div>
+                                                    <div class="station-sub">상도 도장</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Finish Oven</div>
+                                                    <div class="station-sub">상도 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #334155;"><i
+                                                            class="fas fa-wave-square"></i></div>
+                                                    <div class="station-label">Embosser</div>
+                                                    <div class="station-sub">엠보 가공</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Exit Accum.</div>
+                                                    <div class="station-sub">출측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-align-center"></i></div>
+                                                    <div class="station-label">Tension Leveller</div>
+                                                    <div class="station-sub">형상 교정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-magnifying-glass"></i></div>
+                                                    <div class="station-label">Inspection Zone</div>
+                                                    <div class="station-sub">품질 검사</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-layer-group"></i></div>
+                                                    <div class="station-label">Protection Film</div>
+                                                    <div class="station-sub">보호필름 부착</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">출측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Tension Reel</div>
+                                                    <div class="station-sub">제품 권취</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="process-spec-side" style="width: 100%;">
+                                        <div class="spec-side-title">📊 1CCL 라인 상세 제원</div>
+                                        <div class="spec-grid">
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Capacity</span><span class="spec-title-ko">생산
+                                                        용량</span></div>
+                                                <div class="spec-value-group"><span
+                                                        class="spec-value">160,000</span><span
+                                                        class="spec-unit">톤/년</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 120px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Thickness</span><span
+                                                        class="spec-title-ko">두께 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">0.23 ~
+                                                        1.6</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 145px;">
+                                                <div class="spec-label-group"><span class="spec-label">Width</span><span
+                                                        class="spec-title-ko">폭 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">600 ~
+                                                        1,320</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 110px;">
+                                                <div class="spec-label-group"><span class="spec-label">Speed</span><span
+                                                        class="spec-title-ko">라인 속도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">130</span><span
+                                                        class="spec-unit">mpm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.5; min-width: 250px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coil
+                                                        Weight</span><span class="spec-title-ko">Coil 단중</span>
+                                                </div>
+                                                <div class="spec-value-group"><span class="spec-value">입측 : 5~25톤 / 출측 :
+                                                        3~15톤</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 130px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coating
+                                                        Type</span><span class="spec-title-ko">도장 방식</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">2C 2B</span>
+                                                </div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.2; min-width: 160px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Usage</span><span class="spec-title-ko">주요 용도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">건축자재/복합판넬</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2CCL 패널 (Color Coating Line No.2) -->
+                            <div class="line-spec-panel process-panel" id="process-panel-2ccl" style="display: none;">
+                                <div class="line-spec-header">
+                                    <h3>🏭 2CCL <small>연속도장라인 2호기 (Color Coating Line No.2)</small></h3>
+                                    <p class="line-spec-subtitle">고품질 가전용 및 건재용 컬러강판을 생산하는 최신 설비 라인</p>
+                                </div>
+                                <div class="modern-process-grid"
+                                    style="display: flex; flex-direction: column; gap: 30px;">
+                                    <div class="process-visual-side">
+                                        <div class="process-map-container">
+                                            <div class="process-row" style="margin-bottom: 50px;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Pay-off Reel</div>
+                                                    <div class="station-sub">제품 입측</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">입측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f59e0b;"><i
+                                                            class="fas fa-link"></i></div>
+                                                    <div class="station-label">Joiner</div>
+                                                    <div class="station-sub">코일 접합</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Entry Accum.</div>
+                                                    <div class="station-sub">입측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-shower"></i></div>
+                                                    <div class="station-label">Cleaning Zone</div>
+                                                    <div class="station-sub">표면 세척</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-fill-drip"></i></div>
+                                                    <div class="station-label">Chemical Coater</div>
+                                                    <div class="station-sub">전처리 도포</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-wind"></i></div>
+                                                    <div class="station-label">Chemical Dryer</div>
+                                                    <div class="station-sub">전처리 건조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #6366f1;"><i
+                                                            class="fas fa-paint-roller"></i></div>
+                                                    <div class="station-label">Primer Coater</div>
+                                                    <div class="station-sub">하도 도장</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Primer Oven</div>
+                                                    <div class="station-sub">하도 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #8b5cf6;"><i
+                                                            class="fas fa-brush"></i></div>
+                                                    <div class="station-label">Finish Coater</div>
+                                                    <div class="station-sub">상도 도장</div>
+                                                </div>
+                                            </div>
+                                            <div class="process-row" style="margin-bottom: 0;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Finish Oven</div>
+                                                    <div class="station-sub">상도 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-layer-group"></i></div>
+                                                    <div class="station-label">Laminator</div>
+                                                    <div class="station-sub">라미 필름</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #d946ef;"><i
+                                                            class="fas fa-print"></i></div>
+                                                    <div class="station-label">Printer (P1~P4)</div>
+                                                    <div class="station-sub">무늬 인쇄</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #06b6d4;"><i
+                                                            class="fas fa-spray-can"></i></div>
+                                                    <div class="station-label">Clear Coater</div>
+                                                    <div class="station-sub">클리어 코팅</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Clear Oven</div>
+                                                    <div class="station-sub">클리어 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #334155;"><i
+                                                            class="fas fa-wave-square"></i></div>
+                                                    <div class="station-label">Embosser</div>
+                                                    <div class="station-sub">엠보 가공</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-align-center"></i></div>
+                                                    <div class="station-label">Tension Leveller</div>
+                                                    <div class="station-sub">형상 교정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Exit Accum.</div>
+                                                    <div class="station-sub">출측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-magnifying-glass"></i></div>
+                                                    <div class="station-label">Inspection</div>
+                                                    <div class="station-sub">품질 검사</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-layer-group"></i></div>
+                                                    <div class="station-label">Protection Film</div>
+                                                    <div class="station-sub">보호필름 부착</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-scissors"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">출측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Tension Reel</div>
+                                                    <div class="station-sub">제품 권취</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="process-spec-side" style="width: 100%;">
+                                        <div class="spec-side-title">📊 2CCL 라인 상세 제원</div>
+                                        <div class="spec-grid">
+                                            <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Capacity</span><span class="spec-title-ko">생산
+                                                        용량</span></div>
+                                                <div class="spec-value-group"><span
+                                                        class="spec-value">50,000</span><span
+                                                        class="spec-unit">톤/년</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 120px;">
+                                                <div class="spec-label-group"><span
+                                                        class="spec-label">Thickness</span><span
+                                                        class="spec-title-ko">두께 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">0.3 ~
+                                                        2.0</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 145px;">
+                                                <div class="spec-label-group"><span class="spec-label">Width</span><span
+                                                        class="spec-title-ko">폭 범위</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">600 ~
+                                                        1,710</span><span class="spec-unit">mm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 110px;">
+                                                <div class="spec-label-group"><span class="spec-label">Speed</span><span
+                                                        class="spec-title-ko">라인 속도</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">80</span><span
+                                                        class="spec-unit">mpm</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.5; min-width: 250px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coil
+                                                        Weight</span><span class="spec-title-ko">Coil 단중</span>
+                                                </div>
+                                                <div class="spec-value-group"><span class="spec-value">입측 : 5~25톤 / 출측 :
+                                                        2~15톤</span></div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1; min-width: 130px;">
+                                                <div class="spec-label-group"><span class="spec-label">Coating
+                                                        Type</span><span class="spec-title-ko">도장 방식</span></div>
+                                                <div class="spec-value-group"><span class="spec-value">3C 3B</span>
+                                                </div>
+                                            </div>
+                                            <div class="spec-item" style="flex: 1.2; min-width: 160px;">
+                                                <div class="spec-label-group"><span class="spec-label">Main
+                                                        Usage</span><span class="spec-title-ko">주요 용도</span></div>
+                                                <div class="spec-value-group"><span
+                                                        class="spec-value">AL복합/PRINT/가전</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3CCL 패널 -->
+                            <div class="line-spec-panel process-panel" id="process-panel-3ccl" style="display: none;">
+                                <div class="line-spec-header">
+                                    <h3>🏭 3CCL <small>연속도장라인 3호기 (Color Coating Line No.3)</small></h3>
+                                    <p class="line-spec-subtitle">최신 설비를 갖춘 가전전용 컬러강판 라인</p>
+                                </div>
+                                <div class="modern-process-grid"
+                                    style="display: flex; flex-direction: column; gap: 30px;">
+                                    <!-- 위쪽: 공정 비주얼 (HTML/CSS로 직접 구현) -->
+                                    <div class="process-visual-side">
+                                        <div class="process-map-container">
+                                            <!-- 첫 번째 줄: 입측 ~ 상도 공정 (11개) -->
+                                            <div class="process-row" style="margin-bottom: 70px;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Pay-off Reel</div>
+                                                    <div class="station-sub">제품 입측</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-cut"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">선/후단 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon"
+                                                        style="color: #f59e0b; display: flex; gap: 3px; align-items: center; justify-content: center; font-size: 14px;">
+                                                        <i class="fas fa-bolt"></i>
+                                                        <span style="font-size: 9px; color: #cbd5e1;">|</span>
+                                                        <i class="fas fa-link"></i>
+                                                    </div>
+                                                    <div class="station-label" style="line-height: 1.1;">Welder / Joiner
+                                                    </div>
+                                                    <div class="station-sub">코일 접합</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Entry Accum.</div>
+                                                    <div class="station-sub">입측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #3b82f6;"><i
+                                                            class="fas fa-shower"></i></div>
+                                                    <div class="station-label">Cleaning Zone</div>
+                                                    <div class="station-sub">표면 세척</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-fill-drip"></i></div>
+                                                    <div class="station-label">Chemical Coater</div>
+                                                    <div class="station-sub">전처리 도포</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-wind"></i></div>
+                                                    <div class="station-label">Chemical Dryer</div>
+                                                    <div class="station-sub">전처리 건조</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #6366f1;"><i
+                                                            class="fas fa-paint-roller"></i></div>
+                                                    <div class="station-label">Primer Coater</div>
+                                                    <div class="station-sub">하도 도장</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Primer Oven & Quench</div>
+                                                    <div class="station-sub">하도 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #8b5cf6;"><i
+                                                            class="fas fa-brush"></i></div>
+                                                    <div class="station-label">Finish Coater</div>
+                                                    <div class="station-sub">상도 도장</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Finish Oven & Quench</div>
+                                                    <div class="station-sub">상도 건조/냉각</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 행 연결 화살표 제거됨 -->
+
+                                            <!-- 두 번째 줄: 인쇄 ~ 출측 (10개) -->
+                                            <div class="process-row" style="margin-bottom: 0;">
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #d946ef;"><i
+                                                            class="fas fa-print"></i></div>
+                                                    <div class="station-label">Printer (P1~P4)</div>
+                                                    <div class="station-sub">무늬 인쇄</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #06b6d4;"><i
+                                                            class="fas fa-spray-can"></i></div>
+                                                    <div class="station-label">Clear Coater</div>
+                                                    <div class="station-sub">클리어 코팅</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #f97316;"><i
+                                                            class="fas fa-fire-burner"></i></div>
+                                                    <div class="station-label">Clear Oven & Quench</div>
+                                                    <div class="station-sub">클리어 건조/냉각</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #94a3b8;"><i
+                                                            class="fas fa-grip-lines-vertical"></i></div>
+                                                    <div class="station-label">Exit Accum.</div>
+                                                    <div class="station-sub">출측 루프</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #334155;"><i
+                                                            class="fas fa-wave-square"></i></div>
+                                                    <div class="station-label">Embosser</div>
+                                                    <div class="station-sub">엠보 가공</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #64748b;"><i
+                                                            class="fas fa-align-center"></i></div>
+                                                    <div class="station-label">Tension Leveller</div>
+                                                    <div class="station-sub">평탄도 보정</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-magnifying-glass"></i></div>
+                                                    <div class="station-label">Inspection Zone</div>
+                                                    <div class="station-sub">품질 검사</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #10b981;"><i
+                                                            class="fas fa-layer-group"></i></div>
+                                                    <div class="station-label">Protection Film</div>
+                                                    <div class="station-sub">보호필름 부착</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #475569;"><i
+                                                            class="fas fa-scissors"></i></div>
+                                                    <div class="station-label">Shear</div>
+                                                    <div class="station-sub">출측 절단</div>
+                                                </div>
+                                                <div class="process-station">
+                                                    <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            class="fas fa-compact-disc"></i></div>
+                                                    <div class="station-label">Tension Reel</div>
+                                                    <div class="station-sub">제품 권취</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 아래쪽: 상세 제원 (텍스트) -->
+                                <div class="process-spec-side" style="width: 100%;">
+                                    <div class="spec-side-title" style="margin-bottom: 20px;">📊 3CCL 라인 상세 제원</div>
+                                    <div class="spec-grid">
+                                        <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                            <div class="spec-label-group"><span class="spec-label">Capacity</span><span
+                                                    class="spec-title-ko">생산 용량</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">80,000</span><span
+                                                    class="spec-unit">톤/년</span></div>
+                                        </div>
+                                        <div class="spec-item" style="flex: 1; min-width: 120px;">
+                                            <div class="spec-label-group"><span class="spec-label">Thickness</span><span
+                                                    class="spec-title-ko">두께 범위</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">0.3 ~ 1.2</span><span
+                                                    class="spec-unit">mm</span></div>
+                                        </div>
+                                        <div class="spec-item" style="flex: 1; min-width: 140px;">
+                                            <div class="spec-label-group"><span class="spec-label">Width</span><span
+                                                    class="spec-title-ko">폭 범위</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">600 ~
+                                                    1,360</span><span class="spec-unit">mm</span></div>
+                                        </div>
+                                        <div class="spec-item" style="flex: 1; min-width: 110px;">
+                                            <div class="spec-label-group"><span class="spec-label">Speed</span><span
+                                                    class="spec-title-ko">라인 속도</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">100</span><span
+                                                    class="spec-unit">mpm</span></div>
+                                        </div>
+                                        <div class="spec-item" style="flex: 1.5; min-width: 250px;">
+                                            <div class="spec-label-group"><span class="spec-label">Coil
+                                                    Weight</span><span class="spec-title-ko">Coil 단중</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">입측 : 5~25톤 / 출측 :
+                                                    3~15톤</span></div>
+                                        </div>
+                                        <div class="spec-item" style="flex: 1; min-width: 130px;">
+                                            <div class="spec-label-group"><span class="spec-label">Coating
+                                                    Type</span><span class="spec-title-ko">도장 방식</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">3C 3B</span></div>
+                                        </div>
+                                        <div class="spec-item" style="flex: 1.2; min-width: 160px;">
+                                            <div class="spec-label-group"><span class="spec-label">Main
+                                                    Usage</span><span class="spec-title-ko">주요 용도</span></div>
+                                            <div class="spec-value-group"><span class="spec-value">가전/프리미엄 프린트</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Line Spec View (라인별 생산 가능 SPEC) -->
+            <section id="line-spec-view" class="page-section" style="display: none;">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <div class="page-header" style="text-align: center;">
+                        <h2>📐 라인별 생산 가능 SPEC</h2>
+                        <p>각 생산 라인별로 제조 가능한 두께 및 폭 범위를 확인합니다.</p>
+                    </div>
+
+                    <!-- SPEC 확인 가이드 -->
+                    <div class="info-banner"
+                        style="margin-bottom: 30px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #93c5fd;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 24px;">📊</span>
+                            <h5 style="margin: 0; color: #1e3a8a;">SPEC 확인 가이드</h5>
+                        </div>
+                        <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                            <strong>PPGI 및 PPGL 기준:</strong> 두께 <span style="color: #dc2626; font-weight: 700;">0.3T ~
+                                1.8T</span>,
+                            폭 <span style="color: #dc2626; font-weight: 700;">700W ~ 1350W</span> 까지 생산 가능
+                        </p>
+                    </div>
+
+                    <!-- 탭 헤더 -->
+                    <div class="tab-container">
+                        <div class="tab-header" id="line-spec-tabs">
+                            <button class="tab-btn active" data-line-tab="cpl">CPL</button>
+                            <button class="tab-btn" data-line-tab="crm">CRM</button>
+                            <button class="tab-btn" data-line-tab="cgl">CGL GI</button>
+                            <button class="tab-btn" data-line-tab="cgl-gl">CGL GL</button>
+                            <button class="tab-btn" data-line-tab="1ccl">1CCL</button>
+                            <button class="tab-btn" data-line-tab="2ccl">2CCL</button>
+                            <button class="tab-btn" data-line-tab="3ccl">3CCL</button>
+                        </div>
+
+                        <div class="tab-content">
+                            <!-- CPL 탭 -->
+                            <div class="line-spec-panel active" id="panel-line-cpl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CPL <small>산세라인 (Pickling Line)</small></h3>
+                                    <p class="line-spec-subtitle">열연코일의 산화스케일 제거 후 냉연/도금 공정 투입용 원판 생산</p>
+                                </div>
+                                <div class="spec-chart-container"
+                                    style="background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                        <h4 style="margin: 0; font-size: 18px; color: #1e3a8a;">CPL 생산 가능 범위</h4>
+                                        <div style="display: flex; gap: 16px; font-size: 12px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;"><span
+                                                    style="width: 16px; height: 16px; background: rgba(59, 130, 246, 0.7); border-radius: 3px;"></span>
+                                                생산 가능 영역</span>
+                                        </div>
+                                    </div>
+                                    <div style="position: relative; height: 400px;"><canvas id="chart-cpl"></canvas>
+                                    </div>
+                                    <div class="spec-note" style="margin-top: 16px;"><small>• 두께 Range: 1.20 ~ 5.00mm /
+                                            폭 Range: 600 ~ 1350mm</small></div>
+                                </div>
+                            </div>
+
+                            <!-- CRM 탭 -->
+                            <div class="line-spec-panel" id="panel-line-crm">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
+                                    <p class="line-spec-subtitle">산세강판을 냉간압연하여 목표 두께로 압연</p>
+                                </div>
+                                <div class="spec-chart-container"
+                                    style="background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                        <h4 style="margin: 0; font-size: 18px; color: #1e3a8a;">CRM 생산 가능 범위</h4>
+                                        <div style="display: flex; gap: 16px; font-size: 12px;">
+                                            <span style="display: flex; align-items: center; gap: 6px;"><span
+                                                    style="width: 16px; height: 16px; background: rgba(16, 185, 129, 0.7); border-radius: 3px;"></span>
+                                                생산 가능 영역</span>
+                                        </div>
+                                    </div>
+                                    <div style="position: relative; height: 400px;"><canvas id="chart-crm"></canvas>
+                                    </div>
+                                    <div class="spec-note" style="margin-top: 16px;"><small>• 두께 Range: 0.20 ~ 1.60mm /
+                                            폭 Range: 600 ~ 1350mm</small></div>
+                                </div>
+                            </div>
+
+                            <!-- CGL GI 탭 (HTML Flow 유지) -->
+                            <div class="line-spec-panel" id="panel-line-cgl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CGL GI <small>용융아연도금라인 (Galvanizing Line)</small></h3>
+                                    <p class="line-spec-subtitle">미려한 표면과 우수한 가공성/내식성을 보유한 용융아연도금강판 생산 (GI)</p>
+                                </div>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <h4>CQ (SAE1008)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gi-cq"></canvas></div>
+                                        <p class="chart-note">• 두께 가공여력 기준: 0.4% 아연부(편) / 0.40%~0.80%(양면)</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>DQ (POSHRD2)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gi-dq"></canvas></div>
+                                        <p class="chart-note">• 드로잉용 강판으로 가공성 우수</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>DDQ (POSHRD3)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gi-ddq"></canvas></div>
+                                        <p class="chart-note">• 심가공용 강판으로 딥드로잉 가공에 적합</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>구조용 (SAE1017)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gi-struct"></canvas></div>
+                                        <p class="chart-note">• 구조용 강판으로 강도 우수</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>Gr.E</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gi-gre"></canvas></div>
+                                        <p class="chart-note">• 후판 Gr.E 생산 이력 없음, 향후 확대 검토 예정</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CGL GL 탭 (HTML Flow 유지) -->
+                            <div class="line-spec-panel" id="panel-line-cgl-gl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 CGL GL <small>용융갈바륨도금라인 (Galvalume Line)</small></h3>
+                                    <p class="line-spec-subtitle">냉연강판에 55% 알루미늄-아연 합금 도금을 입히는 연속 도금 라인 (도금량: AZ120 기준)
+                                    </p>
+                                </div>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <h4>CQ (SAE1008)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gl-cq"></canvas></div>
+                                        <p class="chart-note">• 0.8T 이하 박판 사양 양산라인 검토 필요</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>DQ - POSHRD2</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gl-dq"></canvas></div>
+                                        <p class="chart-note">• 가전용 제외</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>DDQ - POSHRD3</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gl-ddq"></canvas></div>
+                                        <p class="chart-note">• 가전용 제외</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>구조용 (SAE1017)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gl-struct"></canvas></div>
+                                        <p class="chart-note">• 구조용 강판으로 강도 우수</p>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>Gr.E</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-gl-gre"></canvas></div>
+                                        <p class="chart-note">• 후판 Gr.E 생산 이력 없음</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 1CCL 탭 -->
+                            <div class="line-spec-panel" id="panel-line-1ccl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 1CCL <small>연속도장라인 1호기 (Color Coating Line No.1)</small></h3>
+                                    <p class="line-spec-subtitle">아연도금강판 및 알루미늄 강판에 다양한 색상의 도료를 코팅하는 라인</p>
+                                </div>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <h4>PPGI 및 PPGL</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-1ccl-ppgi"></canvas></div>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>PPAL</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-1ccl-ppal"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2CCL 탭 -->
+                            <div class="line-spec-panel" id="panel-line-2ccl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 2CCL <small>연속도장라인 2호기 (Color Coating Line No.2)</small></h3>
+                                    <p class="line-spec-subtitle">고품질 가전용 및 건재용 컬러강판을 생산하는 최신 설비 라인</p>
+                                </div>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <h4>PPAL (1000계열)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-2ccl-ppal-1000"></canvas></div>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>PPAL (1000계열 외)</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-2ccl-ppal-others"></canvas></div>
+                                    </div>
+                                    <div class="spec-chart-box">
+                                        <h4>PPGI/GL</h4>
+                                        <div class="chart-wrapper"><canvas id="chart-2ccl-ppgi-gl"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3CCL 탭 -->
+                            <div class="line-spec-panel" id="panel-line-3ccl">
+                                <div class="line-spec-header">
+                                    <h3>🏭 3CCL <small>연속도장라인 3호기 (Color Coating Line No.3)</small></h3>
+                                    <p class="line-spec-subtitle">최신 설비를 갖춘 가전전용 컬러강판 라인</p>
+                                </div>
+                                <div class="spec-charts-grid">
+                                    <div class="spec-chart-box">
+                                        <h4>PPGI 및 PPGL</h4>
+                                        <div class="chart-wrapper" style="height: 350px;">
+                                            <canvas id="chart-3ccl-ppgi-gl"></canvas>
+                                        </div>
+                                        <p class="chart-note">• 질감이 강한 클리어 등 특수 제품의 경우 품질 협의 필요</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 참고 사항 배너 -->
+                    <div class="info-banner" style="margin-top: 30px; background: #f8fafc;">
+                        <h5>📌 참고 사항</h5>
+                        <ul
+                            style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.8;">
+                            <li>상기 스펙은 표준 제조 범위이며, 특수 사양은 품질경영팀에 별도 문의 바랍니다.</li>
+                            <li>폭 범위는 두께에 따라 달라질 수 있으며, 상세 그래프는 원본 자료를 참조하세요.</li>
+                            <li><strong>빨간색 영역</strong>: 생산 가능 영역 / <strong>회색 영역</strong>: 생산 불가</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
 
             <!-- Management View -->
@@ -1357,8 +2663,8 @@
                             보호받고 있습니다. 캡처 및 무단 배포 시 법적 책임을 물을 수 있습니다.</p>
                     </div>
                 </div>
-            </div>
 
+            </div>
     </div>
     </main>
     </div>
@@ -1377,6 +2683,12 @@
     </script>
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <!-- Image Modal for Process Diagram -->
+    <div id="image-modal" class="image-modal" onclick="closeImageModal()">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modal-image">
+        <div id="modal-caption" class="modal-caption"></div>
+    </div>
 </body>
 
 </html>

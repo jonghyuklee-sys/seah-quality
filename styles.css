@@ -96,6 +96,30 @@ body.admin-mode button.admin-only {
     min-height: 100vh;
 }
 
+/* Main Content Area */
+.main-area {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Page Section Styling */
+.page-section {
+    padding: 24px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* display: none인 섹션은 완전히 숨기기 */
+.page-section[style*="display: none"],
+.page-section[style*="display:none"] {
+    display: none !important;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+
 /* Sidebar Styling */
 .sidebar {
     width: var(--sidebar-width);
@@ -2538,4 +2562,859 @@ body.admin-mode button.admin-only {
 .pagination-container .page-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* ========================================
+   라인별 생산 가능 SPEC 페이지 스타일
+   ======================================== */
+
+/* 라인 스펙 탭 패널 */
+.line-spec-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.line-spec-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 라인 스펙 헤더 */
+.line-spec-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.line-spec-header h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 0 0 8px 0;
+}
+
+.line-spec-header h3 small {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 8px;
+}
+
+.line-spec-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* 라인 스펙 카드 그리드 */
+.line-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* 라인 스펙 카드 */
+.line-spec-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.line-spec-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-light);
+}
+
+/* 스펙 카드 헤더 */
+.spec-card-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.spec-card-header h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.spec-icon {
+    font-size: 24px;
+}
+
+/* 스펙 뱃지 */
+.spec-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: #ffffff;
+    min-width: 50px;
+}
+
+.spec-badge.badge-green {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.spec-badge.badge-purple {
+    background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+}
+
+.spec-badge.badge-orange {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+}
+
+.spec-badge.badge-gray {
+    background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+}
+
+/* 스펙 카드 바디 */
+.spec-card-body {
+    padding: 20px;
+}
+
+/* 스펙 범위 아이템 */
+.spec-range-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.spec-range-item:last-of-type {
+    border-bottom: none;
+}
+
+.spec-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.spec-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: var(--font-mono);
+}
+
+/* 스펙 노트 */
+.spec-note {
+    margin-top: 12px;
+    padding: 12px;
+    background: #fef3c7;
+    border-radius: 8px;
+    border-left: 4px solid #f59e0b;
+}
+
+.spec-note small {
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.5;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .line-spec-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .line-spec-header h3 {
+        font-size: 18px;
+    }
+
+    .line-spec-header h3 small {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
+    }
+
+    .spec-card-header {
+        padding: 14px 16px;
+    }
+
+    .spec-card-body {
+        padding: 16px;
+    }
+
+    .spec-range-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .spec-value {
+        font-size: 14px;
+    }
+}
+
+/* 강종 선택 버튼 스타일 */
+.spec-select-btn {
+    padding: 10px 20px;
+    border: 2px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.spec-select-btn:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.spec-select-btn.active {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: #ffffff;
+    border-color: #1e3a8a;
+}
+
+/* 그래프 그리드 스타일 */
+.spec-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .spec-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.spec-chart-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.spec-chart-box h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e3a8a;
+    text-align: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.chart-note {
+    margin: 12px 0 0 0;
+    font-size: 11px;
+    color: #64748b;
+    background: #fef3c7;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #f59e0b;
+}
+
+/* --- Process Flow & Diagram Styles --- */
+.process-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.process-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+}
+
+.process-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 스펙 정보 그리드 */
+.line-specs-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.spec-item-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.spec-item-value {
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* 공정 흐름도 (가로 스크롤) */
+.flow-diagram-wrapper {
+    overflow-x: auto;
+    padding-bottom: 12px;
+    /* 스크롤바 공간 */
+}
+
+.flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: max-content;
+    padding: 10px 4px;
+}
+
+.flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    min-width: 80px;
+}
+
+.step-box {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    z-index: 1;
+    border: 2px solid #fff;
+}
+
+/* 라인별 색상 테마 */
+.theme-cpl .step-box {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.theme-crm .step-box {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.theme-cgl .step-box {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.theme-1ccl .step-box {
+    background: linear-gradient(135deg, #a855f7, #7e22ce);
+}
+
+.theme-2ccl .step-box {
+    background: linear-gradient(135deg, #6366f1, #4338ca);
+}
+
+.theme-3ccl .step-box {
+    background: linear-gradient(135deg, #14b8a6, #0f766e);
+}
+
+.step-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 90px;
+}
+
+.flow-arrow {
+    font-size: 14px;
+    color: #cbd5e1;
+    margin-top: -24px;
+    /* 박스 높이에 맞춤 */
+}
+
+/* --- Process Image & Zoom Styles --- */
+.process-image-container {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    cursor: zoom-in;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.process-image-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.zoom-hint {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.process-image-container:hover .zoom-hint {
+    opacity: 1;
+}
+
+.process-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    filter: contrast(1.1) brightness(1.02);
+    /* 선명도 및 밝기 미세 조정 */
+}
+
+/* --- Image Modal (Lightbox) --- */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 95%;
+    /* 더 크게 볼 수 있도록 확대 */
+    max-height: 90vh;
+    border-radius: 4px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+    animation-name: zoom;
+    animation-duration: 0.3s;
+    background: #fff;
+    image-rendering: -webkit-optimize-contrast;
+    filter: contrast(1.1);
+}
+
+@keyframes zoom {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+.modal-caption {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    text-align: center;
+    color: #e2e8f0;
+    padding: 15px 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* --- Modern Process Hybrid Layout --- */
+.modern-process-grid {
+    display: grid;
+    grid-template-columns: 2fr 0.8fr;
+    gap: 30px;
+    align-items: start;
+    margin-top: 20px;
+}
+
+@media (max-width: 1100px) {
+    .modern-process-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.process-visual-side {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Pure CSS Process Flow Map (Improved) --- */
+.process-map-container {
+    padding: 30px;
+    background: #fff;
+    overflow-x: auto;
+}
+
+.process-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 50px;
+    position: relative;
+    padding: 15px 10px;
+    background: #f8fafc;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+/* 연결선 (Process Path) - 실선으로 변경 및 화살표 추가를 위한 베이스 */
+.process-row::before {
+    content: '';
+    position: absolute;
+    top: 42px;
+    /* 아이콘 중앙 높이 (줄어든 아이콘에 맞춤) */
+    left: 60px;
+    right: 60px;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+
+/* 공정 사이 연결선 (화살표 제거) */
+.process-row::before {
+    content: '';
+    position: absolute;
+    top: 42px;
+    left: 60px;
+    right: 60px;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+
+.process-station {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90px;
+}
+
+/* 순번 표시 (Process Step) - 번호 제거 요청에 따라 숨김 처리 */
+.station-step {
+    display: none;
+}
+
+.station-icon {
+    width: 50px;
+    height: 50px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--primary);
+}
+
+.process-station:hover .station-icon {
+    transform: translateY(-8px);
+    border-color: var(--primary-light);
+    background: var(--primary-light);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+}
+
+.station-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: keep-all;
+}
+
+.station-sub {
+    font-size: 10px;
+    color: #475569;
+    font-weight: 700;
+    background: #f8fafc;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+/* 개별 공정 사이 화살표 제거 */
+.process-station:not(:last-child)::after {
+    display: none;
+}
+
+/* 큰 U-Turn 연결선 개선 (R1 끝 -> R2 시작) */
+.row-connector {
+    position: relative;
+    height: 40px;
+    width: 85%;
+    margin: -45px auto 15px auto;
+    border-right: 2px solid #cbd5e1;
+    border-bottom: 2px solid #cbd5e1;
+    border-left: 2px solid #cbd5e1;
+    border-radius: 0 0 40px 40px;
+    z-index: 1;
+}
+
+.row-connector::after {
+    display: none;
+}
+
+/* --- Process Spec Side Card Refined --- */
+.process-spec-side {
+    background: #fff;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    padding: 28px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+}
+
+.spec-side-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.spec-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 12px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.spec-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.spec-item:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(30, 58, 138, 0.1);
+    background: linear-gradient(to bottom, #ffffff, #f0f7ff);
+}
+
+.spec-label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 12px;
+}
+
+.spec-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--primary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.spec-title-ko {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+}
+
+.spec-value-group {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 4px;
+    margin-top: 4px;
+    white-space: nowrap;
+}
+
+.spec-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+    font-family: var(--font-primary);
+}
+
+.spec-unit {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+/* --- Image Modal (Lightbox) Styles --- */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(8px);
+}
+
+.image-modal .modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 85vh;
+    object-fit: contain;
+    animation: zoomIn 0.3s ease;
+    border-radius: 8px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.image-modal .close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10001;
+}
+
+.image-modal .close-modal:hover {
+    color: #ff4444;
+    transform: scale(1.1);
+}
+
+.image-modal .modal-caption {
+    text-align: center;
+    color: #ccc;
+    padding: 16px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    max-width: 700px;
+    margin: 0 auto;
 }
