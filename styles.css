@@ -3941,92 +3941,129 @@ body.viewer-open::after {
     }
 }
 
-/* Resin Quality Mobile Optimization - Compressed Table Layout */
+/* Resin Quality Mobile Optimization - Strictly Compact Table */
+/* Resin Quality Mobile Optimization - True Card View (Vertical Scroll Only) */
 @media (max-width: 768px) {
     #resin-quality-view .table-container {
-        padding: 0;
-        margin: 0;
-        overflow-x: hidden;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        overflow: visible !important;
     }
 
-    /* Force Table Display instead of Card for better density on mobile */
-    #resin-quality-view table {
-        table-layout: fixed;
-        width: 100%;
-        display: table !important;
+    /* Reset Table to Block Layout */
+    #resin-quality-view table,
+    #resin-quality-view tbody {
+        display: block !important;
+        width: 100% !important;
+        border: none !important;
     }
 
     #resin-quality-view thead {
-        display: table-header-group !important;
+        display: none !important;
     }
 
-    #resin-quality-view tbody tr {
-        display: table-row !important;
-        flex-direction: row !important;
-        box-shadow: none !important;
-        border: none !important;
-        background: transparent !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    /* Row as Card */
+    #resin-quality-view tr {
+        display: flex !important;
+        flex-direction: column !important;
+        background: white !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+        position: relative !important;
+        padding-top: 40px !important;
+        /* Space for Header */
+        overflow: hidden !important;
     }
 
-    #resin-quality-view th {
-        font-size: 11px !important;
-        padding: 8px 4px !important;
-        white-space: nowrap;
-        background: #f1f5f9;
-        color: #475569;
-        display: table-cell !important;
-    }
-
-    #resin-quality-view td {
-        font-size: 11px !important;
-        padding: 8px 4px !important;
-        word-wrap: break-word;
-        word-break: break-all;
-        white-space: normal !important;
-        /* Wrap text */
+    /* Card Header (Generated from data-item) */
+    #resin-quality-view tr::before {
+        content: attr(data-item);
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        background: #f8fafc;
         border-bottom: 1px solid #e2e8f0;
-        display: table-cell !important;
+        font-weight: 700;
+        font-size: 14px;
+        color: #1e3a8a;
+        z-index: 1;
     }
 
-    /* Column Width Adjustments */
-    #resin-quality-view th:nth-child(1),
-    #resin-quality-view td:nth-child(1) {
-        width: 25% !important;
-        /* 검사항목 */
-        background: #f8fafc !important;
+    /* Hide the original Item TD (it uses rowspan and breaks layout) */
+    #resin-quality-view td.resin-table-item {
+        display: none !important;
     }
 
-    #resin-quality-view th:nth-child(2),
-    #resin-quality-view td:nth-child(2) {
-        width: 35% !important;
-        /* 조건 */
-    }
-
-    #resin-quality-view th:nth-child(3),
-    #resin-quality-view td:nth-child(3) {
-        width: 40% !important;
-        /* 기준 */
-    }
-
-    /* Reset Card View Styles if present */
-    .resin-table-item,
-    .resin-table-condition,
-    .resin-table-criteria {
-        width: auto !important;
+    /* Data Cells (Condition & Criteria) */
+    #resin-quality-view td {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        padding: 12px 16px !important;
         border: none !important;
-        text-align: center !important;
-        display: table-cell !important;
-        min-height: auto !important;
-        padding: 8px 4px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        font-size: 13px !important;
+        color: #334155 !important;
+        text-align: right !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    .resin-table-item::before,
-    .resin-table-condition::before,
-    .resin-table-criteria::before {
-        content: none !important;
-        /* Hide labels */
+    #resin-quality-view td:last-child {
+        border-bottom: none !important;
+    }
+
+    /* Inject Labels via pseudo-elements */
+    #resin-quality-view td.resin-table-condition::before {
+        content: "조건";
+        display: block;
+        font-weight: 600;
+        color: #64748b;
+        text-align: left;
+        margin-right: auto;
+        /* Push content to right */
+        flex-shrink: 0;
+    }
+
+    #resin-quality-view td.resin-table-criteria::before {
+        content: "기준";
+        display: block;
+        font-weight: 600;
+        color: #64748b;
+        text-align: left;
+        margin-right: auto;
+        flex-shrink: 0;
+    }
+
+    /* Specific content styling */
+    #resin-quality-view td.resin-table-condition {
+        font-weight: 500;
+        color: #0f172a !important;
+    }
+
+    #resin-quality-view td.resin-table-criteria {
+        color: #1e40af !important;
+        /* Blue for criteria */
+        font-weight: 600;
+    }
+
+    /* Ensure text wrapping inside cards */
+    #resin-quality-view td span {
+        text-align: right;
+        display: inline-block;
+        max-width: 70%;
+        /* Limit width to ensure label visibility */
     }
 }
 
@@ -4034,25 +4071,30 @@ body.viewer-open::after {
 @media (max-width: 768px) {
     #certification-view .table-container {
         overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     #certification-view table {
         min-width: 600px;
-        /* Ensure table keeps structure but allows scroll */
+        /* Keep minimum width to preserve layout integrity */
     }
 
     #certification-view th,
     #certification-view td {
         font-size: 11px !important;
-        /* Reduced font size */
-        padding: 8px 6px !important;
-        white-space: nowrap;
+        padding: 8px 4px !important;
     }
 
-    /* Allow wrapping for Name/Item columns */
-    #certification-view td:nth-child(2),
+    /* Wrap long text in certification table where safe */
+    #certification-view td:nth-child(2) {
+        /* Name */
+        white-space: normal !important;
+        min-width: 80px;
+    }
+
     #certification-view td:nth-child(3) {
-        white-space: normal;
+        /* Item */
+        white-space: normal !important;
         min-width: 100px;
     }
 }
