@@ -142,12 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (resultsCard) {
-            if (targetId === 'search-view') {
-                if (resultsCardWasVisible) resultsCard.style.display = 'block';
-            } else {
-                resultsCardWasVisible = (resultsCard.style.display === 'block');
-                resultsCard.style.display = 'none';
-            }
+            resultsCard.style.display = 'none';
         }
 
         // [수정] 탭 기반 뷰 진입 시 활성 탭 강제 리트리거 (CPL 미표시 및 차트 깨짐 방지)
@@ -160,9 +155,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (targetId === 'line-spec-view') {
             setTimeout(() => {
-                const activeTab = document.querySelector('#line-spec-tabs .tab-btn.active');
-                if (activeTab) activeTab.click();
-            }, 200);
+                const tabs = document.querySelector('#line-spec-tabs');
+                if (tabs) {
+                    const activeTab = tabs.querySelector('.tab-btn.active') || tabs.querySelector('.tab-btn');
+                    if (activeTab) activeTab.click();
+                }
+            }, 300);
         }
         if (targetId === 'certification-view') {
             try {
@@ -170,6 +168,12 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (err) {
                 console.error("renderCertification failed:", err);
             }
+        }
+        if (targetId === 'warranty-guide-view') {
+            setTimeout(() => {
+                const activeTab = document.querySelector('#warranty-tab-header .warranty-tab-btn.active');
+                if (activeTab) activeTab.click();
+            }, 100);
         }
 
         sidebar.classList.remove('open');
@@ -991,7 +995,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const vocPaginationEl = document.getElementById('voc-pagination');
     const vocMonthFilterEl = document.getElementById('voc-month-filter');
     let lineChart, catChart, monthlyChart, marketChart, teamChart, costChart, defectTypeChart;
-    let activeAnnotations = []; // [{x, y, color}] 
+    let globalGridData = {};
+    let isGlobalGridEditMode = false;
+    let isPaintingGrid = false;
+    let currentPaintStatus = 0;
+    let activeAnnotations = []; // [{x, y, color}]
 
 
     if (vocMonthFilterEl) {
@@ -2438,46 +2446,43 @@ document.addEventListener('DOMContentLoaded', function () {
     // 강종별 데이터 (원본 이미지 기반)
     const cglGiData = {
         cq: {
-            // Image analysis: [두께, 생산폭, 협의폭]
+            // Updated: 0.25 -> 1219, 0.27 -> 1270 based on user request
             data: [
-                [0.25, 1219, 1270], [0.27, 1219, 1270], [0.30, 1320, 1350], [0.35, 1320, 1350],
-                [0.40, 1320, 1350], [0.50, 1320, 1350], [0.60, 1320, 1350], [0.70, 1320, 1350],
-                [0.80, 1320, 1350], [0.90, 1320, 1350], [1.00, 1320, 1350], [1.10, 1320, 1350],
-                [1.20, 1290, 1320], [1.40, 1270, 1290], [1.60, 1270, 1290], [1.80, 1250, null],
-                [2.00, 1250, null]
+                [0.25, 1219, 1300], [0.27, 1270, 1330], [0.30, 1320, 1340], [0.35, 1320, 1340],
+                [0.40, 1320, 1340], [0.50, 1320, 1340], [0.60, 1320, 1340], [0.70, 1320, 1340],
+                [0.80, 1320, 1340], [0.90, 1320, 1340], [1.00, 1320, 1340], [1.20, 1300, 1320],
+                [1.40, 1270, 1300], [1.60, 1270, 1300], [1.80, 1250, null], [2.00, 1250, null], [2.10, 1250, null]
             ]
         },
         dq: {
             data: [
-                [0.20, 1170], [0.25, 1250], [0.30, 1270], [0.35, 1285],
-                [0.40, 1550], [0.50, 1550], [0.60, 1550], [0.70, 1550],
-                [0.80, 1550], [0.90, 1550], [1.00, 1550], [1.10, 1550],
-                [1.20, 1500], [1.40, 1400], [1.60, 1300], [1.80, 1200],
-                [2.00, 1150], [2.20, 1100]
+                [0.25, 1250, null], [0.30, 1290, 1310], [0.35, 1320, null], [0.40, 1320, null],
+                [0.50, 1320, null], [0.60, 1320, null], [0.70, 1320, null], [0.80, 1320, null],
+                [0.90, 1320, 1340], [1.00, 1310, 1330], [1.20, 1290, 1310], [1.40, 1290, 1310],
+                [1.60, 1290, 1310], [1.80, 1270, 1290], [2.00, 1270, 1290]
             ]
         },
         ddq: {
             data: [
-                [0.20, 1170], [0.25, 1200], [0.30, 1250], [0.35, 1270],
-                [0.40, 1285], [0.50, 1550], [0.60, 1550], [0.70, 1550],
-                [0.80, 1550], [0.90, 1500], [1.00, 1400], [1.10, 1300],
-                [1.20, 1200], [1.40, 1100], [1.60, 1100]
+                [0.35, 1290, 1310], [0.40, 1320, 1340], [0.50, 1320, 1340], [0.60, 1320, 1340],
+                [0.70, 1310, 1330], [0.80, 1290, null], [0.90, 1290, null], [1.00, 1270, null],
+                [1.20, 1270, null], [1.50, 1270, null]
             ]
         },
         struct: {
             data: [
-                [0.20, 1200], [0.25, 1270], [0.30, 1285], [0.35, 1300],
-                [0.40, 1550], [0.50, 1550], [0.60, 1550], [0.70, 1550],
-                [0.80, 1550], [0.90, 1550], [1.00, 1550], [1.10, 1500],
-                [1.20, 1400], [1.40, 1350], [1.60, 1300]
+                [0.35, 1300, 1320], [0.40, 1300, 1320], [0.50, 1300, 1320], [0.60, 1300, 1320],
+                [0.70, 1300, 1320], [0.80, 1300, 1320], [0.90, 1300, 1320], [1.00, 1300, 1320],
+                [1.20, 1270, 1290], [1.40, 1270, 1290], [1.60, 1250, 1270], [1.80, 1250, 1270],
+                [2.00, 1250, 1270], [2.10, 1250, 1270]
             ]
         },
         gre: {
             data: [
-                [0.30, 1270], [0.35, 1270], [0.40, 1270], [0.45, 1270],
-                [0.50, 1270], [0.55, 1270], [0.60, 1200], [0.70, 1170],
-                [0.80, 1140], [0.90, 1100], [1.00, 1050], [1.10, 1000],
-                [1.15, 950], [1.20, 914], [1.25, 850], [1.30, 800], [1.35, 800]
+                [0.30, 1270, null], [0.35, 1270, null], [0.40, 1310, null], [0.50, 1310, null],
+                [0.60, 1290, null], [0.70, 1270, null], [0.80, 1270, null], [1.00, 1270, null],
+                [1.05, 1250, null], [1.10, 1240, null], [1.15, 1240, null], [1.20, 1200, null],
+                [1.25, 1170, null], [1.30, 1140, null]
             ]
         }
     };
@@ -2498,20 +2503,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const ctx = canvas.getContext('2d');
         const rawData = chartData.data;
-        const startVal = rawData[0][0];
-        const endVal = rawData[rawData.length - 1][0];
+        let labels, prodData, negData;
 
-        // Create padded dataset
-        const paddedData = [
-            [(startVal - 0.1).toFixed(2), 0, null],
-            ...rawData,
-            [(endVal + 0.1).toFixed(2), 0, null]
-        ];
+        const giLabels = {
+            cq: ['0.20', '0.25', '0.27', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '2.00', '2.20'],
+            dq: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '2.00', '2.20'],
+            ddq: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.50', '1.60', '1.80', '2.00', '2.20'],
+            struct: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '2.00', '2.20'],
+            gre: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '1.00', '1.05', '1.10', '1.15', '1.20', '1.25', '1.30', '1.35']
+        };
 
-        const labels = paddedData.map(d => parseFloat(d[0]).toString());
-        const prodData = paddedData.map(d => d[1]);
-        const negData = paddedData.map(d => (d[2] !== undefined && d[2] !== null) ? d[2] : null);
-        const hasNeg = negData.some(v => v !== null && v > 0);
+        if (giLabels[type]) {
+            labels = giLabels[type];
+            prodData = labels.map(l => {
+                const found = rawData.find(d => parseFloat(d[0]).toFixed(2) === parseFloat(l).toFixed(2));
+                return found ? [600, found[1]] : null;
+            });
+            negData = labels.map(l => {
+                const found = rawData.find(d => parseFloat(d[0]).toFixed(2) === parseFloat(l).toFixed(2));
+                return (found && found[2]) ? [found[1], found[2]] : null;
+            });
+        } else {
+            const startVal = rawData[0][0];
+            const endVal = rawData[rawData.length - 1][0];
+            const paddedLabels = [(startVal - 0.1).toFixed(2), ...rawData.map(d => d[0].toFixed(2)), (endVal + 0.1).toFixed(2)];
+            labels = paddedLabels.map(l => parseFloat(l).toString());
+            prodData = labels.map(l => {
+                const found = rawData.find(d => d[0].toFixed(2) === parseFloat(l).toFixed(2));
+                return found ? [600, found[1]] : null;
+            });
+            negData = labels.map(l => {
+                const found = rawData.find(d => d[0].toFixed(2) === parseFloat(l).toFixed(2));
+                return (found && found[2]) ? [found[1], found[2]] : null;
+            });
+        }
+        const hasNeg = negData.some(v => v !== null);
 
         const datasets = [];
 
@@ -2524,6 +2550,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 borderWidth: 1,
                 barPercentage: 1.0,
                 categoryPercentage: 1.0,
+                grouped: false,
                 order: 1
             });
         }
@@ -2531,12 +2558,13 @@ document.addEventListener('DOMContentLoaded', function () {
         datasets.push({
             label: '생산 가능 폭',
             data: prodData,
-            backgroundColor: 'rgba(220, 38, 38, 0.8)',
-            borderColor: 'rgba(180, 30, 30, 1)',
+            backgroundColor: '#ea580c', // Orange as requested
+            borderColor: '#9a3412',
             borderWidth: 1,
             borderSkipped: 'bottom',
             barPercentage: 1.0,
             categoryPercentage: 1.0,
+            grouped: false,
             order: 2
         });
 
@@ -2558,58 +2586,56 @@ document.addEventListener('DOMContentLoaded', function () {
                         align: 'end',
                         offset: -2,
                         clip: false,
-                        color: '#991b1b',
+                        color: (ctx) => ctx.dataset.label === '협의 영역' ? '#475569' : '#9a3412',
                         font: { weight: 'bold', size: 10 },
                         display: function (context) {
                             const val = context.dataset.data[context.dataIndex];
-                            if (!val || val === 0) return false;
-
+                            if (!val || val[1] === 0) return false;
                             const idx = context.dataIndex;
-                            if (idx > 0 && context.dataset.data[idx - 1] === val) return false;
-
-                            // Always show negotiation labels if distinct
-                            if (context.dataset.label === '협의 영역') return true;
-
+                            const prevVal = context.dataset.data[idx - 1];
+                            if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
                             return true;
                         },
                         formatter: function (value, context) {
-                            if (context.dataset.label === '협의 영역') return '협의\\n' + value;
-                            return value;
+                            return value[1];
+                            return value[1];
                         }
                     },
                     tooltip: {
                         callbacks: {
                             label: ctx => {
-                                const l = ctx.dataset.label || '';
-                                return `${l}: ${ctx.raw} mm`;
+                                const val = ctx.raw;
+                                if (!val) return '';
+                                return `${ctx.dataset.label}: ${val[0]} ~ ${val[1]} mm`;
                             },
                             title: ctx => `두께: ${ctx[0].label} mm`
                         }
                     }
                 },
-                layout: { padding: { top: 25 } },
+                layout: { padding: { top: 25, right: 10, left: 10 } },
                 scales: {
                     x: {
-                        title: {
-                            display: true,
-                            text: '두께 (mm)',
-                            font: { weight: 'bold', size: 11 }
-                        },
+                        title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
                         grid: { display: false },
-                        ticks: { font: { size: 9 } }
+                        ticks: { font: { size: 9 }, autoSkip: false }
                     },
                     y: {
-                        min: 500,
-                        max: 1800,
-                        title: {
-                            display: true,
-                            text: '폭 (mm)',
-                            font: { weight: 'bold', size: 11 }
-                        },
+                        min: 600,
+                        max: 1400,
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
                         grid: { color: '#e5e7eb' },
                         ticks: {
-                            stepSize: 100,
-                            font: { size: 9 }
+                            font: { size: 9 },
+                            callback: function (value) {
+                                // Important values from image
+                                const keyValues = [600, 700, 800, 830, 880, 914, 1040, 1140, 1170, 1219, 1250, 1270, 1290, 1300, 1320, 1330, 1340, 1350];
+                                if (keyValues.includes(value)) return value;
+                                return '';
+                            }
+                        },
+                        afterBuildTicks: (axis) => {
+                            const keyValues = [600, 700, 800, 830, 880, 914, 1040, 1140, 1170, 1219, 1250, 1270, 1290, 1300, 1320, 1330, 1340, 1350];
+                            axis.ticks = keyValues.map(v => ({ value: v }));
                         }
                     }
                 }
@@ -2627,38 +2653,44 @@ document.addEventListener('DOMContentLoaded', function () {
     const cglGlData = {
         cq: {
             data: [
-                [0.25, 1100], [0.30, 1200], [0.40, 1285],
-                [0.50, 1350], [0.60, 1350], [0.80, 1350],
-                [1.00, 1350], [1.20, 1285], [1.40, 1250], [1.60, 1219]
-            ]
+                [0.25, null, [1140, 1219]], [0.27, 1140, [1140, 1270]], [0.30, 1250, [1250, 1270]],
+                [0.35, 1300, null], [0.40, 1320, null], [0.50, 1320, null], [0.60, 1300, null],
+                [0.70, 1290, [1290, 1310]], [0.80, 1290, null], [0.90, 1270, [1270, 1290]],
+                [1.00, 1270, [1270, 1290]], [1.20, 1250, null]
+            ],
+            postAttach: { t: [0.35, 1.20] }
         },
         dq: {
             data: [
-                [0.25, 1100], [0.30, 1150], [0.40, 1250],
-                [0.50, 1300], [0.60, 1300], [0.80, 1300],
-                [1.00, 1250], [1.20, 1200], [1.40, 1150], [1.60, 1100]
-            ]
+                [0.35, 1280, null], [0.40, 1300, 1320], [0.50, 1300, 1320], [0.60, 1300, 1320],
+                [0.70, 1300, 1320], [0.80, 1300, 1320], [0.90, 1260, 1280], [1.00, 1250, 1270],
+                [1.20, 1250, 1270]
+            ],
+            postAttach: { t: [0.40, 0.80], w: 1260 }
         },
         ddq: {
             data: [
-                [0.30, 1100], [0.35, 1150], [0.40, 1200],
-                [0.50, 1250], [0.60, 1250], [0.80, 1250],
-                [1.00, 1200], [1.20, 1150], [1.40, 1100], [1.60, 1000]
-            ]
+                [0.35, 1270, 1290], [0.40, 1270, 1290], [0.50, 1270, 1290], [0.55, 1270, 1290],
+                [0.60, 1270, 1290], [0.80, 1270, null], [0.90, 1270, null], [1.00, 1250, 1270],
+                [1.20, 1219, 1250]
+            ],
+            postAttach: { t: [0.40, 0.55], w: 1260 }
         },
         struct: {
             data: [
-                [0.20, 914], [0.25, 1000], [0.30, 1100], [0.40, 1219],
-                [0.50, 1250], [0.60, 1250], [0.80, 1250], [1.00, 1250],
-                [1.20, 1219], [1.40, 1150], [1.60, 1100]
-            ]
+                [0.35, 1280, null], [0.40, 1300, null], [0.50, 1300, null], [0.60, 1300, null],
+                [0.70, 1300, null], [0.80, 1280, 1300], [0.90, 1280, 1300], [1.00, 1280, 1300],
+                [1.20, 1250, null]
+            ],
+            postAttach: { t: [0.35, 0.90], w: 1280 }
         },
         gre: {
             data: [
-                [0.30, 1000], [0.40, 1100], [0.50, 1200],
-                [0.60, 1219], [0.80, 1219], [1.00, 1200],
-                [1.20, 1100], [1.30, 1000]
-            ]
+                [0.35, 1260, 1280], [0.40, 1260, 1280], [0.50, 1260, 1280], [0.55, 1260, 1280],
+                [0.60, 1260, 1280], [0.80, 1260, 1280], [1.00, 1260, 1280], [1.05, 1230, null],
+                [1.10, 1219, null], [1.15, 1219, null], [1.20, 1170, null]
+            ],
+            postAttach: { t: [0.35, 0.55], w: 1240 }
         }
     };
 
@@ -2677,19 +2709,64 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!chartData) return;
 
         const ctx = canvas.getContext('2d');
-        // Pad data with 0 values
         const rawData = chartData.data;
-        const startVal = rawData[0][0];
-        const endVal = rawData[rawData.length - 1][0];
+        let labels, prodData, negData;
 
-        const paddedData = [
-            [(startVal - 0.1).toFixed(2), 0],
-            ...rawData,
-            [(endVal + 0.1).toFixed(2), 0]
-        ];
+        const glLabels = {
+            cq: ['0.25', '0.27', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60'],
+            dq: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60'],
+            ddq: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.55', '0.60', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60'],
+            struct: ['0.20', '0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60'],
+            gre: ['0.25', '0.30', '0.35', '0.40', '0.50', '0.55', '0.60', '0.80', '1.00', '1.05', '1.10', '1.15', '1.20', '1.50']
+        };
 
-        const labels = paddedData.map(d => parseFloat(d[0]).toString());
-        const widthData = paddedData.map(d => d[1]);
+        if (glLabels[type]) {
+            labels = glLabels[type];
+            prodData = labels.map(l => {
+                const found = rawData.find(d => parseFloat(d[0]).toFixed(2) === parseFloat(l).toFixed(2));
+                if (!found) return null;
+                // If found[1] is an array, it's [start, end]. Else [600, found[1]]
+                if (Array.isArray(found[1])) return found[1];
+                return (found[1] !== null && found[1] > 600) ? [600, found[1]] : null;
+            });
+            negData = labels.map(l => {
+                const found = rawData.find(d => parseFloat(d[0]).toFixed(2) === parseFloat(l).toFixed(2));
+                if (!found) return null;
+                // If found[2] is an array, it's [start, end]. Else [found[1], found[2]]
+                if (Array.isArray(found[2])) return found[2];
+                return (found[2] !== null) ? [found[1], found[2]] : null;
+            });
+        }
+
+        const hasNeg = negData.some(v => v !== null);
+        const datasets = [];
+
+        if (hasNeg) {
+            datasets.push({
+                label: '협의 영역',
+                data: negData,
+                backgroundColor: getHatchPattern(ctx),
+                borderColor: '#94a3b8',
+                borderWidth: 1,
+                barPercentage: 1.0,
+                categoryPercentage: 1.0,
+                grouped: false,
+                order: 1
+            });
+        }
+
+        datasets.push({
+            label: '생산 가능 폭',
+            data: prodData,
+            backgroundColor: '#ea580c',
+            borderColor: '#9a3412',
+            borderWidth: 1,
+            borderSkipped: 'bottom',
+            barPercentage: 1.0,
+            categoryPercentage: 1.0,
+            grouped: false,
+            order: 2
+        });
 
         if (cglGlCharts[type]) {
             cglGlCharts[type].destroy();
@@ -2697,18 +2774,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         cglGlCharts[type] = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '생산 가능 폭',
-                    data: widthData,
-                    backgroundColor: 'rgba(234, 88, 12, 0.8)', // 주황색
-                    borderColor: 'rgba(194, 65, 12, 1)',
-                    borderWidth: 1,
-                    barPercentage: 1.0,
-                    categoryPercentage: 1.0
-                }]
-            },
+            data: { labels, datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -2720,671 +2786,310 @@ document.addEventListener('DOMContentLoaded', function () {
                         align: 'end',
                         offset: -2,
                         clip: false,
-                        color: '#c2410c',
+                        color: (ctx) => ctx.dataset.label === '협의 영역' ? '#475569' : '#9a3412',
                         font: { weight: 'bold', size: 10 },
                         display: function (context) {
                             const val = context.dataset.data[context.dataIndex];
-                            if (val === 0) return false;
+                            if (!val || val[1] === 0) return false;
                             const idx = context.dataIndex;
-                            if (idx > 0 && context.dataset.data[idx - 1] === val) return false;
+                            const prevVal = context.dataset.data[idx - 1];
+                            if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
                             return true;
+                        },
+                        formatter: function (value, context) {
+                            return value[1];
+                            return value[1];
                         }
                     },
                     tooltip: {
                         callbacks: {
-                            label: ctx => `폭: ${ctx.raw} mm`,
+                            label: ctx => {
+                                const val = ctx.raw;
+                                if (!val) return '';
+                                return `${ctx.dataset.label}: ${val[0]} ~ ${val[1]} mm`;
+                            },
                             title: ctx => `두께: ${ctx[0].label} mm`
                         }
                     }
                 },
-                layout: { padding: { top: 25 } },
+                layout: { padding: { top: 25, right: 10, left: 10 } },
                 scales: {
                     x: {
                         title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
                         grid: { display: false },
-                        ticks: { font: { size: 9 } }
-                    },
-                    y: {
-                        min: 500,
-                        max: 1800,
-                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
-                        grid: { color: '#e5e7eb' },
-                        ticks: { stepSize: 100, font: { size: 9 } }
-                    }
-                }
-            }
-        });
-    }
-
-    // --- [CPL/CRM 그래프 구현] ---
-    let cplChart = null;
-    let crmChart = null;
-
-    // Helper for hatch pattern
-    function getHatchPattern(ctx, color = '#cbd5e1') {
-        const shape = document.createElement('canvas');
-        shape.width = 10;
-        shape.height = 10;
-        const c = shape.getContext('2d');
-        c.strokeStyle = color;
-        c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(0, 10);
-        c.lineTo(10, 0);
-        c.stroke();
-        return ctx.createPattern(shape, 'repeat');
-    }
-
-    function initCplChart() {
-        const canvas = document.getElementById('chart-cpl');
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (cplChart) cplChart.destroy();
-
-        // CPL Data
-        // Range: 1.50 ~ 5.00 (Production 1.60 ~ 4.00)
-        // Production: 600 ~ 1320
-        // Negotiation: 1320 ~ 1350
-        const labels = ['1.50', '1.60', '1.80', '2.00', '2.20', '2.40', '2.60', '2.80', '3.00', '3.20', '3.40', '3.60', '3.80', '4.00', '4.50', '5.00'];
-
-        const prodData = labels.map(l => {
-            const val = parseFloat(l);
-            return (val >= 1.60 && val <= 4.00) ? [600, 1320] : null;
-        });
-
-        const negData = labels.map(l => {
-            const val = parseFloat(l);
-            return (val >= 1.60 && val <= 4.00) ? [1320, 1350] : null;
-        });
-
-        cplChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '생산 가능',
-                        data: prodData,
-                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                        borderColor: 'rgba(185, 28, 28, 1)',
-                        borderWidth: 1,
-                        barPercentage: 1.0,
-                        categoryPercentage: 1.0,
-                        grouped: false, // Ensure they overlap/stack visually without axis stacking logic
-                        order: 2
-                    },
-                    {
-                        label: '협의 영역',
-                        data: negData,
-                        backgroundColor: getHatchPattern(ctx),
-                        borderColor: '#94a3b8',
-                        borderWidth: 1,
-                        barPercentage: 1.0,
-                        categoryPercentage: 1.0,
-                        grouped: false,
-                        order: 1 // Ensure hatch renders on top if overlaps occur
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'x',
-                plugins: {
-                    legend: { display: false },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        offset: -5,
-                        clip: false,
-                        color: function (context) {
-                            return context.datasetIndex === 0 ? '#b91c1c' : '#475569';
-                        },
-                        font: { weight: 'bold', size: 11 },
-                        textAlign: 'center',
-                        formatter: function (value, context) {
-                            if (!value) return '';
-                            // value is [min, max]
-                            if (context.datasetIndex === 0) return value[1]; // 1320
-                            return '협의\n' + value[1]; // 1350
-                        },
-                        display: function (context) {
-                            const val = context.dataset.data[context.dataIndex];
-                            if (!val) return false;
-
-                            // Hide duplicates to avoid clutter
-                            const idx = context.dataIndex;
-                            const prevVal = context.dataset.data[idx - 1];
-                            if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
-
-                            // For negotiation bar, show only for first valid
-                            if (context.datasetIndex === 1) {
-                                return true;
-                            }
-                            return true;
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                const val = context.raw;
-                                if (!val) return '';
-                                return `${context.dataset.label}: ${val[0]} ~ ${val[1]} mm`;
-                            }
-                        }
-                    }
-                },
-                layout: { padding: { top: 40 } },
-                scales: {
-                    x: {
-                        title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
-                        grid: { display: false }
-                    },
-                    y: {
-                        min: 600, // Starts from 600
-                        max: 1400, // Max 1400
-                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } },
-                        grid: { color: '#e5e7eb' },
-                        ticks: { stepSize: 100, font: { size: 9 } }
-                    }
-                }
-            }
-        });
-    }
-
-    function initCrmChart() {
-        const canvas = document.getElementById('chart-crm');
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (crmChart) crmChart.destroy();
-
-        // CRM Data based on user image with padding for empty zones
-        // X-Axis: 0.15 (Empty), 0.20 (Empty), 0.23 (Start) ... 1.60 (End), 1.80 (Empty), 4.20 (Empty)
-        // Production Area: 600 ~ 1320 (Red)
-        // Negotiation Area: 1320 ~ 1350 (Hatched)
-        const labels = ['0.15', '0.20', '0.23', '0.30', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '4.20'];
-
-        const prodData = labels.map(l => {
-            const val = parseFloat(l);
-            // Production from 0.23 to 1.60 inclusive
-            return (val >= 0.23 && val <= 1.60) ? [600, 1320] : null;
-        });
-
-
-
-        crmChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '생산 가능',
-                        data: prodData,
-                        backgroundColor: 'rgba(239, 68, 68, 0.7)', // Red like CPL
-                        borderColor: 'rgba(185, 28, 28, 1)',
-                        borderWidth: 1,
-                        barPercentage: 1.0,
-                        categoryPercentage: 1.0,
-                        grouped: false,
-                        order: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'x',
-                plugins: {
-                    legend: { display: false },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        offset: -5,
-                        clip: false,
-                        color: function (context) {
-                            return context.datasetIndex === 0 ? '#b91c1c' : '#475569';
-                        },
-                        font: { weight: 'bold', size: 11 },
-                        textAlign: 'center',
-                        formatter: function (value, context) {
-                            if (!value) return '';
-                            if (context.datasetIndex === 0) return value[1];
-                            return '협의\n' + value[1];
-                        },
-                        display: function (context) {
-                            const val = context.dataset.data[context.dataIndex];
-                            if (!val) return false;
-
-                            const idx = context.dataIndex;
-                            const prevVal = context.dataset.data[idx - 1];
-                            if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
-
-                            if (context.datasetIndex === 1) return true;
-                            return true;
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                const val = context.raw;
-                                if (!val) return '';
-                                return `${context.dataset.label}: ${val[0]} ~ ${val[1]} mm`;
-                            }
-                        }
-                    }
-                },
-                layout: { padding: { top: 40 } },
-                scales: {
-                    x: {
-                        title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
-                        grid: { display: false }
+                        ticks: { font: { size: 9 }, autoSkip: false }
                     },
                     y: {
                         min: 600,
                         max: 1400,
-                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } },
+                        title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
                         grid: { color: '#e5e7eb' },
-                        ticks: { stepSize: 100, font: { size: 9 } }
+                        ticks: {
+                            font: { size: 9 },
+                            callback: function (value) {
+                                const keyValues = [600, 700, 800, 830, 880, 914, 1040, 1140, 1170, 1219, 1230, 1250, 1270, 1290, 1300, 1310, 1320, 1330, 1340, 1350];
+                                if (keyValues.includes(value)) return value;
+                                return '';
+                            }
+                        },
+                        afterBuildTicks: (axis) => {
+                            const keyValues = [600, 700, 800, 830, 880, 914, 1040, 1140, 1170, 1219, 1230, 1250, 1270, 1290, 1300, 1310, 1320, 1330, 1340, 1350];
+                            axis.ticks = keyValues.map(v => ({ value: v }));
+                        }
                     }
                 }
-            }
+            },
+            plugins: [{
+                id: 'postAttachBox',
+                afterDraw: (chart) => {
+                    const post = chartData.postAttach;
+                    if (!post) return;
+                    const { ctx, scales: { x, y } } = chart;
+
+                    ctx.save();
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+
+                    if (type === 'cq') {
+                        // Drawing stepped dashed line for CQ as per image
+                        const steps = [
+                            { t: '0.35', w: 1250 },
+                            { t: '0.40', w: 1270 },
+                            { t: '0.50', w: 1270 },
+                            { t: '0.60', w: 1290 },
+                            { t: '0.70', w: 1290 },
+                            { t: '0.80', w: 1290 },
+                            { t: '0.90', w: 1270 },
+                            { t: '1.00', w: 1270 },
+                            { t: '1.20', w: 1250 }
+                        ];
+
+                        const firstX = x.getPixelForValue(steps[0].t) - (x.width / (labels.length || 1) / 2);
+                        const lastX = x.getPixelForValue(steps[steps.length - 1].t) + (x.width / (labels.length || 1) / 2);
+                        const bottomY = y.getPixelForValue(600);
+
+                        ctx.moveTo(firstX, bottomY);
+                        steps.forEach((s, idx) => {
+                            const currXStart = x.getPixelForValue(s.t) - (x.width / (labels.length || 1) / 2);
+                            const currXEnd = x.getPixelForValue(s.t) + (x.width / (labels.length || 1) / 2);
+                            const currY = y.getPixelForValue(s.w);
+
+                            if (idx === 0) {
+                                ctx.lineTo(currXStart, currY);
+                            }
+                            ctx.lineTo(currXEnd, currY);
+
+                            if (idx < steps.length - 1) {
+                                const nextY = y.getPixelForValue(steps[idx + 1].w);
+                                ctx.lineTo(currXEnd, nextY);
+                            }
+                        });
+                        ctx.lineTo(lastX, bottomY);
+                        ctx.lineTo(firstX, bottomY);
+                    } else {
+                        // Default single box
+                        const xStart = x.getPixelForValue(post.t[0].toString()) - (x.width / (labels.length || 1) / 2);
+                        const xEnd = x.getPixelForValue(post.t[1].toString()) + (x.width / (labels.length || 1) / 2);
+                        const yTop = y.getPixelForValue(post.w);
+                        const yBottom = y.getPixelForValue(600);
+                        ctx.rect(xStart, yTop, xEnd - xStart, yBottom - yTop);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }]
         });
     }
 
+    // --- [통합 그리드 규격 데이터 시스템] ---
+    // 기본 템플릿 값
+    const defaultGridSpecs = {
+        cpl: { widths: [1350, 1340, 1320, 1300, 1250, 1219, 1140, 1040, 914, 880, 830, 800, 700, 600], thicknesses: ['1.60', '1.80', '2.00', '2.30', '2.50', '2.80', '3.00', '3.20', '3.50', '4.00', '4.20'] },
+        crm: { widths: [1350, 1340, 1320, 1300, 1250, 1219, 1140, 1040, 914, 880, 830, 800, 700, 600], thicknesses: ['0.23', '0.30', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60'] },
+        cgl: { widths: [1350, 1340, 1330, 1320, 1300, 1290, 1270, 1250, 1219, 1140, 1040, 914, 800, 700, 600], thicknesses: ['0.25', '0.27', '0.30', '0.40', '0.50', '0.60', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '2.00', '2.30'] },
+        ccl: { widths: [1350, 1340, 1320, 1300, 1250, 1219, 1140, 1040, 914, 880, 830, 800, 700, 600], thicknesses: ['0.30', '0.35', '0.40', '0.45', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.10', '1.20', '1.30', '1.40', '1.60'] },
+        '2ccl': { widths: [1710, 1650, 1600, 1550, 1500, 1450, 1350, 1300, 1250, 1200, 1100, 1000, 800, 600], thicknesses: ['0.25', '0.30', '0.35', '0.40', '0.50', '0.60', '0.70', '0.80', '0.90', '1.00', '1.20', '1.40', '1.60', '1.80', '2.00'] }
+    };
 
+    // 각 그리드별 독립적인 규격 저장소 (그리드ID: {widths: [], thicknesses: []})
+    let gridConfig = {};
 
-    // 초기 로드 시 CPL 차트 렌더링 (단, 섹션이 표시될 때 다시 그려지므로 지연 후 실행)
-    if (document.getElementById('chart-cpl')) {
-        setTimeout(() => {
-            const section = document.getElementById('line-spec-view');
-            if (section && section.style.display !== 'none') {
-                initCplChart();
+    async function loadGridData() {
+        if (!db) return;
+        try {
+            const doc = await db.collection("settings").doc("lineGridSpecs").get();
+            if (doc.exists) {
+                const firebaseData = doc.data();
+                globalGridData = firebaseData.data || {};
+                // 서버에 저장된 규격 수치가 있으면 덮어쓰기
+                if (firebaseData.config) {
+                    gridConfig = firebaseData.config;
+                    // 2CCL 그리드들은 새 템플릿 적용을 위해 기존 설정 초기화
+                    Object.keys(gridConfig).forEach(key => {
+                        if (key.includes('2ccl')) {
+                            delete gridConfig[key];
+                        }
+                    });
+                }
             }
-        }, 500);
+            setTimeout(() => {
+                const activeTab = document.querySelector('#line-spec-tabs .tab-btn.active');
+                if (activeTab) activeTab.click();
+            }, 100);
+        } catch (e) { console.error("Grid data load failed:", e); }
     }
 
-    // --- [1CCL/2CCL 그래프 구현] ---
-    const cclCharts = {};
+    window.renderLineGrid = function (gridId) {
+        const container = document.getElementById(gridId);
+        if (!container) return;
 
-    // 1CCL 데이터
-    const ccl1Data = {
-        ppgi: {
-            // [두께, 폭] - 이미지 근사치
-            data: [
-                [0.27, 1270], [0.30, 1350], [0.40, 1350], [0.50, 1350],
-                [0.80, 1350], [1.00, 1350], [1.20, 1350], [1.40, 1350],
-                [1.60, 1350], [1.70, 1250], [1.80, 1250]
-            ]
-        },
-        ppal: {
-            data: [
-                [0.30, 1270], [0.35, 1300], [0.40, 1300], [0.50, 1300],
-                [0.80, 1300], [1.00, 1300], [1.20, 1300], [1.40, 1300],
-                [1.70, 1300]
-            ]
-        }
-    };
+        // 해당 gridId의 규격이 없으면 기본 템플릿에서 복사
+        if (!gridConfig[gridId]) {
+            let templateKey = 'ccl';
+            if (gridId.includes('cpl')) templateKey = 'cpl';
+            else if (gridId.includes('crm')) templateKey = 'crm';
+            else if (gridId.includes('cgl')) templateKey = 'cgl';
+            else if (gridId.includes('2ccl')) templateKey = '2ccl';
 
-    // 2CCL 데이터
-    const ccl2Data = {
-        'ppal-1000': {
-            data: [
-                [0.30, 1200], [0.35, 1270], [0.45, 1700], [0.80, 1700],
-                [1.00, 1700], [1.20, 1700], [1.25, 1700], [1.40, 1250],
-                [1.80, 1250], [2.00, 1250], [2.10, 1200]
-            ]
-        },
-        'ppal-others': {
-            data: [
-                [0.30, 1270], [0.45, 1700], [0.80, 1700], [1.00, 1700],
-                [1.25, 1700], [1.40, 1600], [2.00, 1600], [2.20, 1400], [2.50, 1400]
-            ]
-        },
-        'ppgi-gl': {
-            data: [
-                [0.30, 1600], [0.35, 1600], [0.40, 1600], [0.80, 1600],
-                [1.00, 1600], [1.20, 1600], [1.25, 1500], [1.40, 1000]
-            ]
-        },
-        'ppgi-print': {
-            data: [
-                [0.30, 1450], [0.35, 1450], [0.40, 1600], [0.80, 1600],
-                [1.00, 1600], [1.20, 1600], [1.25, 1600], [1.30, 1000], [1.40, 1000]
-            ]
-        },
-        'pet': {
-            data: [
-                [0.30, 1350], [0.40, 1350], [0.80, 1350], [1.00, 1350],
-                [1.10, 1350], [1.20, 1250], [1.30, 1250]
-            ]
-        },
-        'ppal-print': {
-            data: [
-                [0.30, 1250], [0.40, 1250], [0.45, 1650], [0.80, 1650],
-                [1.00, 1650], [1.10, 1650], [1.20, 1400], [1.60, 1400], [2.00, 1400]
-            ]
-        },
-        'snow': {
-            data: [
-                [0.35, 1250], [0.40, 1250], [0.60, 1250], [0.80, 1250], [0.85, 1250],
-                // 0.85 이후는 데이터 없음 (이미지상 회색 구간)
-                [1.00, 0]
-            ]
-        }
-    };
-
-    // 3CCL 데이터
-    const ccl3Data = {
-        'ppgi-gl': {
-            data: [
-                [0.27, 1270], [0.30, 1270], [0.35, 1350], [0.40, 1350],
-                [0.50, 1350], [0.80, 1350], [1.00, 1350], [1.20, 1350],
-                [1.25, 1270], [1.30, 1270]
-            ]
-        }
-    };
-
-    function initCclCharts(tabId) {
-        let dataset;
-        let prefix;
-        let baseColor;
-        let borderColor;
-
-        if (tabId === '1ccl') {
-            dataset = ccl1Data;
-            prefix = 'chart-1ccl-';
-            baseColor = 'rgba(147, 51, 234, 0.8)';
-            borderColor = 'rgba(126, 34, 206, 1)';
-        } else if (tabId === '2ccl') {
-            dataset = ccl2Data;
-            prefix = 'chart-2ccl-';
-            baseColor = 'rgba(79, 70, 229, 0.8)';
-            borderColor = 'rgba(67, 56, 202, 1)';
-        } else if (tabId === '3ccl') {
-            dataset = ccl3Data;
-            prefix = 'chart-3ccl-';
-            baseColor = 'rgba(13, 148, 136, 0.8)'; // Teal
-            borderColor = 'rgba(15, 118, 110, 1)';
-        } else {
-            return;
+            gridConfig[gridId] = {
+                widths: [...defaultGridSpecs[templateKey].widths],
+                thicknesses: [...defaultGridSpecs[templateKey].thicknesses]
+            };
         }
 
-        Object.keys(dataset).forEach(key => {
-            const canvas = document.getElementById(prefix + key);
-            if (!canvas) return;
+        const widths = gridConfig[gridId].widths;
+        const thicknesses = gridConfig[gridId].thicknesses;
 
-            const ctx = canvas.getContext('2d');
-            const chartData = dataset[key];
+        let html = `<table class="grid-table" style="border-collapse: collapse; font-size: 10px; text-align: center; user-select: none;">`;
+        html += `<tbody>`;
 
-            // Filter existing valid data
-            const validData = chartData.data.filter(d => d[1] > 0);
+        // Body
+        widths.forEach((w, wIdx) => {
+            const displayW = isGlobalGridEditMode ?
+                `<input type="text" value="${w}" style="width: 40px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'widths', ${wIdx}, this.value)">` : w;
 
-            // Pad data
-            if (validData.length > 0) {
-                const startVal = validData[0][0];
-                const endVal = validData[validData.length - 1][0];
-                validData.unshift([(startVal - 0.1).toFixed(2), 0]);
-                validData.push([(endVal + 0.1).toFixed(2), 0]);
-            }
-
-            const labels = validData.map(d => parseFloat(d[0]).toString());
-            const widthData = validData.map(d => d[1]);
-
-            if (cclCharts[prefix + key]) {
-                cclCharts[prefix + key].destroy();
-            }
-
-            cclCharts[prefix + key] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '생산 가능 폭',
-                        data: widthData,
-                        backgroundColor: baseColor,
-                        borderColor: borderColor,
-                        borderWidth: 1,
-                        barPercentage: 1.0,
-                        categoryPercentage: 1.0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'x',
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'end',
-                            offset: -2,
-                            clip: false,
-                            color: borderColor || '#333',
-                            font: { weight: 'bold', size: 10 },
-                            display: function (context) {
-                                const val = context.dataset.data[context.dataIndex];
-                                if (val === 0) return false;
-                                const idx = context.dataIndex;
-                                if (idx > 0 && context.dataset.data[idx - 1] === val) return false;
-                                return true;
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => `폭: ${ctx.raw} mm`,
-                                title: ctx => `두께: ${ctx[0].label} mm`
-                            }
-                        }
-                    },
-                    layout: { padding: { top: 25 } },
-                    scales: {
-                        x: {
-                            title: { display: true, text: '두께 (mm)', font: { weight: 'bold', size: 11 } },
-                            grid: { display: false },
-                            ticks: { font: { size: 9 } }
-                        },
-                        y: {
-                            min: 500,
-                            max: 1800,
-                            title: { display: true, text: '폭 (mm)', font: { weight: 'bold', size: 11 } },
-                            grid: { color: '#e5e7eb' },
-                            ticks: { stepSize: 100, font: { size: 9 } }
-                        }
-                    }
+            html += `<tr><td style="padding: 4px; border: 1px solid #e2e8f0; background: #f1f5f9; font-weight: bold; color: #475569;">${displayW}</td>`;
+            thicknesses.forEach(t => {
+                const key = `${gridId}_${t}_${w}`;
+                const status = globalGridData[key] || 0;
+                let bg = 'white';
+                let style = '';
+                if (status === 1) bg = '#ea580c';
+                if (status === 2) {
+                    bg = '#e0f2fe';
+                    style = 'background-image: repeating-linear-gradient(45deg, #94a3b8, #94a3b8 1px, transparent 1px, transparent 3px);';
                 }
+                if (status === 3) {
+                    bg = '#1e3a8a';
+                }
+                const cellStyle = `height: 24px; border: 1px solid #e2e8f0; background-color: ${bg}; ${style} cursor: ${isGlobalGridEditMode ? 'pointer' : 'default'}; transition: all 0.1s;`;
+                html += `<td style="${cellStyle}" 
+                    onmousedown="handleGridMouseDown('${gridId}', '${t}', '${w}')" 
+                    onmouseenter="handleGridMouseEnter('${gridId}', '${t}', '${w}')"></td>`;
             });
+            html += `</tr>`;
         });
-    }
+        html += `</tbody>`;
 
-    // 라인별 생산 가능 SPEC 전용 탭 클릭 이벤트 통합 관리
+        // Footer
+        html += `<tfoot><tr><td style="padding: 6px; border: 1px solid #e2e8f0; background: #f1f5f9; font-weight: 800; color: #1e3a8a;">폭/두께</td>`;
+        thicknesses.forEach((t, tIdx) => {
+            const displayT = isGlobalGridEditMode ?
+                `<input type="text" value="${t}" style="width: 32px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'thicknesses', ${tIdx}, this.value)">` : t;
+            html += `<td style="padding: 6px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 800; color: #1e3a8a; min-width: 32px;">${displayT}</td>`;
+        });
+        html += `</tr></tfoot></table>`;
+
+        container.innerHTML = html;
+    };
+
+    window.updateGridValue = function (gridId, fieldType, index, value) {
+        if (gridConfig[gridId] && gridConfig[gridId][fieldType]) {
+            gridConfig[gridId][fieldType][index] = fieldType === 'widths' ? parseInt(value) || value : value;
+        }
+    };
+
+    window.handleGridMouseDown = function (gridId, t, w) {
+        if (!isGlobalGridEditMode) return;
+        isPaintingGrid = true;
+        const key = `${gridId}_${t}_${w}`;
+        const current = globalGridData[key] || 0;
+        currentPaintStatus = (current + 1) % 4;
+        globalGridData[key] = currentPaintStatus;
+        renderLineGrid(gridId);
+    };
+
+    window.handleGridMouseEnter = function (gridId, t, w) {
+        if (!isGlobalGridEditMode || !isPaintingGrid) return;
+        const key = `${gridId}_${t}_${w}`;
+        if (globalGridData[key] === currentPaintStatus) return; // 동일하면 무시
+        globalGridData[key] = currentPaintStatus;
+        renderLineGrid(gridId);
+    };
+
+    window.addEventListener('mouseup', () => {
+        isPaintingGrid = false;
+    });
+
+    window.toggleGlobalGridEditMode = function () {
+        if (!window.isAdmin) return;
+        isGlobalGridEditMode = !isGlobalGridEditMode;
+        const btn = document.getElementById('btn-global-edit');
+        const saveBtn = document.getElementById('btn-global-save');
+        if (btn) btn.innerHTML = isGlobalGridEditMode ? '<i class="fas fa-lock-open"></i> 편집 모드 종료' : '📝 그리드 편집 모드';
+        if (saveBtn) saveBtn.style.display = isGlobalGridEditMode ? 'inline-block' : 'none';
+        const activeTabBtn = document.querySelector('#line-spec-tabs .tab-btn.active');
+        if (activeTabBtn) activeTabBtn.click();
+    };
+
+    window.saveAllGridsData = async function () {
+        if (!confirm("모든 라인의 변경사항(폭/두께 수치 포함)을 서버에 저장하시겠습니까?")) return;
+        try {
+            await db.collection("settings").doc("lineGridSpecs").set({
+                data: globalGridData,
+                config: gridConfig, // 수정한 폭/두께 설정도 함께 저장
+                updatedAt: new Date().toISOString(),
+                updatedBy: 'admin'
+            });
+            alert("성공적으로 저장되었습니다.");
+            toggleGlobalGridEditMode();
+        } catch (e) { alert("저장 실패: " + e.message); }
+    };
+
+    loadGridData();
+
     const lineSpecTabContainer = document.getElementById('line-spec-tabs');
     if (lineSpecTabContainer) {
         const lineSpecTabs = lineSpecTabContainer.querySelectorAll('.tab-btn');
         lineSpecTabs.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 const tabId = btn.getAttribute('data-line-tab');
                 if (!tabId) return;
-
-                // 1. 버튼 활성 상태 즉시 변경
                 lineSpecTabs.forEach(t => t.classList.remove('active'));
                 btn.classList.add('active');
-
-                // 2. 모든 패널 숨기기
                 document.querySelectorAll('.line-spec-panel').forEach(panel => {
                     panel.style.display = 'none';
                     panel.classList.remove('active');
                 });
-
-                // 3. 선택된 패널 보이기
-                const targetPanel = document.getElementById(tabId === 'cgl-gl' ? 'panel-line-cgl-gl' : (tabId === 'cgl' ? 'panel-line-cgl' : `panel-line-${tabId}`));
+                const panelId = `panel-line-${tabId}`;
+                const targetPanel = document.getElementById(panelId);
                 if (targetPanel) {
                     targetPanel.style.display = 'block';
-                    // 브라우저 리플로우 강제 유도 후 active 클래스 추가 (애니메이션 최적화)
-                    targetPanel.offsetHeight;
-                    targetPanel.classList.add('active');
+                    setTimeout(() => targetPanel.classList.add('active'), 10);
+                    const grids = targetPanel.querySelectorAll('.grid-wrapper');
+                    grids.forEach(g => { renderLineGrid(g.id); });
                 }
-
-                // 4. 차트 초기화 (브라우저가 패널을 그리자마자 실행 - 지연시간 추가로 안정성 확보)
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        if (tabId === 'cpl') initCplChart();
-                        else if (tabId === 'crm') initCrmChart();
-                        else if (tabId === 'cgl') initAllCglGiCharts();
-                        else if (tabId === 'cgl-gl') initAllCglGlCharts();
-                        else if (tabId === '1ccl' || tabId === '2ccl') {
-                            initCclCharts(tabId);
-                        } else if (tabId === '3ccl') {
-                            initCclCharts(tabId);
-                            setTimeout(initCcl3SpecialCharts, 100);
-                        }
-                    }, 50);
-                });
             });
         });
     }
 
-    // --- 3CCL Special Charts (Stucco & Leather) ---
-    function initCcl3SpecialCharts() {
-        const createSpecialChart = (canvasId, dataFunc, negFunc, labels) => {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-
-            // Check if chart instance exists on canvas property or global map if needed
-            // For simplicity, we just create new one, assuming simple lifecycle or managed elsewhere if needed.
-            // But to avoid overlap, we store in a global object if we want standard management, 
-            // strictly speaking we should track these.
-            if (canvas.chart) canvas.chart.destroy();
-
-            const prodData = labels.map(dataFunc);
-            const negData = negFunc ? labels.map(negFunc) : [];
-
-            canvas.chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: '생산 가능',
-                            data: prodData,
-                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                            borderColor: 'rgba(185, 28, 28, 1)',
-                            borderWidth: 1,
-                            barPercentage: 1.0,
-                            categoryPercentage: 1.0,
-                            grouped: false,
-                            order: 2
-                        },
-                        {
-                            label: '협의 영역',
-                            data: negData,
-                            backgroundColor: getHatchPattern(ctx),
-                            borderColor: '#94a3b8',
-                            borderWidth: 1,
-                            barPercentage: 1.0,
-                            categoryPercentage: 1.0,
-                            grouped: false,
-                            order: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'x',
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'end',
-                            offset: -5,
-                            clip: false,
-                            color: function (context) {
-                                return context.datasetIndex === 0 ? '#b91c1c' : '#475569';
-                            },
-                            font: { weight: 'bold', size: 10 },
-                            formatter: function (value, context) {
-                                if (!value) return '';
-                                if (context.datasetIndex === 0) return value[1];
-                                return '협의\n' + value[1];
-                            },
-                            display: function (context) {
-                                const val = context.dataset.data[context.dataIndex];
-                                if (!val) return false;
-                                // Basic duplicate filter
-                                const idx = context.dataIndex;
-                                const prevVal = context.dataset.data[idx - 1];
-                                if (idx > 0 && prevVal && prevVal[1] === val[1]) return false;
-                                return true;
-                            }
-                        }
-                    },
-                    layout: { padding: { top: 30 } },
-                    scales: {
-                        x: {
-                            title: { display: true, text: '두께 (mm)', font: { weight: 'bold' } },
-                            grid: { display: false }
-                        },
-                        y: {
-                            min: 600,
-                            max: 1400,
-                            title: { display: true, text: '폭 (mm)', font: { weight: 'bold' } },
-                            grid: { color: '#e5e7eb' }
-                        }
-                    }
-                }
-            });
-        };
-
-        // Labels covering all critical points
-        const labels = ['0.20', '0.27', '0.30', '0.32', '0.40', '0.50', '0.55', '0.60', '0.65', '0.70', '0.80', '0.85', '0.90', '1.00', '1.05', '1.10'];
-
-        // Stucco Logic
-        // 0.27~0.32: [700, 1219]
-        // 0.32~0.55: [700, 1270]
-        // 0.55~0.65: [700, 1020]
-        // 0.65~0.85: [700, 914]
-        createSpecialChart('chart-3ccl-stucco', (l) => {
-            const v = parseFloat(l);
-            if (v < 0.27) return null;
-            if (v <= 0.32) return [700, 1219];
-            if (v <= 0.55) return [700, 1270];
-            if (v <= 0.65) return [700, 1020];
-            if (v <= 0.85) return [700, 914];
-            return null;
-        }, null, labels);
-
-        // Leather Logic
-        // 0.27~0.32: [700, 1020]
-        // 0.32~0.65: [700, 1270]
-        // 0.65~0.85: Prod [700, 1100], Neg [1100, 1220] (approx)
-        // 0.85~1.05: Neg [700, 914]
-        createSpecialChart('chart-3ccl-leather', (l) => {
-            // Prod
-            const v = parseFloat(l);
-            if (v < 0.27) return null;
-            if (v <= 0.32) return [700, 1020];
-            if (v <= 0.65) return [700, 1270];
-            if (v <= 0.85) return [700, 1100];
-            return null;
-        }, (l) => {
-            // Neg
-            const v = parseFloat(l);
-            if (v >= 0.65 && v <= 0.85) return [1100, 1220]; // Stacked on top of prod
-            if (v > 0.85 && v <= 1.05) return [700, 914]; // Full neg
-            return null;
-        }, labels);
-    }
-
-    // --- [New] Process Spec Tab Logic ---
     const processTabs = document.querySelectorAll('.process-tab-btn');
     processTabs.forEach(btn => {
         btn.addEventListener('click', () => {
             processTabs.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
             document.querySelectorAll('.process-panel').forEach(p => {
                 p.style.display = 'none';
                 p.classList.remove('active');
@@ -3397,6 +3102,35 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+
+    // --- [WARRANTY GUIDE 탭 로직] ---
+    const warrantyTabHeader = document.getElementById('warranty-tab-header');
+    if (warrantyTabHeader) {
+        const warrantyTabs = warrantyTabHeader.querySelectorAll('.warranty-tab-btn');
+        warrantyTabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-warranty-tab');
+                if (!tabId) return;
+
+                // 1. 버튼 활성 상태 변경
+                warrantyTabs.forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+
+                // 2. 패널 숨기기 및 보이기
+                document.querySelectorAll('.warranty-panel').forEach(panel => {
+                    panel.style.display = 'none';
+                    panel.classList.remove('active');
+                });
+
+                const targetPanel = document.getElementById(`warranty-panel-${tabId}`);
+                if (targetPanel) {
+                    targetPanel.style.display = 'block';
+                    setTimeout(() => targetPanel.classList.add('active'), 10);
+                }
+            });
+        });
+    }
 });
 
 // --- 전역 함수: 이미지 확대 모달 (Lightbox) ---
@@ -3681,5 +3415,4 @@ window.deleteCertification = async (docId) => {
 
 // Initialize
 loadCertifications();
-
 

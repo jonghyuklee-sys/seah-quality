@@ -48,7 +48,7 @@ button {
 }
 
 html {
-    overflow-x: hidden;
+    
     width: 100%;
 }
 
@@ -57,29 +57,29 @@ body {
     background-color: var(--bg-main);
     color: var(--text-main);
     line-height: 1.5;
-    overflow-x: hidden;
+    
     width: 100%;
-    max-width: 100vw;
+    
 }
 
-/* 관리자 모드 제어 */
+/* ??㉱?洹먮봿??嶺뚮ㅄ維獄???戮?꽑 */
 .admin-only {
     display: none !important;
 }
 
-/* 관리자 모드일 때만 표시 */
+/* ??㉱?洹먮봿??嶺뚮ㅄ維獄?????異???戮?뻣 */
 body.admin-mode .admin-only {
     display: block !important;
 }
 
-/* 관리자 모드이면서 가로 배치가 필요한 경우 */
+/* ??㉱?洹먮봿??嶺뚮ㅄ維獄???????띠럾????꾩룄??洹쏆쾸? ?熬곣뫗????롪퍔???*/
 body.admin-mode .admin-only.admin-flex {
     display: flex !important;
     gap: 8px;
     align-items: center;
 }
 
-/* 인라인 블록 등 다른 디스플레이 형태 대응 */
+/* ?筌뤾퍔逾????곕?餓??????섎???븐슜裕???????筌먐븍Ф ????*/
 body.admin-mode span.admin-only {
     display: inline-block !important;
 }
@@ -102,6 +102,8 @@ body.admin-mode button.admin-only {
     margin-left: var(--sidebar-width);
     display: flex;
     flex-direction: column;
+    overflow-x: auto;
+    min-width: 0;
 }
 
 /* Page Section Styling */
@@ -111,7 +113,7 @@ body.admin-mode button.admin-only {
     box-sizing: border-box;
 }
 
-/* display: none인 섹션은 완전히 숨기기 */
+/* display: none???獄???? ?熬곣뫗?????節뗢뵛??*/
 .page-section[style*="display: none"],
 .page-section[style*="display:none"] {
     display: none !important;
@@ -236,7 +238,7 @@ body.admin-mode button.admin-only {
     color: var(--text-muted);
 }
 
-/* 데스크탑에서 모바일 요소 숨기기 */
+/* ??⑥ル츩??繹?????嶺뚮ㅄ維?????븐슜爰???節뗢뵛??*/
 .mobile-menu-btn {
     display: none;
 }
@@ -301,7 +303,7 @@ body.admin-mode button.admin-only {
 #resin-quality-view th {
     background: #1e3a8a;
     color: #ffffff !important;
-    /* 글씨색 흰색으로 강제 적용 */
+    /* ?リ섣???觀????⑥ろ돰??怨쀬Ŧ ?띠룆踰????⑤챷??*/
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -316,13 +318,13 @@ body.admin-mode button.admin-only {
     border-right: 1px solid #edf2f7;
     padding: 20px 24px;
     vertical-align: middle !important;
-    /* 모든 셀 상하 중앙 정렬 */
+    /* 嶺뚮ㅄ維獄??? ??⑤갭由?繞벿살탳???筌먲퐣議?*/
 }
 
 #resin-quality-view td:last-child {
     border-right: none;
     text-align: left;
-    /* 합부 기준은 왼쪽 정렬 유지 */
+    /* ??? ?リ옇???? ??湲깃국 ?筌먲퐣議???? */
 }
 
 /* Zebra Striping for Criteria Rows */
@@ -340,7 +342,7 @@ body.admin-mode button.admin-only {
 }
 
 .criteria-item::before {
-    content: "•";
+    content: "??;
     position: absolute;
     left: 0;
     color: var(--primary-light);
@@ -766,7 +768,7 @@ body.admin-mode button.admin-only {
 }
 
 .standard-card li::before {
-    content: "•";
+    content: "??;
     position: absolute;
     left: 0;
     color: var(--primary-light);
@@ -1021,7 +1023,7 @@ body.admin-mode button.admin-only {
 }
 
 .info-spec-box li::before {
-    content: "✓";
+    content: "??;
     position: absolute;
     left: 0;
     color: var(--success);
@@ -1117,9 +1119,9 @@ body.admin-mode button.admin-only {
 
     .main-area {
         margin-left: 0;
-        overflow-x: hidden;
+        
         width: 100%;
-        max-width: 100vw;
+        
     }
 
     .top-bar {
@@ -1171,10 +1173,10 @@ body.admin-mode button.admin-only {
 
     .content-padding {
         padding: 12px;
-        overflow-x: hidden;
+        
     }
 
-    /* Page Header - 텍스트 잘림 방지 */
+    /* Page Header - ???⑸츩????濡〓턁 ?꾩렮維? */
     .page-header {
         margin-bottom: 20px;
         padding: 0 !important;
@@ -1369,7 +1371,7 @@ body.admin-mode button.admin-only {
         flex-shrink: 0;
     }
 
-    /* Info Layout (강종 상세 정보) */
+    /* Info Layout (?띠룆踰▽펺???⑤㈇???筌먲퐢沅? */
     .info-layout {
         grid-template-columns: 1fr !important;
         gap: 20px;
@@ -1563,7 +1565,7 @@ body.admin-mode button.admin-only {
         grid-template-columns: 1fr;
     }
 
-    /* 탭 버튼 더 작게 */
+    /* ???뺢퀗???????얜‘??*/
     .tab-btn {
         padding: 6px 12px;
         font-size: 11px;
@@ -1571,10 +1573,10 @@ body.admin-mode button.admin-only {
 }
 
 /* ========================================
-   섹션별 모바일 최적화 (규격조회처럼 깔끔하게)
+   ?獄???묓돦?嶺뚮ㅄ維???嶺뚣끉裕???(?잙?裕꾤댆???⑥쥙?녕춯節뚭섬??濚밸Ŧ?椰???우벟)
    ======================================== */
 
-/* --- 국가별 규격 비교 모바일 최적화 --- */
+/* --- ??????잙?裕꾤댆??????嶺뚮ㅄ維???嶺뚣끉裕???--- */
 @media (max-width: 768px) {
     #integrated-comparison {
         margin-top: 30px !important;
@@ -1614,10 +1616,10 @@ body.admin-mode button.admin-only {
     }
 }
 
-/* --- VOC 폼 모바일 최적화 --- */
+/* --- VOC ??嶺뚮ㅄ維???嶺뚣끉裕???--- */
 @media (max-width: 768px) {
 
-    /* VOC 상단 헤더 영역 */
+    /* VOC ??⑤８堉????녹맠 ??⑤챶??*/
     #complaint-view .search-container>div:first-child {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -1635,18 +1637,18 @@ body.admin-mode button.admin-only {
         font-size: 15px !important;
     }
 
-    /* VOC 폼 그리드 - 모바일에서 2열 → 1열 */
+    /* VOC ???잙갭梨???- 嶺뚮ㅄ維???源낇뱺??2????1??*/
     #voc-form.search-form-grid {
         grid-template-columns: 1fr !important;
         gap: 14px !important;
     }
 
-    /* span 2개짜리 필드도 1열로 */
+    /* span 2?띠룇裕뉐퐲?좊뎨??熬곣뫀援??1???餓?*/
     #voc-form .form-field[style*="grid-column: span"] {
         grid-column: span 1 !important;
     }
 
-    /* 라벨 스타일 */
+    /* ??怨뚮낵 ?????*/
     #voc-form .form-field label {
         font-size: 12px !important;
         font-weight: 600;
@@ -1654,7 +1656,7 @@ body.admin-mode button.admin-only {
         margin-bottom: 6px !important;
     }
 
-    /* 입력 필드 스타일 개선 */
+    /* ???놁졑 ?熬곣뫀援???????띠룇裕뉓땻?*/
     #voc-form .form-field select,
     #voc-form .form-field input,
     #voc-form .form-field textarea {
@@ -1668,7 +1670,7 @@ body.admin-mode button.admin-only {
         min-height: 100px !important;
     }
 
-    /* VOC 처리 대장 헤더 영역 */
+    /* VOC 嶺뚳퐣瑗?????????녹맠 ??⑤챶??*/
     #complaint-view .search-container:last-child>div:first-child {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -1684,13 +1686,13 @@ body.admin-mode button.admin-only {
         flex: 1;
     }
 
-    /* 테이블 힌트 텍스트 */
+    /* ???逾????怨뺣콦 ???⑸츩??*/
     #complaint-view .search-container:last-child>div:first-child>div:last-child {
         text-align: center !important;
     }
 }
 
-/* --- VOC 폼 매우 작은 화면 추가 최적화 (480px 이하) --- */
+/* --- VOC ??嶺뚮씞?????? ??븐뻼???怨뺣뼺? 嶺뚣끉裕???(480px ??袁⑤┃) --- */
 @media (max-width: 480px) {
     #voc-form .form-field label {
         font-size: 11px !important;
@@ -1702,7 +1704,7 @@ body.admin-mode button.admin-only {
         font-size: 13px !important;
     }
 
-    /* 파일 선택 버튼 스타일 개선 */
+    /* ???逾???ルㅎ臾??뺢퀗?????????띠룇裕뉓땻?*/
     #voc-form input[type="file"] {
         font-size: 11px !important;
     }
@@ -1710,7 +1712,7 @@ body.admin-mode button.admin-only {
 
 @media (max-width: 768px) {
 
-    /* === 공통: 모든 섹션 전체 너비 사용 === */
+    /* === ??ㅻ쾹?? 嶺뚮ㅄ維獄??獄????熬곣뫕?????딅룴 ????=== */
     .page-section {
         width: 100% !important;
         max-width: 100% !important;
@@ -1725,7 +1727,7 @@ body.admin-mode button.admin-only {
         margin-right: 0 !important;
     }
 
-    /* === 1. 수지별 품질 기준 (Resin Quality) === */
+    /* === 1. ????????깆떨 ?リ옇?? (Resin Quality) === */
     #resin-quality-view .page-header {
         padding: 0 10px;
         margin-bottom: 16px;
@@ -1756,7 +1758,7 @@ body.admin-mode button.admin-only {
 
     #resin-quality-view .resin-grid {
         grid-template-columns: repeat(3, 1fr) !important;
-        /* 모바일에서 3열로 확대 */
+        /* 嶺뚮ㅄ維???源낇뱺??3???餓??筌? */
         gap: 8px;
     }
 
@@ -1779,16 +1781,16 @@ body.admin-mode button.admin-only {
         width: 100%;
     }
 
-    /* 테이블 모바일 스크롤 및 텍스트 최적화 */
+    /* ???逾??嶺뚮ㅄ維??????꾩씩???????⑸츩??嶺뚣끉裕???*/
     #resin-quality-view .table-container {
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
         margin: 0 -15px;
-        /* 컨테이너 꽉 차게 */
+        /* ???쳜????????嶺뚢뼰紐욤떋?*/
         padding: 0;
     }
 
-    /* 수지별 품질 기준 테이블 - 모바일 카드 형식으로 변환 */
+    /* ????????깆떨 ?リ옇?? ???逾??- 嶺뚮ㅄ維????곸궠?獄??筌먦끇六??怨쀬Ŧ ?곌떠???*/
     #resin-quality-view table {
         display: block;
         width: 100%;
@@ -1797,7 +1799,7 @@ body.admin-mode button.admin-only {
 
     #resin-quality-view thead {
         display: none;
-        /* 헤더 숨김 */
+        /* ???녹맠 ??? */
     }
 
     #resin-quality-view tbody {
@@ -1818,7 +1820,7 @@ body.admin-mode button.admin-only {
         margin-bottom: 12px;
     }
 
-    /* 그룹 시작 (같은 검사항목의 첫 번째) */
+    /* ?잙갭梨띄쳥???戮곗굚 (?띠룇?? ?롪틵?????냵彛?諭踰?嶺??뺢퀡??? */
     #resin-quality-view tbody tr.group-start {
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
@@ -1827,7 +1829,7 @@ body.admin-mode button.admin-only {
         padding-bottom: 10px;
     }
 
-    /* 그룹 중간 (같은 검사항목의 중간) */
+    /* ?잙갭梨띄쳥?繞벿살탪??(?띠룇?? ?롪틵?????냵彛?諭踰?繞벿살탪?? */
     #resin-quality-view tbody tr.group-middle {
         border-radius: 0;
         border-top: none;
@@ -1837,7 +1839,7 @@ body.admin-mode button.admin-only {
         padding-bottom: 10px;
     }
 
-    /* 그룹 끝 (같은 검사항목의 마지막) */
+    /* ?잙갭梨띄쳥???(?띠룇?? ?롪틵?????냵彛?諭踰?嶺뚮씭??嶺? */
     #resin-quality-view tbody tr.group-end {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
@@ -1846,18 +1848,18 @@ body.admin-mode button.admin-only {
         padding-top: 10px;
     }
 
-    /* 그룹 단일 (혼자인 검사항목) */
+    /* ?잙갭梨띄쳥???關逾?(??源놁겱???롪틵?????냵彛? */
     #resin-quality-view tbody tr.group-single {
         margin-bottom: 12px;
     }
 
-    /* 그룹 시작/단일에서만 검사항목(첫 번째 td) 표시 */
+    /* ?잙갭梨띄쳥???戮곗굚/??關逾????ｇ춯??롪틵?????냵彛?嶺??뺢퀡???td) ??戮?뻣 */
     #resin-quality-view tbody tr.group-start td:first-child,
     #resin-quality-view tbody tr.group-single td:first-child {
         display: block !important;
     }
 
-    /* group-middle, group-end에서는 조건이 첫 번째 td이므로 표시 */
+    /* group-middle, group-end???????브퀗?쀦뤃??嶺??뺢퀡???td????????戮?뻣 */
     #resin-quality-view tbody tr.group-middle td:first-child,
     #resin-quality-view tbody tr.group-end td:first-child {
         display: block !important;
@@ -1868,10 +1870,10 @@ body.admin-mode button.admin-only {
         padding-bottom: 8px !important;
     }
 
-    /* group-middle, group-end의 첫 번째 td에 조건 라벨 표시 */
+    /* group-middle, group-end??嶺??뺢퀡???td???브퀗?쀦뤃???怨뚮낵 ??戮?뻣 */
     #resin-quality-view tbody tr.group-middle td:first-child::before,
     #resin-quality-view tbody tr.group-end td:first-child::before {
-        content: "조건: " !important;
+        content: "?브퀗?쀦뤃? " !important;
         font-weight: 700;
         color: #64748b;
         font-size: 11px;
@@ -1897,9 +1899,9 @@ body.admin-mode button.admin-only {
         padding-bottom: 0 !important;
     }
 
-    /* 모바일에서 각 셀 앞에 라벨 표시 */
+    /* 嶺뚮ㅄ維???源낇뱺?????? ??濡ロ뱺 ??怨뚮낵 ??戮?뻣 */
     #resin-quality-view tbody tr td:first-child::before {
-        content: "검사항목: ";
+        content: "?롪틵?????냵彛? ";
         font-weight: 700;
         color: #1e3a8a;
         font-size: 11px;
@@ -1910,7 +1912,7 @@ body.admin-mode button.admin-only {
     #resin-quality-view tbody tr td:nth-child(2)::before,
     #resin-quality-view tbody tr.group-middle td:first-child::before,
     #resin-quality-view tbody tr.group-end td:first-child::before {
-        content: "조건: ";
+        content: "?브퀗?쀦뤃? ";
         font-weight: 700;
         color: #64748b;
         font-size: 11px;
@@ -1919,7 +1921,7 @@ body.admin-mode button.admin-only {
     }
 
     #resin-quality-view tbody tr td:last-child::before {
-        content: "합부 기준: ";
+        content: "??? ?リ옇??: ";
         font-weight: 700;
         color: #16a34a;
         font-size: 11px;
@@ -1927,7 +1929,7 @@ body.admin-mode button.admin-only {
         margin-bottom: 4px;
     }
 
-    /* 검사항목 셀 스타일 */
+    /* ?롪틵?????냵彛??? ?????*/
     #resin-quality-view tbody tr td:first-child {
         font-weight: 700;
         color: #1e3a8a;
@@ -1952,7 +1954,7 @@ body.admin-mode button.admin-only {
         font-size: 11px !important;
     }
 
-    /* === 2. 품질 분석 대시보드 (Dashboard) === */
+    /* === 2. ???깆떨 ?釉뚯뫒??????類ｊ텠??(Dashboard) === */
     #dashboard-view .page-header {
         padding: 0 10px;
         margin-bottom: 16px;
@@ -1976,7 +1978,7 @@ body.admin-mode button.admin-only {
         max-width: 100% !important;
     }
 
-    /* 대시보드 내 모든 컨테이너 너비 100% */
+    /* ????類ｊ텠????嶺뚮ㅄ維獄????쳜?????????딅룴 100% */
     #dashboard-view .stats-grid,
     #dashboard-view .search-container,
     #dashboard-view .dashboard-charts-grid {
@@ -2036,7 +2038,7 @@ body.admin-mode button.admin-only {
         font-size: 11px;
     }
 
-    /* === 3. 고객 불만 관리 (VOC) === */
+    /* === 3. ??μ쪙???釉띾쐞壤???㉱??(VOC) === */
     #complaint-view .page-header {
         padding: 0 10px;
         margin-bottom: 16px;
@@ -2087,7 +2089,7 @@ body.admin-mode button.admin-only {
         margin-top: 8px;
     }
 
-    /* VOC 테이블 최적화 */
+    /* VOC ???逾??嶺뚣끉裕???*/
     #complaint-view .table-container {
         margin: 0 -14px;
         padding: 0 14px;
@@ -2104,7 +2106,7 @@ body.admin-mode button.admin-only {
         white-space: nowrap;
     }
 
-    /* VOC 모달 최적화 */
+    /* VOC 嶺뚮ㅄ維??嶺뚣끉裕???*/
     #voc-modal>div>div {
         width: 95% !important;
         max-height: 85vh;
@@ -2126,7 +2128,7 @@ body.admin-mode button.admin-only {
         gap: 10px !important;
     }
 
-    /* === 4. 강종 정보 (Steel Info) === */
+    /* === 4. ?띠룆踰▽펺??筌먲퐢沅?(Steel Info) === */
     #info-view>div {
         max-width: 100% !important;
         padding: 0;
@@ -2236,15 +2238,15 @@ body.admin-mode button.admin-only {
     }
 }
 
-/* 480px 이하 추가 최적화 */
+/* 480px ??袁⑤┃ ?怨뺣뼺? 嶺뚣끉裕???*/
 @media (max-width: 480px) {
 
-    /* 수지 버튼 2열로 */
+    /* ??? ?뺢퀗???2???餓?*/
     #resin-quality-view .resin-grid {
         grid-template-columns: repeat(4, 1fr) !important;
     }
 
-    /* 대시보드 통계 카드 */
+    /* ????類ｊ텠????????곸궠?獄?*/
     #dashboard-view .stats-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
@@ -2257,7 +2259,7 @@ body.admin-mode button.admin-only {
         font-size: 8px !important;
     }
 
-    /* 강종 정보 특성 태그 */
+    /* ?띠룆踰▽펺??筌먲퐢沅??獄?????蹂μ쟽 */
     #info-view .info-feature-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -2463,7 +2465,7 @@ body.admin-mode button.admin-only {
     }
 }
 
-/* --- [보안: 워터마크 및 인쇄 제어] --- */
+/* --- [?곌랜?삯뇡? ??怨뚯댉嶺뚮씭?뉐칰????筌뤾쑬????戮?꽑] --- */
 .viewer-watermark-overlay {
     position: absolute;
     top: 0;
@@ -2475,18 +2477,18 @@ body.admin-mode button.admin-only {
     overflow: hidden;
     opacity: 0.12;
     user-select: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><text x='50%' y='50%' font-size='22' font-weight='900' fill='black' transform='rotate(-30 200 150)' text-anchor='middle'>인쇄 및 저장 금지</text><text x='50%' y='70%' font-size='14' font-weight='700' fill='black' transform='rotate(-30 200 150)' text-anchor='middle'>DO NOT PRINT / SAVE</text></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><text x='50%' y='50%' font-size='22' font-weight='900' fill='black' transform='rotate(-30 200 150)' text-anchor='middle'>?筌뤾쑬?????????ル??</text><text x='50%' y='70%' font-size='14' font-weight='700' fill='black' transform='rotate(-30 200 150)' text-anchor='middle'>DO NOT PRINT / SAVE</text></svg>");
     background-repeat: repeat;
 }
 
 @media print {
 
-    /* 기존 body 숨김 대신 워터마크 강조 */
+    /* ?リ옇???body ??? ??????怨뚯댉嶺뚮씭?뉐칰??띠룆踰??*/
     body {
         position: relative;
     }
 
-    /* 인쇄 시 모든 화면 요소 위에 워터마크 레이어 강제 표시 */
+    /* ?筌뤾쑬????嶺뚮ㅄ維獄???븐뻼????븐슜爰??熬곣뫖????怨뚯댉嶺뚮씭?뉐칰????깅턄???띠룆踰????戮?뻣 */
     .viewer-watermark-overlay {
         opacity: 0.35 !important;
         position: fixed !important;
@@ -2496,12 +2498,12 @@ body.admin-mode button.admin-only {
         height: 100% !important;
         display: block !important;
         z-index: 99999 !important;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><text x='50%' y='50%' font-size='22' font-weight='900' fill='red' transform='rotate(-30 200 150)' text-anchor='middle'>인쇄 및 저장 금지</text><text x='50%' y='70%' font-size='14' font-weight='700' fill='red' transform='rotate(-30 200 150)' text-anchor='middle'>UNAUTHORIZED COPY PROHIBITED</text></svg>") !important;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><text x='50%' y='50%' font-size='22' font-weight='900' fill='red' transform='rotate(-30 200 150)' text-anchor='middle'>?筌뤾쑬?????????ル??</text><text x='50%' y='70%' font-size='14' font-weight='700' fill='red' transform='rotate(-30 200 150)' text-anchor='middle'>UNAUTHORIZED COPY PROHIBITED</text></svg>") !important;
     }
 
-    /* 인쇄 하단 알림 */
+    /* ?筌뤾쑬????濡ル펺 ???逾?*/
     body::after {
-        content: "본 문서는 세아씨엠 보안 정책에 의해 인쇄가 금지된 문서입니다. 무단 유출 시 법적 책임이 발생할 수 있습니다.";
+        content: "????쒖굣????筌뤾쑬???貫???곌랜?삯뇡??筌먦끉?????臾먰돵 ?筌뤾쑬?득뤆?쎛 ?ル??????쒖굣????낅퉵?? ???????ル“?????뺢퀡踰??嶺?援????꾩룇裕뉑틦???????곕????덈펲.";
         position: fixed;
         bottom: 20px;
         left: 0;
@@ -2592,10 +2594,10 @@ body.admin-mode button.admin-only {
 }
 
 /* ========================================
-   라인별 생산 가능 SPEC 페이지 스타일
+   ??源녿데????諛댄뀰 ?띠럾???SPEC ??瑜곷턄嶺뚯솘? ?????
    ======================================== */
 
-/* 라인 스펙 탭 패널 */
+/* ??源녿데 ???덉쓢 ?????븐꽢 */
 .line-spec-panel {
     display: none;
     animation: fadeIn 0.3s ease;
@@ -2617,7 +2619,7 @@ body.admin-mode button.admin-only {
     }
 }
 
-/* 라인 스펙 헤더 */
+/* ??源녿데 ???덉쓢 ???녹맠 */
 .line-spec-header {
     margin-bottom: 24px;
     padding-bottom: 16px;
@@ -2644,14 +2646,14 @@ body.admin-mode button.admin-only {
     margin: 0;
 }
 
-/* 라인 스펙 카드 그리드 */
+/* ??源녿데 ???덉쓢 ?곸궠?獄??잙갭梨???*/
 .line-spec-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
 }
 
-/* 라인 스펙 카드 */
+/* ??源녿데 ???덉쓢 ?곸궠?獄?*/
 .line-spec-card {
     background: #ffffff;
     border: 1px solid var(--border);
@@ -2667,7 +2669,7 @@ body.admin-mode button.admin-only {
     border-color: var(--primary-light);
 }
 
-/* 스펙 카드 헤더 */
+/* ???덉쓢 ?곸궠?獄????녹맠 */
 .spec-card-header {
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     padding: 16px 20px;
@@ -2688,7 +2690,7 @@ body.admin-mode button.admin-only {
     font-size: 24px;
 }
 
-/* 스펙 뱃지 */
+/* ???덉쓢 ???? */
 .spec-badge {
     display: inline-flex;
     align-items: center;
@@ -2718,12 +2720,12 @@ body.admin-mode button.admin-only {
     background: linear-gradient(135deg, #475569 0%, #64748b 100%);
 }
 
-/* 스펙 카드 바디 */
+/* ???덉쓢 ?곸궠?獄??꾩룆???*/
 .spec-card-body {
     padding: 20px;
 }
 
-/* 스펙 범위 아이템 */
+/* ???덉쓢 ?뺢퀡????熬곣뫗逾??*/
 .spec-range-item {
     display: flex;
     justify-content: space-between;
@@ -2749,7 +2751,7 @@ body.admin-mode button.admin-only {
     font-family: var(--font-mono);
 }
 
-/* 스펙 노트 */
+/* ???덉쓢 ?筌뤿굝諭?*/
 .spec-note {
     margin-top: 12px;
     padding: 12px;
@@ -2764,7 +2766,7 @@ body.admin-mode button.admin-only {
     line-height: 1.5;
 }
 
-/* 반응형 */
+/* ?꾩룇瑗???*/
 @media (max-width: 768px) {
     .line-spec-grid {
         grid-template-columns: 1fr;
@@ -2799,7 +2801,7 @@ body.admin-mode button.admin-only {
     }
 }
 
-/* 강종 선택 버튼 스타일 */
+/* ?띠룆踰▽펺???ルㅎ臾??뺢퀗????????*/
 .spec-select-btn {
     padding: 10px 20px;
     border: 2px solid #e2e8f0;
@@ -2824,7 +2826,7 @@ body.admin-mode button.admin-only {
     border-color: #1e3a8a;
 }
 
-/* 그래프 그리드 스타일 */
+/* ?잙갭梨????잙갭梨????????*/
 .spec-charts-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2901,7 +2903,7 @@ body.admin-mode button.admin-only {
     gap: 8px;
 }
 
-/* 스펙 정보 그리드 */
+/* ???덉쓢 ?筌먲퐢沅??잙갭梨???*/
 .line-specs-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -2932,11 +2934,11 @@ body.admin-mode button.admin-only {
     font-weight: 600;
 }
 
-/* 공정 흐름도 (가로 스크롤) */
+/* ??ㅻ쾴????????(?띠럾??????꾩씩?? */
 .flow-diagram-wrapper {
     overflow-x: auto;
     padding-bottom: 12px;
-    /* 스크롤바 공간 */
+    /* ???꾩씩?β뼯?뉓???ㅻ???*/
 }
 
 .flow-diagram {
@@ -2971,7 +2973,7 @@ body.admin-mode button.admin-only {
     border: 2px solid #fff;
 }
 
-/* 라인별 색상 테마 */
+/* ??源녿데????源껊쭜 ???異?*/
 .theme-cpl .step-box {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
@@ -3009,7 +3011,7 @@ body.admin-mode button.admin-only {
     font-size: 14px;
     color: #cbd5e1;
     margin-top: -24px;
-    /* 박스 높이에 맞춤 */
+    /* ?꾩룆踰???沃섅굦逾??嶺뚮씮???*/
 }
 
 /* --- Process Image & Zoom Styles --- */
@@ -3058,7 +3060,7 @@ body.admin-mode button.admin-only {
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
     filter: contrast(1.1) brightness(1.02);
-    /* 선명도 및 밝기 미세 조정 */
+    /* ??ル봿援?????꾩룇鍮볡뵳?亦껋꼶梨룩땻??브퀗???*/
 }
 
 /* --- Image Modal (Lightbox) --- */
@@ -3080,7 +3082,7 @@ body.admin-mode button.admin-only {
     margin: auto;
     display: block;
     max-width: 95%;
-    /* 더 크게 볼 수 있도록 확대 */
+    /* ?????????????덉┣???筌? */
     max-height: 90vh;
     border-radius: 4px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
@@ -3178,12 +3180,12 @@ body.admin-mode button.admin-only {
     border: 1px solid #e2e8f0;
 }
 
-/* 연결선 (Process Path) - 실선으로 변경 및 화살표 추가를 위한 베이스 */
+/* ??⑤슡???(Process Path) - ???⑦맖??怨쀬Ŧ ?곌떠???????븐슙????怨뺣뼺????熬곥굥由??뺢퀣伊???*/
 .process-row::before {
     content: '';
     position: absolute;
     top: 42px;
-    /* 아이콘 중앙 높이 (줄어든 아이콘에 맞춤) */
+    /* ?熬곣뫗逾??繞벿살탳???沃섅굦逾?(繞벿븐뫒????熬곣뫗逾?袁⑷섭??嶺뚮씮??? */
     left: 60px;
     right: 60px;
     height: 2px;
@@ -3191,7 +3193,7 @@ body.admin-mode button.admin-only {
     z-index: 1;
 }
 
-/* 공정 사이 연결선 (화살표 제거) */
+/* ??ㅻ쾴????????⑤슡???(??븐슙?????蹂ㅽ깴) */
 .process-row::before {
     content: '';
     position: absolute;
@@ -3212,7 +3214,7 @@ body.admin-mode button.admin-only {
     width: 90px;
 }
 
-/* 순번 표시 (Process Step) - 번호 제거 요청에 따라 숨김 처리 */
+/* ??類ㅼ벐 ??戮?뻣 (Process Step) - ?뺢퀡?????蹂ㅽ깴 ??븐슙?????⑤벡逾???? 嶺뚳퐣瑗??*/
 .station-step {
     display: none;
 }
@@ -3266,12 +3268,12 @@ body.admin-mode button.admin-only {
     white-space: nowrap;
 }
 
-/* 개별 공정 사이 화살표 제거 */
+/* ?띠룇裕????ㅻ쾴????????븐슙?????蹂ㅽ깴 */
 .process-station:not(:last-child)::after {
     display: none;
 }
 
-/* 큰 U-Turn 연결선 개선 (R1 끝 -> R2 시작) */
+/* ??U-Turn ??⑤슡????띠룇裕뉓땻?(R1 ??-> R2 ??戮곗굚) */
 .row-connector {
     position: relative;
     height: 40px;
@@ -3596,19 +3598,42 @@ body.admin-mode button.admin-only {
     .spec-grid {
         flex-wrap: wrap;
         overflow-x: visible;
-        /* Remove horizontal scroll */
         gap: 12px;
         padding-bottom: 0;
         display: flex;
-        /* Ensure flex is active */
     }
 
     .spec-item {
         flex: 1 1 100% !important;
-        /* Force full width on mobile */
         min-width: 100% !important;
         width: 100%;
         margin-right: 0 !important;
+    }
+
+    /* SPEC Grid Chart adjustment for mobile */
+    .grid-wrapper {
+        padding: 5px !important;
+        margin: 0 -10px !important;
+        /* Allow more horizontal space */
+        width: calc(100% + 20px) !important;
+    }
+
+    .grid-table {
+        font-size: 8px !important;
+        /* Smaller text for mobile */
+    }
+
+    .grid-table td,
+    .grid-table th {
+        padding: 2px !important;
+    }
+
+    .line-spec-header h3 {
+        font-size: 16px !important;
+    }
+
+    .line-spec-subtitle {
+        font-size: 11px !important;
     }
 
     /* Adjust spec item internal layout for mobile if needed */
@@ -3669,4 +3694,129 @@ body.admin-mode button.admin-only {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: 1px solid #fff;
     }
+}
+
+/* WARRANTY GUIDE View Premium Styling */
+#warranty-guide-view .sub-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#warranty-guide-view .sub-title span {
+    background: rgba(30, 58, 138, 0.1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#warranty-guide-view .data-table {
+    border-radius: 12px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+#warranty-guide-view .data-table thead th {
+    font-size: 12px;
+    padding: 14px 10px;
+    font-weight: 700;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#warranty-guide-view .data-table tbody td {
+    font-size: 12.5px;
+    padding: 12px 10px;
+    border: 1px solid #f1f5f9;
+}
+
+#warranty-guide-view .data-table tbody tr:nth-child(even) {
+    background: #fcfdfe;
+}
+
+#warranty-guide-view .data-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+.warranty-tab-btn {
+    padding: 10px 20px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.warranty-tab-btn.active {
+    background: #fff !important;
+    color: var(--primary) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    font-weight: 800 !important;
+}
+
+.warranty-panel {
+    animation: warrantySlideIn 0.4s ease forwards;
+}
+
+@keyframes warrantySlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    #warranty-guide-view .search-container {
+        padding: 15px;
+    }
+
+    #warranty-tab-header {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 5px;
+        display: flex;
+    }
+
+    .warranty-tab-btn {
+        padding: 8px 15px !important;
+        font-size: 12px !important;
+        flex-shrink: 0;
+    }
+}
+
+/* Mobile Spec Grid Optimization - Balanced One-Screen View */
+@media (max-width: 768px) {
+    .spec-charts-grid { grid-template-columns: 1fr !important; gap: 15px !important; }
+    .spec-chart-box { padding: 8px !important; width: 100% !important; box-sizing: border-box !important; }
+    .grid-wrapper { width: 100% !important; overflow-x: hidden !important; }
+    .grid-table { width: 100% !important; table-layout: fixed !important; font-size: 6px !important; border-spacing: 0 !important; }
+    .grid-table td, .grid-table th { padding: 1px !important; border-width: 0.5px !important; height: auto !important; }
+    /* 폭(왼쪽 첫번째 열)과 두께(하단 마지막 행) 숫자만 강조 및 확대 */
+    .grid-table td:first-child, 
+    .grid-table tr:last-child td { 
+        font-size: 8.5px !important; 
+        font-weight: 800 !important; 
+        color: #1e3a8a !important; 
+        background: #f8fafc !important;
+    }
+    /* 편집 모드 입력창 크기 */
+    .grid-table input { width: 100% !important; font-size: 8px !important; padding: 0 !important; height: 12px !important; }
+    .chart-note { font-size: 9px !important; flex-direction: column !important; gap: 5px; }
+    .grid-legend-mini { font-size: 8px !important; gap: 5px !important; }
 }
