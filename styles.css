@@ -1860,6 +1860,20 @@ body.admin-mode button.admin-only {
         margin-bottom: 12px !important;
     }
 
+    /* Center charts vertically in their container */
+    #dashboard-view .search-container>div:has(canvas) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Fallback for browsers without :has support - targeting the div following h4 */
+    #dashboard-view .search-container>h4+div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     #dashboard-view .section-title-line {
         font-size: 13px;
         margin-bottom: 10px;
@@ -3573,8 +3587,10 @@ body.viewer-open::after {
         padding: 0 !important;
         flex: 1 1 auto !important;
         overflow-y: auto !important;
-        /* Ensure scrolling */
+        overflow-x: auto !important;
+        /* Enable horizontal scroll for zoom */
         -webkit-overflow-scrolling: touch;
+        text-align: center;
     }
 
     #viewer-canvas-container {
@@ -3922,5 +3938,121 @@ body.viewer-open::after {
     #selected-resin-title {
         font-size: 18px !important;
         margin-bottom: 20px !important;
+    }
+}
+
+/* Resin Quality Mobile Optimization - Compressed Table Layout */
+@media (max-width: 768px) {
+    #resin-quality-view .table-container {
+        padding: 0;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    /* Force Table Display instead of Card for better density on mobile */
+    #resin-quality-view table {
+        table-layout: fixed;
+        width: 100%;
+        display: table !important;
+    }
+
+    #resin-quality-view thead {
+        display: table-header-group !important;
+    }
+
+    #resin-quality-view tbody tr {
+        display: table-row !important;
+        flex-direction: row !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #resin-quality-view th {
+        font-size: 11px !important;
+        padding: 8px 4px !important;
+        white-space: nowrap;
+        background: #f1f5f9;
+        color: #475569;
+        display: table-cell !important;
+    }
+
+    #resin-quality-view td {
+        font-size: 11px !important;
+        padding: 8px 4px !important;
+        word-wrap: break-word;
+        word-break: break-all;
+        white-space: normal !important;
+        /* Wrap text */
+        border-bottom: 1px solid #e2e8f0;
+        display: table-cell !important;
+    }
+
+    /* Column Width Adjustments */
+    #resin-quality-view th:nth-child(1),
+    #resin-quality-view td:nth-child(1) {
+        width: 25% !important;
+        /* 검사항목 */
+        background: #f8fafc !important;
+    }
+
+    #resin-quality-view th:nth-child(2),
+    #resin-quality-view td:nth-child(2) {
+        width: 35% !important;
+        /* 조건 */
+    }
+
+    #resin-quality-view th:nth-child(3),
+    #resin-quality-view td:nth-child(3) {
+        width: 40% !important;
+        /* 기준 */
+    }
+
+    /* Reset Card View Styles if present */
+    .resin-table-item,
+    .resin-table-condition,
+    .resin-table-criteria {
+        width: auto !important;
+        border: none !important;
+        text-align: center !important;
+        display: table-cell !important;
+        min-height: auto !important;
+        padding: 8px 4px !important;
+    }
+
+    .resin-table-item::before,
+    .resin-table-condition::before,
+    .resin-table-criteria::before {
+        content: none !important;
+        /* Hide labels */
+    }
+}
+
+/* Certification Status Mobile Optimization */
+@media (max-width: 768px) {
+    #certification-view .table-container {
+        overflow-x: auto !important;
+    }
+
+    #certification-view table {
+        min-width: 600px;
+        /* Ensure table keeps structure but allows scroll */
+    }
+
+    #certification-view th,
+    #certification-view td {
+        font-size: 11px !important;
+        /* Reduced font size */
+        padding: 8px 6px !important;
+        white-space: nowrap;
+    }
+
+    /* Allow wrapping for Name/Item columns */
+    #certification-view td:nth-child(2),
+    #certification-view td:nth-child(3) {
+        white-space: normal;
+        min-width: 100px;
     }
 }

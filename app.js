@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await page.render({ canvasContext: context, viewport: viewport }).promise;
             }
 
-            canvas.style.maxWidth = '100%';
+            canvas.style.maxWidth = 'none';
             canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
 
             canvasContainer.innerHTML = ''; // Clear loading message
@@ -847,7 +847,9 @@ document.addEventListener('DOMContentLoaded', function () {
             let html = '<option value="">유형 선택</option>';
 
             // 도감에 등록된 타이틀로 옵션 생성
-            const titles = [...new Set(localDefects.map(d => d.title))].sort();
+            const standardDefects = ['도장박리', '색차', '스크래치', '오염', '광택불량', '가공크랙', '형상불량'];
+            const titles = [...new Set([...standardDefects, ...localDefects.map(d => d.title)])].sort();
+
             titles.forEach(title => {
                 html += `<option value="${title}">${title}</option>`;
             });
