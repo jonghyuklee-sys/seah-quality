@@ -3891,7 +3891,8 @@
                     <span
                         style="font-size: 12px; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px;">보안
                         모드 가동 중</span>
-                    <button onclick="document.getElementById('doc-viewer-modal').style.display='none'"
+                    <button
+                        onclick="document.getElementById('doc-viewer-modal').style.display='none'; document.body.classList.remove('viewer-open'); document.body.style.overflow='';"
                         style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
                 </div>
             </div>

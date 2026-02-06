@@ -3552,21 +3552,62 @@ body.admin-mode button.admin-only {
     }
 }
 
+/* Hide global watermark when viewer is open */
+body.viewer-open::after {
+    display: none !important;
+}
+
 /* Mobile Viewer Optimization */
 @media (max-width: 768px) {
     #doc-viewer-modal .modal-content {
         width: 100% !important;
         height: 100% !important;
-        max-height: 100vh !important;
+        max-height: 100% !important;
+        /* Fix 100vh issue */
         border-radius: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     #viewer-body {
         padding: 0 !important;
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        /* Ensure scrolling */
+        -webkit-overflow-scrolling: touch;
     }
 
     #viewer-canvas-container {
-        padding: 10px 5px !important;
+        padding: 10px 0 !important;
+        min-height: auto !important;
+        /* Allow content to dictate height */
+    }
+
+    .pdf-page-canvas {
+        margin: 10px auto !important;
+        box-shadow: none !important;
+        /* Reduce lag */
+    }
+
+    /* Viewer Footer Mobile Layout */
+    #doc-viewer-modal>div>div:last-child {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 15px !important;
+    }
+
+    #viewer-pagination {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    #doc-viewer-modal p {
+        text-align: center !important;
+        font-size: 10px !important;
+        width: 100%;
+        color: #64748b !important;
+        margin-top: 5px !important;
     }
 }
 
@@ -3690,29 +3731,40 @@ body.admin-mode button.admin-only {
     .grid-wrapper {
         width: 100% !important;
         overflow-x: hidden !important;
+        /* Disable horizontal scroll */
+        margin-bottom: 20px;
     }
 
     .grid-table {
         width: 100% !important;
+        min-width: unset !important;
+        /* Allow shrinking to screen width */
         table-layout: fixed !important;
-        font-size: 6px !important;
-        border-spacing: 0 !important;
+        /* Force cells to equal width */
+        border-collapse: collapse !important;
+        font-size: 7.5px !important;
+        /* Minimal size for full view */
     }
 
     .grid-table td,
     .grid-table th {
         padding: 1px !important;
-        border-width: 0.5px !important;
-        height: auto !important;
+        /* Minimal padding */
+        border: 1px solid #cbd5e1 !important;
+        height: 16px !important;
+        overflow: hidden;
+        /* visual cleanup */
+        white-space: nowrap;
     }
 
-    /* 폭(왼쪽 첫번째 열)과 두께(하단 마지막 행) 숫자만 강조 및 확대 */
-    .grid-table td:first-child,
-    .grid-table tr:last-child td {
-        font-size: 8.5px !important;
+    /* Fix: Apply header style only to the first column of Body and all cells of Footer (Thickness) */
+    .grid-table tbody td:first-child,
+    .grid-table tfoot td {
+        background: #f1f5f9 !important;
         font-weight: 800 !important;
         color: #1e3a8a !important;
-        background: #f8fafc !important;
+        border: 1px solid #94a3b8 !important;
+        font-size: 8px !important;
     }
 
     /* 편집 모드 입력창 크기 */
@@ -3720,7 +3772,7 @@ body.admin-mode button.admin-only {
         width: 100% !important;
         font-size: 8px !important;
         padding: 0 !important;
-        height: 12px !important;
+        height: 14px !important;
     }
 
     .chart-note {
@@ -3731,7 +3783,8 @@ body.admin-mode button.admin-only {
 
     .grid-legend-mini {
         font-size: 8px !important;
-        gap: 5px !important;
+        gap: 4px !important;
+        flex-wrap: wrap;
     }
 }
 

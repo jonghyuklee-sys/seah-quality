@@ -179,6 +179,10 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar.classList.remove('open');
         if (sidebarOverlay) sidebarOverlay.classList.remove('open');
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Close viewer cleanup if active
+        document.body.classList.remove('viewer-open');
+        document.body.style.overflow = '';
     }
 
     // --- [PDF 페이지 렌더링 전용 함수] ---
@@ -187,7 +191,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const canvasContainer = document.getElementById('viewer-canvas-container');
         const watermark = document.getElementById('viewer-watermark');
         const shield = document.getElementById('viewer-shield');
-        const pageDisplay = document.getElementById('page-num-display');
+
+        // Correct IDs for pagination
+        const pageNumSpan = document.getElementById('current-page-num');
+        const totalPagesSpan = document.getElementById('total-pages');
         const zoomDisplay = document.getElementById('zoom-level-display');
 
         if (!currentPdfDoc || !canvasContainer) return;
@@ -205,11 +212,12 @@ document.addEventListener('DOMContentLoaded', function () {
             canvas.className = 'pdf-page-canvas';
             canvas.style.display = 'block';
             canvas.style.margin = '20px auto';
+            const context = canvas.getContext('2d');
 
             // 시각적 너비 계산 (줌 레벨에 따라 유동적으로 조절)
             const referenceZoom = isMobile ? 1.3 : 1.6;
             const visualWidth = (isMobile ? 100 : 85) * (currentZoom / referenceZoom);
-            canvas.style.width = isMobile ? '100%' : visualWidth + '%';
+            canvas.style.width = visualWidth + '%';
 
             // 모바일에서 캔버스 크기 상한선 체크 (메모리 부족 방지)
             if (isMobile && viewport.width > 3000) {
@@ -227,8 +235,12 @@ document.addEventListener('DOMContentLoaded', function () {
             canvas.style.maxWidth = '100%';
             canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
 
+            canvasContainer.innerHTML = ''; // Clear loading message
+            canvasContainer.appendChild(canvas); // Append the rendered canvas
+
             // 표시 정보 업데이트
-            if (pageDisplay) pageDisplay.textContent = `${num} / ${totalPageCount}`;
+            if (pageNumSpan) pageNumSpan.textContent = num;
+            if (totalPagesSpan) totalPagesSpan.textContent = totalPageCount;
             if (zoomDisplay) zoomDisplay.textContent = `${Math.round(currentZoom * 77)}%`;
             currentPageNum = num;
 
@@ -253,8 +265,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 페이징 버튼 이벤트 바인딩
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
+    const prevPageBtn = document.getElementById('prev-page-btn');
+    const nextPageBtn = document.getElementById('next-page-btn');
     const zoomInBtn = document.getElementById('zoom-in-btn');
     const zoomOutBtn = document.getElementById('zoom-out-btn');
 
@@ -312,6 +324,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         body.scrollTop = 0;
         modal.style.display = 'flex';
+        // Hide global watermark via CSS
+        document.body.classList.add('viewer-open');
+        document.body.style.overflow = 'hidden';
 
         const isPdf = url.toLowerCase().includes('.pdf') || url.includes('blob:') || url.includes('gs://') || url.includes('firebasestorage');
 
