@@ -3898,6 +3898,14 @@
             <!-- 뷰어 본문 -->
             <div id="viewer-body"
                 style="flex: 1; background: #525659; overflow: auto; position: relative; -webkit-overflow-scrolling: touch;">
+                <!-- 보안 레이어 (쉴드 및 워터마크) -->
+                <div id="viewer-shield"
+                    style="position: absolute; top: 0; left: 0; right: 0; width: 100%; z-index: 10; display: none; background: transparent;">
+                </div>
+                <div id="viewer-watermark"
+                    style="position: absolute; top: 0; left: 0; right: 0; width: 100%; z-index: 5; pointer-events: none; display: none; overflow: hidden; pointer-events: none; font-size: 14px; color: rgba(255,255,255,0.05); text-align: center; white-space: pre-wrap; padding: 20px;">
+                </div>
+
                 <!-- 실제 콘텐츠 (PDF/IMG) -->
                 <iframe id="viewer-iframe"
                     style="width: 100%; height: 100%; border: none; background: white; display: none;" src=""></iframe>
@@ -3911,7 +3919,7 @@
 
                 <!-- PDF용 Canvas 컨테이너 -->
                 <div id="viewer-canvas-container"
-                    style="display: flex; flex-direction: column; align-items: center; padding: 20px; background: #525659;">
+                    style="display: flex; flex-direction: column; align-items: center; padding: 20px; background: #525659; min-height: 100%;">
                     <!-- 캔버스가 여기에 동적으로 삽입됩니다 -->
                 </div>
             </div>

@@ -208,21 +208,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 시각적 너비 계산 (줌 레벨에 따라 유동적으로 조절)
             const referenceZoom = isMobile ? 1.3 : 1.6;
-            const visualWidth = (isMobile ? 98 : 85) * (currentZoom / referenceZoom);
-            canvas.style.width = visualWidth + '%';
+            const visualWidth = (isMobile ? 100 : 85) * (currentZoom / referenceZoom);
+            canvas.style.width = isMobile ? '100%' : visualWidth + '%';
 
-            canvas.style.maxWidth = 'none'; // 확대 시 1200px 제한 해제
-            canvas.style.boxShadow = '0 15px 40px rgba(0,0,0,0.6)';
-            canvas.style.background = 'white';
+            // 모바일에서 캔버스 크기 상한선 체크 (메모리 부족 방지)
+            if (isMobile && viewport.width > 3000) {
+                const scaleDown = 3000 / viewport.width;
+                const scaledViewport = page.getViewport({ scale: currentZoom * scaleDown });
+                canvas.height = scaledViewport.height;
+                canvas.width = scaledViewport.width;
+                await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+            } else {
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+            }
 
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            canvasContainer.innerHTML = '';
-            canvasContainer.appendChild(canvas);
-
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            canvas.style.maxWidth = '100%';
+            canvas.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
 
             // 표시 정보 업데이트
             if (pageDisplay) pageDisplay.textContent = `${num} / ${totalPageCount}`;
@@ -235,13 +238,15 @@ document.addEventListener('DOMContentLoaded', function () {
             // 보안 레이어 동기화
             const syncSecurityLayers = () => {
                 const contentHeight = Math.max(body.scrollHeight, body.offsetHeight, canvasContainer.scrollHeight);
+                const watermark = document.getElementById('viewer-watermark');
+                const shield = document.getElementById('viewer-shield');
                 if (watermark) watermark.style.height = contentHeight + 'px';
                 if (shield) {
                     shield.style.height = contentHeight + 'px';
                     shield.style.display = 'block';
                 }
             };
-            setTimeout(syncSecurityLayers, 100);
+            setTimeout(syncSecurityLayers, 300);
         } catch (e) {
             console.error("페이지 렌더링 실패:", e);
         }
@@ -2008,20 +2013,20 @@ document.addEventListener('DOMContentLoaded', function () {
                         else break;
                     }
                     html += `
-                        <td rowspan="${rs}" style="padding:16px; font-weight:700; color:#1e3a8a; background:#f8fafc; text-align:center; border-right:1px solid #e2e8f0; width:130px; font-size:15px; line-height:1.5; vertical-align:middle;">
+                        <td rowspan="${rs}" class="resin-table-item" data-label="검사항목">
                             ${row.item.replace(/\n/g, '<br>')}
                         </td>`;
                 }
 
                 // 조건
                 html += `
-                    <td style="padding:16px; color:#475569; text-align:center; border-right:1px solid #e2e8f0; width:190px; font-size:15px; line-height:1.5; vertical-align:middle; background:#fff;">
+                    <td class="resin-table-condition" data-label="조건">
                         ${row.condition.replace(/\n/g, '<br>')}
                     </td>`;
 
                 // 합부 기준
                 html += `
-                    <td style="background:#fff;">
+                    <td class="resin-table-criteria" data-label="합부 기준">
                         <div style="padding: 2px 0;">
                             ${row.criteria}
                         </div>
@@ -2962,7 +2967,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const widths = gridConfig[gridId].widths;
         const thicknesses = gridConfig[gridId].thicknesses;
 
-        let html = `<table class="grid-table" style="border-collapse: collapse; font-size: 10px; text-align: center; user-select: none;">`;
+        let html = `<table class="grid-table" style="border-collapse: collapse; font-size: 10px; text-align: center; user-select: none; border: 1px solid #cbd5e1;">`;
         html += `<tbody>`;
 
         // Body
@@ -2970,7 +2975,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const displayW = isGlobalGridEditMode ?
                 `<input type="text" value="${w}" style="width: 40px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'widths', ${wIdx}, this.value)">` : w;
 
-            html += `<tr><td style="padding: 4px; border: 1px solid #e2e8f0; background: #f1f5f9; font-weight: bold; color: #475569;">${displayW}</td>`;
+            html += `<tr><td style="padding: 4px; border: 1px solid #cbd5e1; background: #f1f5f9; font-weight: bold; color: #475569;">${displayW}</td>`;
             thicknesses.forEach(t => {
                 const key = `${gridId}_${t}_${w}`;
                 const status = globalGridData[key] || 0;
@@ -2984,7 +2989,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (status === 3) {
                     bg = '#1e3a8a';
                 }
-                const cellStyle = `height: 24px; border: 1px solid #e2e8f0; background-color: ${bg}; ${style} cursor: ${isGlobalGridEditMode ? 'pointer' : 'default'}; transition: all 0.1s;`;
+                const cellStyle = `height: 24px; border: 1px solid #cbd5e1; background-color: ${bg}; ${style} cursor: ${isGlobalGridEditMode ? 'pointer' : 'default'}; transition: all 0.1s;`;
                 html += `<td style="${cellStyle}" 
                     onmousedown="handleGridMouseDown('${gridId}', '${t}', '${w}')" 
                     onmouseenter="handleGridMouseEnter('${gridId}', '${t}', '${w}')"></td>`;
@@ -2994,11 +2999,11 @@ document.addEventListener('DOMContentLoaded', function () {
         html += `</tbody>`;
 
         // Footer
-        html += `<tfoot><tr><td style="padding: 6px; border: 1px solid #e2e8f0; background: #f1f5f9; font-weight: 800; color: #1e3a8a;">폭/두께</td>`;
+        html += `<tfoot><tr><td style="padding: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; font-weight: 800; color: #1e3a8a;">폭/두께</td>`;
         thicknesses.forEach((t, tIdx) => {
             const displayT = isGlobalGridEditMode ?
                 `<input type="text" value="${t}" style="width: 32px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'thicknesses', ${tIdx}, this.value)">` : t;
-            html += `<td style="padding: 6px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 800; color: #1e3a8a; min-width: 32px;">${displayT}</td>`;
+            html += `<td style="padding: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 800; color: #1e3a8a; min-width: 32px;">${displayT}</td>`;
         });
         html += `</tr></tfoot></table>`;
 

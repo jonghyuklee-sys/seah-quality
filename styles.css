@@ -48,7 +48,7 @@ button {
 }
 
 html {
-    
+
     width: 100%;
 }
 
@@ -57,9 +57,9 @@ body {
     background-color: var(--bg-main);
     color: var(--text-main);
     line-height: 1.5;
-    
+
     width: 100%;
-    
+
 }
 
 /* ??㉱?洹먮봿??嶺뚮ㅄ維獄???戮?꽑 */
@@ -342,7 +342,7 @@ body.admin-mode button.admin-only {
 }
 
 .criteria-item::before {
-    content: "??;
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--primary-light);
@@ -768,7 +768,7 @@ body.admin-mode button.admin-only {
 }
 
 .standard-card li::before {
-    content: "??;
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--primary-light);
@@ -1023,7 +1023,7 @@ body.admin-mode button.admin-only {
 }
 
 .info-spec-box li::before {
-    content: "??;
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--success);
@@ -1119,9 +1119,9 @@ body.admin-mode button.admin-only {
 
     .main-area {
         margin-left: 0;
-        
+
         width: 100%;
-        
+
     }
 
     .top-bar {
@@ -1173,7 +1173,7 @@ body.admin-mode button.admin-only {
 
     .content-padding {
         padding: 12px;
-        
+
     }
 
     /* Page Header - ???⑸츩????濡〓턁 ?꾩렮維? */
@@ -1791,152 +1791,7 @@ body.admin-mode button.admin-only {
     }
 
     /* ????????깆떨 ?リ옇?? ???逾??- 嶺뚮ㅄ維????곸궠?獄??筌먦끇六??怨쀬Ŧ ?곌떠???*/
-    #resin-quality-view table {
-        display: block;
-        width: 100%;
-        min-width: unset !important;
-    }
 
-    #resin-quality-view thead {
-        display: none;
-        /* ???녹맠 ??? */
-    }
-
-    #resin-quality-view tbody {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 12px;
-    }
-
-    #resin-quality-view tbody tr {
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 14px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        margin-bottom: 12px;
-    }
-
-    /* ?잙갭梨띄쳥???戮곗굚 (?띠룇?? ?롪틵?????냵彛?諭踰?嶺??뺢퀡??? */
-    #resin-quality-view tbody tr.group-start {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        border-bottom: 1px dashed #cbd5e1;
-        margin-bottom: 0;
-        padding-bottom: 10px;
-    }
-
-    /* ?잙갭梨띄쳥?繞벿살탪??(?띠룇?? ?롪틵?????냵彛?諭踰?繞벿살탪?? */
-    #resin-quality-view tbody tr.group-middle {
-        border-radius: 0;
-        border-top: none;
-        border-bottom: 1px dashed #cbd5e1;
-        margin-bottom: 0;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-
-    /* ?잙갭梨띄쳥???(?띠룇?? ?롪틵?????냵彛?諭踰?嶺뚮씭??嶺? */
-    #resin-quality-view tbody tr.group-end {
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        border-top: none;
-        margin-bottom: 12px;
-        padding-top: 10px;
-    }
-
-    /* ?잙갭梨띄쳥???關逾?(??源놁겱???롪틵?????냵彛? */
-    #resin-quality-view tbody tr.group-single {
-        margin-bottom: 12px;
-    }
-
-    /* ?잙갭梨띄쳥???戮곗굚/??關逾????ｇ춯??롪틵?????냵彛?嶺??뺢퀡???td) ??戮?뻣 */
-    #resin-quality-view tbody tr.group-start td:first-child,
-    #resin-quality-view tbody tr.group-single td:first-child {
-        display: block !important;
-    }
-
-    /* group-middle, group-end???????브퀗?쀦뤃??嶺??뺢퀡???td????????戮?뻣 */
-    #resin-quality-view tbody tr.group-middle td:first-child,
-    #resin-quality-view tbody tr.group-end td:first-child {
-        display: block !important;
-        font-weight: 400 !important;
-        color: #475569 !important;
-        font-size: 13px !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        padding-bottom: 8px !important;
-    }
-
-    /* group-middle, group-end??嶺??뺢퀡???td???브퀗?쀦뤃???怨뚮낵 ??戮?뻣 */
-    #resin-quality-view tbody tr.group-middle td:first-child::before,
-    #resin-quality-view tbody tr.group-end td:first-child::before {
-        content: "?브퀗?쀦뤃? " !important;
-        font-weight: 700;
-        color: #64748b;
-        font-size: 11px;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    #resin-quality-view tbody tr td {
-        display: block !important;
-        width: 100% !important;
-        min-width: unset !important;
-        padding: 8px 0 !important;
-        border: none !important;
-        border-bottom: 1px solid #f1f5f9;
-        text-align: left !important;
-        font-size: 13px !important;
-        line-height: 1.5 !important;
-        background: transparent !important;
-    }
-
-    #resin-quality-view tbody tr td:last-child {
-        border-bottom: none;
-        padding-bottom: 0 !important;
-    }
-
-    /* 嶺뚮ㅄ維???源낇뱺?????? ??濡ロ뱺 ??怨뚮낵 ??戮?뻣 */
-    #resin-quality-view tbody tr td:first-child::before {
-        content: "?롪틵?????냵彛? ";
-        font-weight: 700;
-        color: #1e3a8a;
-        font-size: 11px;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    #resin-quality-view tbody tr td:nth-child(2)::before,
-    #resin-quality-view tbody tr.group-middle td:first-child::before,
-    #resin-quality-view tbody tr.group-end td:first-child::before {
-        content: "?브퀗?쀦뤃? ";
-        font-weight: 700;
-        color: #64748b;
-        font-size: 11px;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    #resin-quality-view tbody tr td:last-child::before {
-        content: "??? ?リ옇??: ";
-        font-weight: 700;
-        color: #16a34a;
-        font-size: 11px;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    /* ?롪틵?????냵彛??? ?????*/
-    #resin-quality-view tbody tr td:first-child {
-        font-weight: 700;
-        color: #1e3a8a;
-        font-size: 15px !important;
-        padding-bottom: 12px !important;
-        border-bottom: 2px solid #e2e8f0;
-    }
 
 
 
@@ -3626,6 +3481,7 @@ body.admin-mode button.admin-only {
     .grid-table td,
     .grid-table th {
         padding: 2px !important;
+        border: 1px solid #cbd5e1 !important;
     }
 
     .line-spec-header h3 {
@@ -3693,6 +3549,24 @@ body.admin-mode button.admin-only {
         z-index: 5;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: 1px solid #fff;
+    }
+}
+
+/* Mobile Viewer Optimization */
+@media (max-width: 768px) {
+    #doc-viewer-modal .modal-content {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    #viewer-body {
+        padding: 0 !important;
+    }
+
+    #viewer-canvas-container {
+        padding: 10px 5px !important;
     }
 }
 
@@ -3802,21 +3676,198 @@ body.admin-mode button.admin-only {
 
 /* Mobile Spec Grid Optimization - Balanced One-Screen View */
 @media (max-width: 768px) {
-    .spec-charts-grid { grid-template-columns: 1fr !important; gap: 15px !important; }
-    .spec-chart-box { padding: 8px !important; width: 100% !important; box-sizing: border-box !important; }
-    .grid-wrapper { width: 100% !important; overflow-x: hidden !important; }
-    .grid-table { width: 100% !important; table-layout: fixed !important; font-size: 6px !important; border-spacing: 0 !important; }
-    .grid-table td, .grid-table th { padding: 1px !important; border-width: 0.5px !important; height: auto !important; }
+    .spec-charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .spec-chart-box {
+        padding: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .grid-wrapper {
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .grid-table {
+        width: 100% !important;
+        table-layout: fixed !important;
+        font-size: 6px !important;
+        border-spacing: 0 !important;
+    }
+
+    .grid-table td,
+    .grid-table th {
+        padding: 1px !important;
+        border-width: 0.5px !important;
+        height: auto !important;
+    }
+
     /* 폭(왼쪽 첫번째 열)과 두께(하단 마지막 행) 숫자만 강조 및 확대 */
-    .grid-table td:first-child, 
-    .grid-table tr:last-child td { 
-        font-size: 8.5px !important; 
-        font-weight: 800 !important; 
-        color: #1e3a8a !important; 
+    .grid-table td:first-child,
+    .grid-table tr:last-child td {
+        font-size: 8.5px !important;
+        font-weight: 800 !important;
+        color: #1e3a8a !important;
         background: #f8fafc !important;
     }
+
     /* 편집 모드 입력창 크기 */
-    .grid-table input { width: 100% !important; font-size: 8px !important; padding: 0 !important; height: 12px !important; }
-    .chart-note { font-size: 9px !important; flex-direction: column !important; gap: 5px; }
-    .grid-legend-mini { font-size: 8px !important; gap: 5px !important; }
+    .grid-table input {
+        width: 100% !important;
+        font-size: 8px !important;
+        padding: 0 !important;
+        height: 12px !important;
+    }
+
+    .chart-note {
+        font-size: 9px !important;
+        flex-direction: column !important;
+        gap: 5px;
+    }
+
+    .grid-legend-mini {
+        font-size: 8px !important;
+        gap: 5px !important;
+    }
+}
+
+/* Resin Quality Table Styles */
+.resin-table-item {
+    padding: 16px;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #f8fafc;
+    text-align: center;
+    border-right: 1px solid #e2e8f0;
+    width: 140px;
+    font-size: 15px;
+    line-height: 1.5;
+    vertical-align: middle;
+}
+
+.resin-table-condition {
+    padding: 16px;
+    color: #475569;
+    text-align: center;
+    border-right: 1px solid #e2e8f0;
+    width: 200px;
+    font-size: 15px;
+    line-height: 1.5;
+    vertical-align: middle;
+    background: #fff;
+}
+
+.resin-table-criteria {
+    background: #fff;
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.resin-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+/* Resin Quality Mobile Optimization - Card View with Labels */
+@media (max-width: 768px) {
+    #resin-quality-view .table-container {
+        padding: 0;
+        margin: 0;
+        overflow-x: visible;
+    }
+
+    #resin-quality-view table,
+    #resin-quality-view tbody,
+    #resin-quality-view th,
+    #resin-quality-view td,
+    #resin-quality-view tr {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #resin-quality-view thead {
+        display: none;
+    }
+
+    #resin-quality-view tbody tr {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 16px;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    /* Reset desktop cell styles */
+    .resin-table-item,
+    .resin-table-condition,
+    .resin-table-criteria {
+        width: 100% !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        text-align: left !important;
+        padding: 0 0 12px 0 !important;
+        font-size: 14px !important;
+        min-width: unset !important;
+        vertical-align: top !important;
+    }
+
+    .resin-table-criteria {
+        border-bottom: none !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Labels using attr(data-label) for safe rendering */
+    .resin-table-item::before,
+    .resin-table-condition::before,
+    .resin-table-criteria::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        line-height: 1;
+    }
+
+    /* Label Colors matching screenshot/theme */
+    .resin-table-item::before {
+        color: #1e3a8a;
+        /* Primary Blue for '검사항목' */
+    }
+
+    .resin-table-condition::before {
+        color: #64748b;
+        /* Secondary Gray for '조건' */
+    }
+
+    .resin-table-criteria::before {
+        color: #166534;
+        /* Green for '합부 기준' */
+    }
+
+    /* Resin Buttons Mobile */
+    .resin-btn {
+        flex: 1 1 calc(33.33% - 8px);
+        font-size: 13px !important;
+        padding: 10px !important;
+    }
+
+    #selected-resin-title {
+        font-size: 18px !important;
+        margin-bottom: 20px !important;
+    }
 }
