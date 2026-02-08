@@ -3725,9 +3725,19 @@ body.viewer-open::after {
     }
 
     .warranty-tab-btn {
-        padding: 8px 15px !important;
-        font-size: 12px !important;
+        padding: 8px 12px !important;
+        font-size: 11.5px !important;
         flex-shrink: 0;
+    }
+
+    #warranty-guide-view .data-table thead th {
+        font-size: 10px !important;
+        padding: 8px 4px !important;
+    }
+
+    #warranty-guide-view .data-table tbody td {
+        font-size: 10.5px !important;
+        padding: 8px 4px !important;
     }
 }
 
@@ -3846,103 +3856,7 @@ body.viewer-open::after {
     justify-content: center;
 }
 
-/* Resin Quality Mobile Optimization - Card View with Labels */
-@media (max-width: 768px) {
-    #resin-quality-view .table-container {
-        padding: 0;
-        margin: 0;
-        overflow-x: visible;
-    }
-
-    #resin-quality-view table,
-    #resin-quality-view tbody,
-    #resin-quality-view th,
-    #resin-quality-view td,
-    #resin-quality-view tr {
-        display: block;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    #resin-quality-view thead {
-        display: none;
-    }
-
-    #resin-quality-view tbody tr {
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        margin-bottom: 16px;
-        padding: 16px;
-        gap: 12px;
-    }
-
-    /* Reset desktop cell styles */
-    .resin-table-item,
-    .resin-table-condition,
-    .resin-table-criteria {
-        width: 100% !important;
-        background: transparent !important;
-        border: none !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        text-align: left !important;
-        padding: 0 0 12px 0 !important;
-        font-size: 14px !important;
-        min-width: unset !important;
-        vertical-align: top !important;
-    }
-
-    .resin-table-criteria {
-        border-bottom: none !important;
-        padding-bottom: 0 !important;
-    }
-
-    /* Labels using attr(data-label) for safe rendering */
-    .resin-table-item::before,
-    .resin-table-condition::before,
-    .resin-table-criteria::before {
-        content: attr(data-label);
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 6px;
-        line-height: 1;
-    }
-
-    /* Label Colors matching screenshot/theme */
-    .resin-table-item::before {
-        color: #1e3a8a;
-        /* Primary Blue for '검사항목' */
-    }
-
-    .resin-table-condition::before {
-        color: #64748b;
-        /* Secondary Gray for '조건' */
-    }
-
-    .resin-table-criteria::before {
-        color: #166534;
-        /* Green for '합부 기준' */
-    }
-
-    /* Resin Buttons Mobile */
-    .resin-btn {
-        flex: 1 1 calc(33.33% - 8px);
-        font-size: 13px !important;
-        padding: 10px !important;
-    }
-
-    #selected-resin-title {
-        font-size: 18px !important;
-        margin-bottom: 20px !important;
-    }
-}
-
-/* Resin Quality Mobile Optimization - Strictly Compact Table */
-/* Resin Quality Mobile Optimization - True Card View (Vertical Scroll Only) */
+/* Resin Quality Mobile Optimization - Card View with Smart Grouping */
 @media (max-width: 768px) {
     #resin-quality-view .table-container {
         padding: 0 !important;
@@ -3953,7 +3867,6 @@ body.viewer-open::after {
         overflow: visible !important;
     }
 
-    /* Reset Table to Block Layout */
     #resin-quality-view table,
     #resin-quality-view tbody {
         display: block !important;
@@ -3965,23 +3878,48 @@ body.viewer-open::after {
         display: none !important;
     }
 
-    /* Row as Card */
+    /* Card Layout with Grouping Logic */
     #resin-quality-view tr {
         display: flex !important;
         flex-direction: column !important;
         background: white !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 12px !important;
-        margin-bottom: 12px !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
         position: relative !important;
-        padding-top: 40px !important;
-        /* Space for Header */
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin-bottom: 0 !important;
+        border-radius: 0 !important;
         overflow: hidden !important;
     }
 
-    /* Card Header (Generated from data-item) */
-    #resin-quality-view tr::before {
+    /* Only show top radius and header space for the start of a group */
+    #resin-quality-view tr.group-single,
+    #resin-quality-view tr.group-start {
+        margin-top: 16px !important;
+        border-top-left-radius: 16px !important;
+        border-top-right-radius: 16px !important;
+        padding-top: 48px !important;
+        /* Space for the floating header */
+    }
+
+    /* Only show bottom radius and margin for the end of a group */
+    #resin-quality-view tr.group-single,
+    #resin-quality-view tr.group-end {
+        margin-bottom: 16px !important;
+        border-bottom-left-radius: 16px !important;
+        border-bottom-right-radius: 16px !important;
+    }
+
+    /* Remove middle borders to create a unified card look */
+    #resin-quality-view tr.group-middle,
+    #resin-quality-view tr.group-end {
+        border-top: none !important;
+    }
+
+    /* Card Header - Floating on top of the first row of a group */
+    #resin-quality-view tr.group-single::before,
+    #resin-quality-view tr.group-start::before {
         content: attr(data-item);
         display: flex !important;
         align-items: center;
@@ -3989,83 +3927,115 @@ body.viewer-open::after {
         position: absolute !important;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 40px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        font-weight: 700;
-        font-size: 14px;
-        color: #1e3a8a;
-        z-index: 1;
+        width: 100% !important;
+        height: 48px;
+        background: linear-gradient(to right, #f8fafc, #f1f5f9) !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        font-weight: 800 !important;
+        font-size: 15px !important;
+        color: #1e3a8a !important;
+        z-index: 2 !important;
+        padding: 0 16px !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+        white-space: pre-wrap !important;
     }
 
-    /* Hide the original Item TD (it uses rowspan and breaks layout) */
+    /* Remove the redundant desktop Item cell */
     #resin-quality-view td.resin-table-item {
         display: none !important;
     }
 
-    /* Data Cells (Condition & Criteria) */
+    /* Cell Layout Optimization - Using Flex for consistent column widths */
     #resin-quality-view td {
         display: flex !important;
         flex-direction: row !important;
-        justify-content: space-between !important;
         align-items: flex-start !important;
+        width: 100% !important;
         padding: 12px 16px !important;
         border: none !important;
         border-bottom: 1px solid #f1f5f9 !important;
-        font-size: 13px !important;
-        color: #334155 !important;
-        text-align: right !important;
-        width: 100% !important;
         box-sizing: border-box !important;
+        text-align: left !important;
+        gap: 12px !important;
     }
 
-    #resin-quality-view td:last-child {
+    #resin-quality-view tr.group-end td:last-child,
+    #resin-quality-view tr.group-single td:last-child {
         border-bottom: none !important;
     }
 
-    /* Inject Labels via pseudo-elements */
+    /* Row Labeling - Consistent Width for alignment */
     #resin-quality-view td.resin-table-condition::before {
         content: "조건";
-        display: block;
-        font-weight: 600;
+        flex: 0 0 50px !important;
+        font-size: 11px;
+        font-weight: 700;
         color: #64748b;
-        text-align: left;
-        margin-right: auto;
-        /* Push content to right */
-        flex-shrink: 0;
+        text-transform: uppercase;
+        margin-top: 4px;
     }
 
     #resin-quality-view td.resin-table-criteria::before {
         content: "기준";
-        display: block;
-        font-weight: 600;
-        color: #64748b;
-        text-align: left;
-        margin-right: auto;
-        flex-shrink: 0;
+        flex: 0 0 50px !important;
+        font-size: 11px;
+        font-weight: 700;
+        color: #166534;
+        text-transform: uppercase;
+        margin-top: 6px;
     }
 
-    /* Specific content styling */
-    #resin-quality-view td.resin-table-condition {
-        font-weight: 500;
-        color: #0f172a !important;
+    /* Content Area for Cell Values */
+    #resin-quality-view td>* {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+        color: #1e293b !important;
+        word-break: keep-all !important;
+        margin: 0 !important;
     }
 
-    #resin-quality-view td.resin-table-criteria {
-        color: #1e40af !important;
-        /* Blue for criteria */
-        font-weight: 600;
+    /* Enhanced visibility for nested elements */
+    .highlight-blue {
+        color: #2563eb !important;
+        font-weight: 700 !important;
+        display: block !important;
+        margin-bottom: 4px;
     }
 
-    /* Ensure text wrapping inside cards */
-    #resin-quality-view td span {
-        text-align: right;
-        display: inline-block;
-        max-width: 70%;
-        /* Limit width to ensure label visibility */
+    .note-text {
+        font-size: 11.5px !important;
+        color: #64748b !important;
+        display: block !important;
+    }
+
+    /* Resin selection buttons grid for mobile */
+    .resin-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 10px !important;
+        justify-items: center !important;
+    }
+
+    .resin-btn {
+        width: 100% !important;
+        padding: 8px 2px !important;
+        font-size: 11px !important;
+        height: auto !important;
+        min-width: unset !important;
+    }
+
+    #selected-resin-title {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
+        text-align: center !important;
     }
 }
+
+
 
 /* Certification Status Mobile Optimization */
 @media (max-width: 768px) {
@@ -4081,8 +4051,8 @@ body.viewer-open::after {
 
     #certification-view th,
     #certification-view td {
-        font-size: 11px !important;
-        padding: 8px 4px !important;
+        font-size: 12.5px !important;
+        padding: 10px 5px !important;
     }
 
     /* Wrap long text in certification table where safe */

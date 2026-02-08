@@ -1666,11 +1666,16 @@ document.addEventListener('DOMContentLoaded', function () {
         localDefects.forEach(d => { if (d.title && !defectMap.hasOwnProperty(d.title)) defectMap[d.title] = 0; });
 
         displayData.forEach(v => {
-            const dType = v.defectType || '기타';
+            let dType = v.defectType || '기타';
+            // [Fix] 정규화: '도장박리 (Peeling)' -> '도장박리' 형태로 변환하여 매핑 성공률 제고
+            if (dType.includes('(')) {
+                dType = dType.split('(')[0].trim();
+            }
+
             if (defectMap.hasOwnProperty(dType)) {
                 defectMap[dType] += (parseInt(v.cost) || 0);
             } else {
-                // 도감에 없는 유형은 기타로 합산 또는 동적 추가
+                // 도감에 없는 유형은 기타로 합산
                 defectMap['기타'] += (parseInt(v.cost) || 0);
             }
         });
