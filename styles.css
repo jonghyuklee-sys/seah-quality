@@ -4144,3 +4144,22 @@ body.viewer-open::after {
         padding: 10px 5px !important;
     }
 }
+
+/* Chart Interpretation Style */
+.chart-interpretation {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.chart-interpretation strong {
+    color: #1e3a8a;
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 14px;
+}

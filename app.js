@@ -1219,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'modal-edit-description': v.description || '',
 
             'modal-reply-manager': v.replyManager || '',
-            'modal-reply-cost': v.cost || '',
+            'modal-reply-cost': v.cost ? (parseInt(v.cost.toString().replace(/[^0-9]/g, '')) || 0).toLocaleString() : '',
             'modal-reply-cause': v.replyCause || '',
             'modal-reply-countermeasure': v.replyCountermeasure || '',
             'modal-reply-evaluation': v.replyEvaluation || '',
@@ -1344,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     description: document.getElementById('modal-edit-description').value,
 
                     replyManager: document.getElementById('modal-reply-manager').value,
-                    cost: document.getElementById('modal-reply-cost').value,
+                    cost: document.getElementById('modal-reply-cost').value.toString().replace(/[^0-9]/g, ''),
                     replyCause: document.getElementById('modal-reply-cause').value,
                     replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
                     replyEvaluation: document.getElementById('modal-reply-evaluation').value,
@@ -1365,6 +1365,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 modalSaveBtn.disabled = false;
             }
         };
+    }
+
+    // 예상 손실 비용 입력 시 자동 콤마 포맷팅
+    const costInput = document.getElementById('modal-reply-cost');
+    if (costInput) {
+        costInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            if (value) {
+                e.target.value = parseInt(value).toLocaleString();
+            } else {
+                e.target.value = '';
+            }
+        });
     }
 
     window.deleteVoc = async (id) => {
@@ -1475,8 +1488,11 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('dash-completion-rate').textContent = completeRate + "%";
 
         // 비용 합계 계산
-        const totalCost = displayData.reduce((acc, v) => acc + (parseInt(v.cost) || 0), 0);
-        document.getElementById('dash-total-cost').textContent = "₩" + totalCost.toLocaleString();
+        const totalCost = displayData.reduce((acc, v) => {
+            const val = v.cost ? v.cost.toString().replace(/[^0-9]/g, '') : 0;
+            return acc + (parseInt(val) || 0);
+        }, 0);
+        document.getElementById('dash-total-cost').textContent = totalCost.toLocaleString() + " 원";
 
         if (typeof Chart === 'undefined') return;
         if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
@@ -1504,7 +1520,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, datalabels: { color: '#475569', anchor: 'end', align: 'top', formatter: Math.round } },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                    scales: { y: { beginAtZero: true, grace: '15%', grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
                 }
             });
         }
@@ -1561,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, datalabels: { align: 'top', color: '#8b5cf6', font: { weight: 'bold' } } },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } } }
+                    scales: { y: { beginAtZero: true, grace: '15%', grid: { color: '#f1f5f9' } } }
                 }
             });
         }
@@ -1613,7 +1629,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#14b8a6', font: { weight: 'bold' } } },
-                    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
+                    scales: { x: { beginAtZero: true, grace: '15%', grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
                 }
             });
         }
@@ -1622,7 +1638,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const lineCostMap = { 'CPL': 0, 'CRM': 0, 'CGL': 0, '1CCL': 0, '2CCL': 0, '3CCL': 0, 'SSCL': 0 };
         displayData.forEach(v => {
             if (v.line && lineCostMap.hasOwnProperty(v.line)) {
-                lineCostMap[v.line] += (parseInt(v.cost) || 0);
+                const val = v.cost ? v.cost.toString().replace(/[^0-9]/g, '') : 0;
+                lineCostMap[v.line] += (parseInt(val) || 0);
             }
         });
 
@@ -1647,10 +1664,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         legend: { display: false },
                         datalabels: {
                             anchor: 'end', align: 'top', color: '#ef4444', font: { weight: 'bold', size: 10 },
-                            formatter: (v) => v > 0 ? (v / 10000).toFixed(0) + '만' : ''
+                            formatter: (v) => v > 0 ? v.toLocaleString() + ' 원' : ''
                         }
                     },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                    layout: { padding: { top: 30 } },
+                    scales: { y: { beginAtZero: true, grace: '30%', grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
                 }
             });
         }
@@ -1672,16 +1690,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 dType = dType.split('(')[0].trim();
             }
 
+            const costVal = v.cost ? v.cost.toString().replace(/[^0-9]/g, '') : 0;
+            const parsedCost = parseInt(costVal) || 0;
+
             if (defectMap.hasOwnProperty(dType)) {
-                defectMap[dType] += (parseInt(v.cost) || 0);
+                defectMap[dType] += parsedCost;
             } else {
                 // 도감에 없는 유형은 기타로 합산
-                defectMap['기타'] += (parseInt(v.cost) || 0);
+                defectMap['기타'] += parsedCost;
             }
         });
 
-        // 비용이 0보다 큰 항목만 필터링
-        const filteredDefectLabels = Object.keys(defectMap).filter(k => defectMap[k] > 0);
+        // 비용이 0보다 큰 항목만 필터링 후 비용 순으로 정렬
+        const filteredDefectLabels = Object.keys(defectMap).filter(k => defectMap[k] > 0).sort((a, b) => defectMap[b] - defectMap[a]);
         const filteredDefectValues = filteredDefectLabels.map(k => defectMap[k]);
 
         const defectCtx = document.getElementById('defectTypeChart');
@@ -1702,8 +1723,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 options: {
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#f59e0b', font: { weight: 'bold' }, formatter: (v) => v > 0 ? (v / 10000).toFixed(0) + '만' : '' } },
-                    scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#f59e0b', font: { weight: 'bold' }, formatter: (v) => v > 0 ? v.toLocaleString() + ' 원' : '' } },
+                    layout: { padding: { right: 80 } },
+                    scales: { x: { beginAtZero: true, grace: '35%', grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
                 }
             });
         }
@@ -1720,6 +1742,122 @@ document.addEventListener('DOMContentLoaded', function () {
                 </tr>
             `).join('');
             if (displayData.length === 0) recentList.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">현황 없음</td></tr>';
+        }
+
+        // --- Dashboard Interpretation Logic ---
+        const updateInterpretation = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = text;
+        };
+
+        // 1. Line Chart Analysis (공정별 부적합 발생 빈도 해석)
+        let lineAnalysis = "";
+        if (total > 0) {
+            const lines = Object.keys(lineMap).filter(l => lineMap[l] > 0).sort((a, b) => lineMap[b] - lineMap[a]);
+            const topLines = lines.slice(0, 2).map(l => `<strong>${l}</strong>(${lineMap[l]}건)`).join(', ');
+            lineAnalysis = `공정별 부적합 발생 빈도 분석 결과, <strong>${topLines}</strong> 라인에서 상대적으로 높은 발생률이 탐지되었습니다.`;
+            updateInterpretation('lineChart-desc', lineAnalysis);
+        } else {
+            updateInterpretation('lineChart-desc', '안정적 공정 유지 상태: 분석 가능한 데이터가 존재하지 않습니다.');
+        }
+
+        // 2. Category Analysis (품질 리스크 비중 해석)
+        let catAnalysis = "";
+        if (total > 0) {
+            const claimCount = catMap['클레임'] || 0;
+            const claimRatio = Math.round((claimCount / total) * 100);
+            catAnalysis = `클레임 발생 건수는 <strong>${claimCount}건</strong>(점유율 ${claimRatio}%)이며, 현재 <strong>${claimRatio > 50 ? '중대 클레임 위주' : '일반 컴플레인 위주'}</strong>의 품질 현황을 나타내고 있습니다.`;
+            updateInterpretation('categoryChart-desc', catAnalysis);
+        }
+
+        // 3. Monthly Trend Analysis (품질 추세 해석)
+        let trendAnalysis = "";
+        if (sortedMonths.length >= 1) {
+            const avgCount = (total / sortedMonths.length).toFixed(1);
+            trendAnalysis = `구간 내 월평균 발생률은 <strong>${avgCount}건</strong>입니다. `;
+            if (sortedMonths.length >= 2) {
+                const latest = monthlyMap[sortedMonths[sortedMonths.length - 1]];
+                const silver = monthlyMap[sortedMonths[sortedMonths.length - 2]];
+                const diff = latest - silver;
+                trendAnalysis += `최근 1개월간 전월 대비 <strong>${diff > 0 ? diff + '건 상승' : diff < 0 ? Math.abs(diff) + '건 하락' : '변동 없음'}</strong> 추세를 보이고 있습니다.`;
+            }
+            updateInterpretation('monthlyTrendChart-desc', trendAnalysis);
+        }
+
+        // 4. Market Analysis (시장별 비중 해석)
+        let marketAnalysis = "";
+        if (total > 0) {
+            const domestic = marketMap['내수'] || 0;
+            const exportC = marketMap['수출'] || 0;
+            marketAnalysis = `내수(<strong>${domestic}건</strong>)와 수출(<strong>${exportC}건</strong>) 비중 데이터가 집계되었으며, <strong>${domestic >= exportC ? '국내 고객사' : '해외 수출품'}</strong>를 중심으로 품질 관리가 집중되고 있습니다.`;
+            updateInterpretation('marketShareChart-desc', marketAnalysis);
+        }
+
+        // 5. Team Analysis (조직별 대응 현황 해석)
+        if (total > 0) {
+            const teams = Object.keys(teamMap).filter(t => teamMap[t] > 0).sort((a, b) => teamMap[b] - teamMap[a]);
+            if (teams.length > 0) {
+                updateInterpretation('teamShareChart-desc', `<strong>${teams[0]}</strong>의 품질 대응 점유율이 가장 높으며, 전사적 품질 개선 활동이 활발히 진행 중입니다.`);
+            }
+        }
+
+        // 6. Cost Analysis (손실 비용 비중 해석)
+        let costAnalysis = "";
+        if (totalCost > 0) {
+            const costLines = Object.keys(lineCostMap).filter(l => lineCostMap[l] > 0).sort((a, b) => lineCostMap[b] - lineCostMap[a]);
+            const topCostLine = costLines[0];
+            const costRatio = Math.round((lineCostMap[topCostLine] / totalCost) * 100);
+            costAnalysis = `실패 비용 분석 결과, <strong>${topCostLine}</strong> 라인이 전체 손실액의 <strong>${costRatio}%</strong>를 차지하여 집중 관리가 필요합니다.`;
+            updateInterpretation('lineCostChart-desc', costAnalysis);
+        }
+
+        // 7. Defect Type Analysis (불량 유형 해석)
+        let defectAnalysis = "";
+        if (filteredDefectLabels.length > 0) {
+            const topDefects = filteredDefectLabels.slice(0, 2).join(', ');
+            defectAnalysis = `주요 결함 항목은 <strong>${topDefects}</strong>이며, 해당 유형에 대한 공정 점검 및 기술 표준 준수가 강화되어야 합니다.`;
+            updateInterpretation('defectTypeChart-desc', defectAnalysis);
+        }
+
+        // --- AI Integrated Insight (전체 종합 진단 및 전략 제언) ---
+        const totalInsightEl = document.getElementById('ai-total-analysis');
+        if (totalInsightEl) {
+            if (total === 0) {
+                totalInsightEl.innerHTML = "품질 분석 데이터 부재: 현재 등록된 VOC가 없어 종합 진단 의견 실행이 불가능합니다.";
+            } else {
+                const lines = Object.keys(lineMap).filter(l => lineMap[l] > 0).sort((a, b) => lineMap[b] - lineMap[a]);
+                const worstLine = lines[0] || '-';
+                const mainDefect = filteredDefectLabels[0] || '기타';
+                const claimRatio = Math.round((catMap['클레임'] / total) * 100);
+                const completionRate = Math.round(((total - (pending || 0)) / total) * 100);
+
+                // 월별 증감 분석
+                let trendText = "품질 프로세스가 일정 수준을 유지하고 있습니다.";
+                if (sortedMonths.length >= 2) {
+                    const diff = monthlyMap[sortedMonths[sortedMonths.length - 1]] - monthlyMap[sortedMonths[sortedMonths.length - 2]];
+                    trendText = diff > 0 ? "최근 발생 빈도가 전월 대비 상승하여 특수 요인 변동 분석(SPC)이 권고됩니다." : diff < 0 ? "최근 발생 추세가 하향 안정화 단계에 진입하고 있습니다." : "관리 한계선 내에서 안정적인 흐름을 유지 중입니다.";
+                }
+
+                let summaryText = `
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <div>
+                            통계적 엔지니어링 분석 결과, 현재 리스크의 핵심 트리거는 <strong>${worstLine}</strong> 공정의 <strong>${mainDefect}</strong> 결함으로 특정되었습니다. 
+                            또한 ${claimRatio > 50 ? '중대 클레임 비중이 임계치를 초과하여 브랜드 신뢰도 관리가 시급하며,' : '일반 컴플레인 위주의 분포를 보여 예방 강화 단계이며,'} ${trendText}
+                        </div>
+                        <div style="padding:16px; background:#fff; border-radius:10px; border:1px solid #dbeafe; font-size:13.5px; color:#1e40af; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-weight:bold; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                                <span style="font-size:18px;">📋</span> AI 품질 경영 전문 처방 (Quality Executive Summary)
+                            </div>
+                            <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px;">
+                                <li><strong>근본 원인 분석(RCA):</strong> ${worstLine} 라인의 4M(사람, 설비, 재료, 방법) 변경 이력 추적 및 8D 기반의 결함 차단 프로세스 가동</li>
+                                <li><strong>공정 능력(Cpk) 제언:</strong> 주요 다발 결함인 ${mainDefect} 방지를 위한 도장/성형 Set-point 정밀 보정 및 측정시스템 분석(MSA) 실시</li>
+                                <li><strong>CAPA(시정조치):</strong> ${completionRate < 85 ? `조치 완료율(${completionRate}%)이 목표 미달입니다. 미처리 클레임 장기화에 따른 고객 페널티 방지를 위해 즉각적인 Follow-up이 필요합니다.` : `현재 높은 조치 완료율(${completionRate}%)을 유지 중이며, 재발 방지를 위한 표준서(Standard) 등재를 완료하십시오.`}</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                totalInsightEl.innerHTML = summaryText;
+            }
         }
     }
 
