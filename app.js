@@ -122,31 +122,94 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Enter') confirmAdminLoginBtn.click();
     };
 
+    // --- [VOC 접근 보안 로직] ---
+    let isVocAuthenticated = false; // VOC 인증 상태
+    const vocPasswordModal = document.getElementById('voc-password-modal');
+    const vocPasswordInput = document.getElementById('voc-password');
+    const confirmVocLoginBtn = document.getElementById('confirm-voc-login');
+    const cancelVocLoginBtn = document.getElementById('cancel-voc-login');
+    const vocLoginStatusMsg = document.getElementById('voc-login-status');
+
+    if (confirmVocLoginBtn) {
+        confirmVocLoginBtn.onclick = () => {
+            if (vocPasswordInput.value === '2017') { // 암호 확인
+                isVocAuthenticated = true;
+                vocPasswordModal.style.display = 'none';
+                showSection('voc-log-view'); // 인증 성공 시 VOC 화면으로 이동
+                vocPasswordInput.value = '';
+                if (vocLoginStatusMsg) vocLoginStatusMsg.style.display = 'none';
+            } else {
+                if (vocLoginStatusMsg) vocLoginStatusMsg.style.display = 'block';
+                vocPasswordInput.value = '';
+                vocPasswordInput.focus();
+            }
+        };
+    }
+
+    if (cancelVocLoginBtn) {
+        cancelVocLoginBtn.onclick = () => {
+            vocPasswordModal.style.display = 'none';
+            // 취소 시 UI 흐름에 따라 처리 (현재 화면 유지)
+        };
+    }
+
+    if (vocPasswordInput) {
+        vocPasswordInput.onkeydown = (e) => {
+            if (e.key === 'Enter') confirmVocLoginBtn.click();
+        };
+    }
+
     // --- [3. 통합 내비게이션 시스템] ---
     const navLinks = document.querySelectorAll('.nav-link');
     const pageSections = document.querySelectorAll('.page-section');
 
     function showSection(targetId) {
-        pageSections.forEach(s => s.style.display = 'none');
-        const target = document.getElementById(targetId);
-        if (target) target.style.display = 'block';
+        // [VOC 보안 체크] - 관리자 모드면 패스
+        if (targetId === 'voc-log-view' && !isVocAuthenticated && !isAdmin) {
+            // 사이드바가 열려있다면 닫아줌 (모바일 대응)
+            sidebar.classList.remove('open');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('open');
 
-        navLinks.forEach(l => {
-            l.classList.remove('active');
-            if (l.getAttribute('href') === `#${targetId}`) l.classList.add('active');
+            // 모달 표시
+            if (vocPasswordModal) {
+                vocPasswordModal.style.display = 'flex';
+                vocPasswordInput.value = '';
+                vocPasswordInput.focus();
+                if (vocLoginStatusMsg) vocLoginStatusMsg.style.display = 'none';
+            }
+            return; // 섹션 전환 중단
+        }
+
+        // [1] 모든 섹션 숨기기
+        document.querySelectorAll('.page-section').forEach(s => {
+            s.style.display = 'none';
         });
 
-        if (currentPageLabel) {
-            const activeLink = document.querySelector(`.nav-link[href="#${targetId}"]`);
-            if (activeLink) currentPageLabel.textContent = activeLink.textContent.replace(/[^\w\s가-힣]/g, '').trim();
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.style.display = 'block';
         }
+
+        // [2] 사이드바 상태 및 브레드크럼 업데이트
+        navLinks.forEach(l => {
+            l.classList.remove('active');
+            const href = l.getAttribute('href');
+            if (href === `#${targetId}`) {
+                l.classList.add('active');
+
+                if (currentPageLabel) {
+                    const textContent = l.innerText || l.textContent;
+                    const cleanText = textContent.replace(/[^\w\s가-힣]/g, '').trim();
+                    currentPageLabel.textContent = cleanText;
+                }
+            }
+        });
 
         if (resultsCard) {
             resultsCard.style.display = 'none';
         }
 
-        // [수정] 탭 기반 뷰 진입 시 활성 탭 강제 리트리거 (CPL 미표시 및 차트 깨짐 방지)
-        // 렌더링 완료를 위해 지연 시간을 약간 늘림 (50ms -> 200ms)
+        // [3] 섹션별 전용 로직
         if (targetId === 'process-spec-view') {
             setTimeout(() => {
                 const activeTab = document.querySelector('#process-spec-tabs .process-tab-btn.active');
@@ -176,11 +239,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 100);
         }
 
+        // [4] 스크롤 및 모바일 메뉴 정리
         sidebar.classList.remove('open');
         if (sidebarOverlay) sidebarOverlay.classList.remove('open');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // Close viewer cleanup if active
+        window.scrollTo(0, 0);
+        setTimeout(() => window.scrollTo(0, 0), 10);
+        setTimeout(() => window.scrollTo(0, 0), 100);
+
         document.body.classList.remove('viewer-open');
         document.body.style.overflow = '';
     }
@@ -2340,11 +2406,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgProps = {
+                width: canvas.width,
+                height: canvas.height
+            };
+            const pdfWidth = 210; // mm
             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
+            const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save(`세아씨엠_품질_분석_리포트(${selectedPeriodText})_${new Date().toLocaleDateString()}.pdf`);
         } catch (err) {
@@ -3222,6 +3291,266 @@ document.addEventListener('DOMContentLoaded', function () {
             toggleGlobalGridEditMode();
         } catch (e) { alert("저장 실패: " + e.message); }
     };
+
+    // --- [라인별 생산 가능 SPEC 자동 판단 로직] ---
+    window.checkProductionCapability = function () {
+        const line = document.getElementById('check-line').value;
+        const material = document.getElementById('check-material').value;
+        const thickness = parseFloat(document.getElementById('check-thickness').value);
+        const width = parseFloat(document.getElementById('check-width').value);
+        const coating = (document.getElementById('check-coating').value || "").toUpperCase();
+        const resultEl = document.getElementById('check-result-display');
+
+        if (!line || isNaN(thickness) || isNaN(width)) {
+            resultEl.innerHTML = '<div style="padding:15px; background:#fff1f2; border:1px solid #fecdd3; color:#e11d48; border-radius:8px;">라인, 두께, 폭 수치를 모두 입력해주세요.</div>';
+            return;
+        }
+
+        // [추가] CGL 라인의 경우 도금량 입력 필수
+        if (line.includes('cgl') && !coating) {
+            resultEl.innerHTML = '<div style="padding:15px; background:#fff1f2; border:1px solid #fecdd3; color:#e11d48; border-radius:8px;">도금량/부착량 정보를 입력해주세요. (예: Z220, AZ150)</div>';
+            return;
+        }
+
+        let status = 0; // 0: 불가, 1: 가능, 2: 협의, 3: 후부착
+        let message = "";
+
+        // 1. Grid 기반 라인들 (CPL, CRM, 1CCL, 2CCL, 3CCL)
+        const gridLines = ['cpl', 'crm', '1ccl', '2ccl', '3ccl'];
+        if (gridLines.includes(line)) {
+            let gridId = `grid-${line}`;
+            // CCL 라인은 소재별로 그리드가 나뉘어 있으므로 gridId에 소재 식별자를 붙임
+            if (line.includes('ccl')) {
+                gridId = `grid-${line}-${material}`;
+            }
+
+            if (!gridConfig[gridId]) renderLineGrid(gridId);
+
+            const config = gridConfig[gridId];
+            if (config) {
+                const thicknesses = config.thicknesses.map(v => parseFloat(v));
+                const widths = config.widths.map(v => parseInt(v));
+
+                // [수정] 그리드에 '색칠된 부분'만 생산 가능으로 판단 (범위 체크 로직 제거)
+                const closestT = config.thicknesses.reduce((prev, curr) => Math.abs(parseFloat(curr) - thickness) < Math.abs(parseFloat(prev) - thickness) ? curr : prev);
+                const closestW = config.widths.reduce((prev, curr) => Math.abs(parseInt(curr) - width) < Math.abs(parseInt(prev) - width) ? curr : prev);
+
+                const key = `${gridId}_${closestT}_${closestW}`;
+                // 값이 있으면(1,2,3) 생산 가능/협의, 없으면(0) 불가
+                status = globalGridData[key] || 0;
+            }
+        }
+        // 2. Chart 기반 라인들 (CGL GI, CGL GL)
+        else if (line === 'cgl-gi' || line === 'cgl-gl') {
+            const dataObj = (line === 'cgl-gi') ? cglGiData : cglGlData;
+            // Gr.E 매칭을 위해 점 제거 및 소문자 변환
+            const matKey = material.toLowerCase().replace('.', '');
+            const subData = dataObj[matKey] || dataObj['cq'];
+            const found = subData.data.find(d => parseFloat(d[0]).toFixed(2) === thickness.toFixed(2));
+
+            if (found) {
+                // [기본값 설정]
+                // Gr.E는 통상 914mm 이상 생산, 그 외는 600mm 부터
+                let minProdW = (matKey === 'gre') ? 914 : 600;
+                let maxProdW = 0;
+                let minNegW = 0;
+                let maxNegW = 0;
+
+                // 1) 생산 가능 폭 (found[1])
+                if (Array.isArray(found[1])) {
+                    minProdW = found[1][0];
+                    maxProdW = found[1][1];
+                } else if (found[1] !== null) {
+                    maxProdW = found[1];
+                }
+
+                // 2) 협의 폭 (found[2])
+                if (found[2]) {
+                    if (Array.isArray(found[2])) {
+                        minNegW = found[2][0];
+                        maxNegW = found[2][1];
+                    } else {
+                        // 단일 값이면 [생산MAX, 협의MAX] 범위로 간주
+                        minNegW = (maxProdW > 0) ? maxProdW : minProdW;
+                        maxNegW = found[2];
+                    }
+                }
+
+                // 폭 판단 로직
+                // (1) 생산 가능 범위 포함 여부
+                if (maxProdW > 0 && width >= minProdW && width <= maxProdW) {
+                    status = 1;
+                }
+                // (2) 협의 범위 포함 여부
+                else if (maxNegW > 0 && width >= minNegW && width <= maxNegW) {
+                    status = 2;
+                }
+            }
+
+            // 도금량 체크 및 조건부 협의
+            // 문자가 섞여 있어도 숫자만 추출 (예: "Z220 (Test)" -> 220)
+            const coatingVal = parseInt(coating.replace(/[^0-9]/g, '')) || 0;
+            const coatingUpper = coating.toUpperCase();
+
+            if (line === 'cgl-gi') {
+                if (coatingUpper.includes('Z') && !coatingUpper.includes('AZ')) { // Z만 포함 (AZ 제외)
+                    if (coatingVal < 30 || coatingVal > 300) {
+                        status = 0;
+                        message = "<br><small style='color:#ef4444;'>* 생산 불가 도금량입니다. (가능 범위: Z30 ~ Z300)</small>";
+                    } else {
+                        // 품질 협의 조건
+                        if (thickness <= 0.4 && coatingVal >= 220) {
+                            message += "<br><small style='color:#ef4444;'>* 박물재 고도금(0.4T↓, Z220↑)으로 인해 수주 활동 시 품질 협의가 필요합니다.</small>";
+                            if (status === 1) status = 2;
+                        }
+                        if (thickness > 0.801 && coatingVal <= 80) {
+                            message += "<br><small style='color:#ef4444;'>* 후물재 박도금(0.801T↑, Z80↓)으로 인해 수주 활동 시 품질 협의가 필요합니다.</small>";
+                            if (status === 1) status = 2;
+                        }
+                    }
+                }
+            } else if (line === 'cgl-gl') {
+                if (coatingUpper.includes('AZ')) {
+                    if (coatingVal < 30 || coatingVal > 185) {
+                        status = 0;
+                        message = "<br><small style='color:#ef4444;'>* 생산 불가 도금량입니다. (가능 범위: AZ30 ~ AZ185)</small>";
+                    } else {
+                        // AZ120 초과 시 후부착 가능 여부 체크
+                        if (coatingVal > 120) {
+                            let isPostAttachable = false;
+                            const pa = subData.postAttach;
+                            if (pa) {
+                                // 두께 범위 체크
+                                const tMin = pa.t[0];
+                                const tMax = pa.t[1];
+                                if (thickness >= tMin && thickness <= tMax) {
+                                    // 폭 제한 체크 (w가 없으면 제한 없음/기본폭)
+                                    if (!pa.w || width <= pa.w) {
+                                        isPostAttachable = true;
+                                    }
+                                }
+                            }
+
+                            if (isPostAttachable) {
+                                // 후부착 가능 -> 상태 3
+                                // 기존 불가가 아닌 경우에만 3으로 변경 (범위 밖이면 이미 0)
+                                if (status !== 0) {
+                                    status = 3;
+                                    message = "<br><small style='color:#1e40af;'>* 고도금(AZ120 초과)으로 인해 후부착 공정이 필요합니다.</small>";
+                                }
+                            } else {
+                                // 후부착 불가능 -> 생산 불가
+                                status = 0;
+                                message = "<br><small style='color:#ef4444;'>* AZ120 초과 고도금은 후부착 가능 범위(두께/폭) 내에서만 생산 가능합니다.</small>";
+                            }
+                        }
+                    }
+
+                    // [추가] 0.35T 이하 & AZ120 이상 품질 협의 조건 (사용자 요청 사항)
+                    if (thickness <= 0.35 && coatingVal >= 120) {
+                        message += "<br><small style='color:#ef4444;'>* 0.35T 이하, AZ120 이상은 수주 시 품질 협의가 필요합니다.</small>";
+                        // 생산 가능(1) 상태라면 협의(2)로 변경 (후부착(3)이나 불가(0)는 그대로 유지)
+                        if (status === 1) status = 2;
+                    }
+                }
+            }
+        }
+
+        // 결과 렌더링
+        let resultHtml = "";
+        if (status === 1) resultHtml = `<div style="padding:15px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; border-radius:8px;">✅ <strong>[생산 가능]</strong> 입력하신 스펙은 정상 생산 범위 내에 있습니다.${message}</div>`;
+        else if (status === 2) resultHtml = `<div style="padding:15px; background:#fff7ed; border:1px solid #ffedd5; color:#9a3412; border-radius:8px;">⚠️ <strong>[기술 협의]</strong> 해당 스펙은 사전 품질 검토(기술 협의)가 필요한 영역입니다.${message}</div>`;
+        else if (status === 3) resultHtml = `<div style="padding:15px; background:#eff6ff; border:1px solid #dbeafe; color:#1e40af; border-radius:8px;">ℹ️ <strong>[후부착 필요]</strong> 특수 공정(후부착 등) 협의 후 생산 가능합니다.${message}</div>`;
+        else resultHtml = `<div style="padding:15px; background:#fef2f2; border:1px solid #fee2e2; color:#ef4444; border-radius:8px;">❌ <strong>[생산 불가]</strong> 현재 해당 라인의 설비 능력 범위를 벗어나는 스펙입니다.</div>`;
+
+        resultEl.innerHTML = resultHtml;
+    };
+
+    // 라인 선택에 따른 소재 옵션 및 도금량 필드 제어
+    const checkLineSelector = document.getElementById('check-line');
+    if (checkLineSelector) {
+        checkLineSelector.addEventListener('change', (e) => {
+            const line = e.target.value;
+            const matSelect = document.getElementById('check-material');
+            const coatingWrapper = document.getElementById('check-coating-wrapper');
+            const coatingInput = document.getElementById('check-coating');
+
+            // 1. 소재/강종 옵션 제어
+            // 1. 소재/강종 옵션 제어
+            let options = '';
+            // CGL 뿐만 아니라 1,2,3CCL 라인도 동일한 소재 옵션을 선택할 수 있도록 확장
+            if (line.includes('cgl')) {
+                options = `
+                    <option value="CQ">CQ (SAE1008)</option>
+                    <option value="DQ">DQ (POSHRD2)</option>
+                    <option value="DDQ">DDQ (POSHRD3)</option>
+                    <option value="STRUCT">STRUCT (SAE1017)</option>
+                    <option value="GRE">Gr.E</option>
+                `;
+                matSelect.disabled = false;
+                matSelect.value = "CQ"; // 기본값 설정
+            } else if (line.includes('ccl')) {
+                matSelect.disabled = false;
+                if (line.includes('1ccl')) {
+                    // 1CCL
+                    options = `
+                        <option value="ppgi">PPGI 및 PPGL</option>
+                        <option value="ppal">PPAL</option>
+                    `;
+                    matSelect.value = "ppgi";
+                } else if (line.includes('2ccl')) {
+                    // 2CCL - 모든 그리드 제목 반영
+                    options = `
+                        <option value="ppal-1000">PPAL (1000계열)</option>
+                        <option value="ppal-others">PPAL (1000계열 외)</option>
+                        <option value="ppgi-gl">PPGI/GL</option>
+                        <option value="ppgi-print">PPGI/GL 프린트</option>
+                        <option value="pet-vcm">PET 및 VCM</option>
+                        <option value="ppal-print">PPAL 프린트</option>
+                        <option value="snow-flower">스노우 플라워 엠보</option>
+                    `;
+                    matSelect.value = "ppal-1000";
+                } else {
+                    // 3CCL
+                    options = `
+                        <option value="ppgi-gl">PPGI 및 PPGL</option>
+                        <option value="stucco">스타코 엠보 (Stucco Embossed)</option>
+                        <option value="leather">가죽무늬 엠보 (Leather Embossed)</option>
+                    `;
+                    matSelect.value = "ppgi-gl";
+                }
+            } else {
+                // 소재가 1개인 라인 처리 (CPL, CRM 등)
+                matSelect.disabled = true;
+                if (line === 'cpl' || line === 'crm') {
+                    options = '<option value="Generic">일반 ( Generic )</option>';
+                    matSelect.value = "Generic";
+                } else {
+                    // 예외 케이스 처리 (혹시 모를 기타 라인)
+                    const lineName = line.toUpperCase();
+                    options = `<option value="${lineName}">${lineName}</option>`;
+                    matSelect.value = lineName;
+                }
+            }
+            matSelect.innerHTML = options;
+
+            // 2. 도금량 필드 제어 (CGL에서만 활성화)
+            if (line.startsWith('cgl')) {
+                coatingWrapper.style.display = 'flex';
+                if (line === 'cgl-gi') {
+                    coatingInput.placeholder = "예: Z18, Z22";
+                } else if (line === 'cgl-gl') {
+                    coatingInput.placeholder = "예: AZ15, AZ12";
+                }
+            } else {
+                coatingWrapper.style.display = 'none';
+                coatingInput.value = ""; // 초기화
+            }
+        });
+
+        // 초기 로딩 시 상태 적용 (라인이 선택되어 있을 수 있음)
+        checkLineSelector.dispatchEvent(new Event('change'));
+    }
 
     loadGridData();
 

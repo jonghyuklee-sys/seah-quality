@@ -111,15 +111,18 @@ body.admin-mode button.admin-only {
     padding: 24px;
     max-width: 100%;
     box-sizing: border-box;
+    margin-top: 0 !important;
 }
 
 /* display: none???獄???? ?熬곣뫗?????節뗢뵛??*/
 .page-section[style*="display: none"],
 .page-section[style*="display:none"] {
     display: none !important;
-    visibility: hidden;
-    height: 0;
-    overflow: hidden;
+    visibility: hidden !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
 }
 
 /* Sidebar Styling */
@@ -394,19 +397,19 @@ body.admin-mode button.admin-only {
 /* Info Cards / Stats */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .stat-card {
     background: var(--bg-card);
-    padding: 24px;
+    padding: 16px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     text-align: center;
 }
@@ -647,6 +650,163 @@ body.admin-mode button.admin-only {
     border-bottom: 1px solid var(--border);
 }
 
+/* --- Warranty Guide Mobile Optimization --- */
+.pc-only-table {
+    display: block;
+}
+
+.mobile-warranty-list {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .pc-only-table {
+        display: none !important;
+    }
+
+    .mobile-warranty-list {
+        display: grid !important;
+        gap: 16px;
+    }
+
+    .warranty-al-grid {
+        flex-direction: column !important;
+    }
+
+    /* 탭 버튼 모바일 최적화 */
+    #warranty-tab-header {
+        flex-wrap: wrap;
+        padding: 10px 15px !important;
+        gap: 8px !important;
+    }
+
+    .warranty-tab-btn {
+        flex: 1 1 auto;
+        /* 너비 자동 조절 */
+        font-size: 13px !important;
+        padding: 8px 10px !important;
+        min-width: 120px;
+        text-align: center;
+    }
+}
+
+/* Mobile Warranty Card Style */
+.mw-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+.mw-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: #1e3a8a;
+}
+
+.mw-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f8fafc;
+}
+
+.mw-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e3a8a;
+}
+
+.mw-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.mw-item {
+    background: #f8fafc;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.mw-label {
+    display: block;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.mw-value {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.mw-section {
+    margin-top: 16px;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 12px;
+}
+
+.mw-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e40af;
+    background: #eff6ff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.card-row:last-child {
+    border-bottom: none;
+}
+
+.card-row .label {
+    color: #64748b;
+}
+
+.card-row .value {
+    font-weight: 600;
+    color: #334155;
+    text-align: right;
+}
+
+.text-red {
+    color: #ef4444 !important;
+}
+
+.text-gray {
+    color: #94a3b8 !important;
+}
+
+.text-blue {
+    color: #2563eb !important;
+}
+
 .data-table td {
     padding: 14px 16px;
     border-bottom: 1px solid var(--border-light);
@@ -866,6 +1026,14 @@ body.admin-mode button.admin-only {
 }
 
 /* Info Layout Panels */
+.tab-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 30px 0;
+}
+
 .tab-header {
     background: #fff;
     padding: 5px;
@@ -873,7 +1041,6 @@ body.admin-mode button.admin-only {
     border: 1px solid var(--border);
     display: inline-flex;
     gap: 5px;
-    margin-bottom: 32px;
     box-shadow: var(--shadow-sm);
 }
 
@@ -3330,7 +3497,7 @@ body.admin-mode button.admin-only {
 }
 
 .dash-header-title {
-    flex: 2;
+    flex: 3;
     text-align: center;
 }
 
@@ -3363,35 +3530,25 @@ body.admin-mode button.admin-only {
 @media (max-width: 768px) {
     .dashboard-header-layout {
         flex-direction: column;
-        gap: 16px;
-        padding-bottom: 10px;
-    }
-
-    .dash-header-spacer {
-        display: none;
-        /* Hide spacer on mobile to save space */
-    }
-
-    .dash-header-title {
-        flex: auto;
-        width: 100%;
-        text-align: center;
+        gap: 10px;
+        padding-bottom: 5px;
     }
 
     .dash-header-title h2 {
-        font-size: 20px;
-        /* Reduce title size slightly on mobile */
+        font-size: 18px;
+    }
+
+    .dash-header-title p {
+        font-size: 11px;
     }
 
     .dash-header-action {
-        flex: auto;
         width: 100%;
         display: flex;
         justify-content: center;
     }
 
     .custom-down-btn {
-        /* On mobile, ensure it fits but isn't too large */
         padding: 8px 16px;
         font-size: 12px;
         max-width: 100%;
@@ -3627,26 +3784,68 @@ body.viewer-open::after {
     }
 }
 
-/* WARRANTY GUIDE View Premium Styling */
-#warranty-guide-view .sub-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    margin-bottom: 20px;
-    color: var(--primary-dark);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+/* Mobile Optimization for Spec Check Section */
+@media (max-width: 768px) {
+    #line-spec-view .search-container {
+        padding: 15px !important;
+    }
 
-#warranty-guide-view .sub-title span {
-    background: rgba(30, 58, 138, 0.1);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-size: 16px;
+    #line-spec-view .section-title-line {
+        font-size: 13.5px !important;
+        /* 제목 크기 추가 축소하여 한 줄 확보 */
+        margin-bottom: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        /* 줄바꿈 방지 */
+    }
+
+    #line-spec-view .section-title-line i {
+        font-size: 13px !important;
+        margin-right: 4px !important;
+    }
+
+    #line-spec-view .btn-primary {
+        height: 26px !important;
+        /* 판단하기 버튼 높이 추가 축소 */
+        padding: 0 8px !important;
+        /* 좌우 패딩 축소 */
+        font-size: 11px !important;
+        /* 폰트 사이즈 축소 */
+        white-space: nowrap !important;
+        /* 텍스트 줄바꿈 방지 */
+        flex-shrink: 0 !important;
+        /* 버튼이 찌그러지지 않도록 고정 */
+    }
+
+
+    #line-spec-view .search-form-grid {
+        gap: 12px !important;
+        /* 그리드 간격 축소 */
+    }
+
+    #line-spec-view .form-field label {
+        font-size: 12px !important;
+        /* 라벨 폰트 축소 */
+        margin-bottom: 4px !important;
+    }
+
+    #line-spec-view .form-field input,
+    #line-spec-view .form-field select {
+        padding: 8px 10px !important;
+        /* 입력 필드 패딩 축소 */
+        font-size: 13px !important;
+        /* 폰트 약간 축소 */
+        height: 38px !important;
+        /* 높이 고정 축소 */
+    }
+
+    /* 판단 결과 박스 축소 */
+    #check-result-display>div {
+        padding: 12px !important;
+        font-size: 13px !important;
+    }
 }
 
 #warranty-guide-view .data-table {
@@ -3722,6 +3921,7 @@ body.viewer-open::after {
         white-space: nowrap;
         padding-bottom: 5px;
         display: flex;
+        -webkit-overflow-scrolling: touch;
     }
 
     .warranty-tab-btn {
@@ -3739,7 +3939,87 @@ body.viewer-open::after {
         font-size: 10.5px !important;
         padding: 8px 4px !important;
     }
+
+    /* AL 소재 탭 가로 스크롤 보장 및 레이아웃 재정의 */
+    .warranty-al-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+        width: 100% !important;
+    }
+
+    .warranty-al-grid .search-container {
+        display: block !important;
+        width: 100% !important;
+        /* 스크롤 강제를 위한 너비 제한 복구 (화면 여백 20px) */
+        max-width: calc(100vw - 20px) !important;
+        flex: 0 0 auto !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 auto !important;
+
+        /* 텍스트 잘림 방지를 위해 컨테이너 패딩 제거 */
+        padding: 0 !important;
+    }
+
+    /* 제목은 들여쓰기 추가하여 디자인 보정 */
+    .warranty-al-grid .search-container h4 {
+        padding: 15px 15px 10px 15px !important;
+        margin: 0 !important;
+    }
+
+    .warranty-al-grid .data-table {
+        min-width: 600px !important;
+        /* 좌우 테두리 복원 (잘려보이는 느낌 방지) */
+        border-left: 1px solid #e2e8f0 !important;
+        border-right: 1px solid #e2e8f0 !important;
+        /* 테이블 상단 여백 추가 */
+        margin-top: 5px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    /* 일반 테이블 컨테이너 (고위험/저위험 탭) 스크롤 보정 및 테이블 최적화 */
+    .table-container .data-table {
+        /* 인라인 1000px 무시하고 모바일에 맞게 축소 */
+        min-width: 600px !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        /* 가운데 정렬 */
+    }
+
+    .table-container {
+        display: block !important;
+        width: 100% !important;
+        /* 스크롤 강제를 위한 너비 제한 복구 (Notice 박스 여백에 맞춤) */
+        max-width: calc(100vw - 30px) !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 auto !important;
+        border-radius: 8px !important;
+        /* 텍스트 잘림 방지 */
+        padding: 0 !important;
+    }
+
+    #warranty-tab-content {
+        padding: 10px 0 !important;
+        overflow: visible !important;
+    }
+
+    /* 상단 탭 헤더도 좌우 여백 조정 */
+    #warranty-tab-header {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* 각 패널 제목도 여백 추가 (tab-content 패딩 제거 보정) */
+    .warranty-panel>div:first-child {
+        padding: 0 10px;
+        margin-bottom: 15px !important;
+    }
 }
+
+
 
 /* Mobile Spec Grid Optimization - Balanced One-Screen View */
 @media (max-width: 768px) {
@@ -4147,19 +4427,19 @@ body.viewer-open::after {
 
 /* Chart Interpretation Style */
 .chart-interpretation {
-    margin-top: 16px;
-    padding: 12px 16px;
+    margin-top: 10px;
+    padding: 10px 14px;
     background: #f8fafc;
     border-radius: 8px;
     border-left: 4px solid #3b82f6;
-    font-size: 13px;
+    font-size: 12px;
     color: #475569;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
 .chart-interpretation strong {
     color: #1e3a8a;
     display: inline-block;
-    margin-right: 6px;
-    font-size: 14px;
+    margin-right: 4px;
+    font-size: 13px;
 }
