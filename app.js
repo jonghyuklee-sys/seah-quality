@@ -3204,7 +3204,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const displayW = isGlobalGridEditMode ?
                 `<input type="text" value="${w}" style="width: 40px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'widths', ${wIdx}, this.value)">` : w;
 
-            html += `<tr><td style="padding: 4px; border: 1px solid #cbd5e1; background: #f1f5f9; font-weight: bold; color: #475569;">${displayW}</td>`;
+            html += `<tr><td class="grid-axis-label">${displayW}</td>`;
             thicknesses.forEach(t => {
                 const key = `${gridId}_${t}_${w}`;
                 const status = globalGridData[key] || 0;
@@ -3218,7 +3218,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (status === 3) {
                     bg = '#1e3a8a';
                 }
-                const cellStyle = `height: 24px; border: 1px solid #cbd5e1; background-color: ${bg}; ${style} cursor: ${isGlobalGridEditMode ? 'pointer' : 'default'}; transition: all 0.1s;`;
+                const cellStyle = `background-color: ${bg}; ${style} cursor: ${isGlobalGridEditMode ? 'pointer' : 'default'}; transition: all 0.1s;`;
                 html += `<td style="${cellStyle}" 
                     onmousedown="handleGridMouseDown('${gridId}', '${t}', '${w}')" 
                     onmouseenter="handleGridMouseEnter('${gridId}', '${t}', '${w}')"></td>`;
@@ -3228,11 +3228,11 @@ document.addEventListener('DOMContentLoaded', function () {
         html += `</tbody>`;
 
         // Footer
-        html += `<tfoot><tr><td style="padding: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; font-weight: 800; color: #1e3a8a;">폭/두께</td>`;
+        html += `<tfoot><tr><td class="grid-axis-label footer-label">폭/두께</td>`;
         thicknesses.forEach((t, tIdx) => {
             const displayT = isGlobalGridEditMode ?
-                `<input type="text" value="${t}" style="width: 32px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'thicknesses', ${tIdx}, this.value)">` : t;
-            html += `<td style="padding: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 800; color: #1e3a8a; min-width: 32px;">${displayT}</td>`;
+                `<input type="text" value="${t}" style="width: 38px; font-size: 10px; text-align: center; border: 1px solid #cbd5e1; background: #fff; padding: 2px;" onchange="updateGridValue('${gridId}', 'thicknesses', ${tIdx}, this.value)">` : t;
+            html += `<td class="grid-axis-label footer-cell">${displayT}</td>`;
         });
         html += `</tr></tfoot></table>`;
 
@@ -3319,7 +3319,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const gridLines = ['cpl', 'crm', '1ccl', '2ccl', '3ccl'];
         if (gridLines.includes(line)) {
             let gridId = `grid-${line}`;
-            // CCL 라인은 소재별로 그리드가 나뉘어 있으므로 gridId에 소재 식별자를 붙임
             if (line.includes('ccl')) {
                 gridId = `grid-${line}-${material}`;
             }
@@ -3331,13 +3330,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 const thicknesses = config.thicknesses.map(v => parseFloat(v));
                 const widths = config.widths.map(v => parseInt(v));
 
-                // [수정] 그리드에 '색칠된 부분'만 생산 가능으로 판단 (범위 체크 로직 제거)
-                const closestT = config.thicknesses.reduce((prev, curr) => Math.abs(parseFloat(curr) - thickness) < Math.abs(parseFloat(prev) - thickness) ? curr : prev);
-                const closestW = config.widths.reduce((prev, curr) => Math.abs(parseInt(curr) - width) < Math.abs(parseInt(prev) - width) ? curr : prev);
+                const minT = Math.min(...thicknesses);
+                const maxT = Math.max(...thicknesses);
+                const minW = Math.min(...widths);
+                const maxW = Math.max(...widths);
 
-                const key = `${gridId}_${closestT}_${closestW}`;
-                // 값이 있으면(1,2,3) 생산 가능/협의, 없으면(0) 불가
-                status = globalGridData[key] || 0;
+                // 범위를 벗어나면 무조건 생산 불가
+                if (thickness < minT || thickness > maxT || width < minW || width > maxW) {
+                    status = 0;
+                } else {
+                    // [수정] 그리드 내부에 있을 때만 가장 가까운 규격을 찾아 색칠된(status 1,2,3) 여부 확인
+                    const closestT = config.thicknesses.reduce((prev, curr) => Math.abs(parseFloat(curr) - thickness) < Math.abs(parseFloat(prev) - thickness) ? curr : prev);
+                    const closestW = config.widths.reduce((prev, curr) => Math.abs(parseInt(curr) - width) < Math.abs(parseInt(prev) - width) ? curr : prev);
+
+                    const key = `${gridId}_${closestT}_${closestW}`;
+                    status = globalGridData[key] || 0;
+                }
             }
         }
         // 2. Chart 기반 라인들 (CGL GI, CGL GL)

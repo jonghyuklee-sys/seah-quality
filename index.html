@@ -1728,14 +1728,21 @@
                             style="margin: 0 auto 32px auto; max-width: 1200px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; padding: 25px;">
 
                             <!-- 헤더: 제목만 깔끔하게 배치 -->
-                            <h4
-                                style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #1e293b; display: flex; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9;">
-                                <span
-                                    style="background: #eff6ff; color: #3b82f6; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 16px;">
-                                    <i class="fas fa-calculator"></i>
-                                </span>
-                                생산 가능 여부 자동 판단
-                            </h4>
+                            <div class="auto-check-header"
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; gap: 8px;">
+                                <h4
+                                    style="margin: 0; font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; white-space: nowrap;">
+                                    <span class="header-icon"
+                                        style="background: #eff6ff; color: #3b82f6; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 16px;">
+                                        <i class="fas fa-calculator"></i>
+                                    </span>
+                                    <span class="header-text">생산 가능 여부 자동 판단</span>
+                                </h4>
+                                <button onclick="checkProductionCapability()" class="btn-primary auto-check-btn"
+                                    style="padding: 10px 24px; font-weight: 700; border-radius: 8px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none; color: white; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                                    <i class="fas fa-rocket"></i> 판단하기
+                                </button>
+                            </div>
 
                             <!-- 입력 폼 그리드 -->
                             <div class="search-form-grid"
@@ -1786,14 +1793,7 @@
                                 </div>
                             </div>
 
-                            <!-- 액션 버튼 및 결과 표시 -->
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 15px;">
-                                <button onclick="checkProductionCapability()" class="btn-primary"
-                                    style="padding: 10px 24px; font-size: 14px; font-weight: 600; border-radius: 8px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5); border: none; color: white; cursor: pointer; transition: transform 0.1s;">
-                                    🚀 판단하기
-                                </button>
-                                <div id="check-result-display" style="width: 100%;"></div>
-                            </div>
+                            <div id="check-result-display" style="width: 100%; margin-top: 5px;"></div>
                         </div>
 
                         <!-- 탭 헤더 -->
