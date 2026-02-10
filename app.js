@@ -2211,7 +2211,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const tag = document.createElement('div');
             tag.className = 'notify-email-tag';
             tag.innerHTML = `
-                        < span > ${item.email}</span >
+                        <span>${item.email}</span>
                             <span class="remove-btn" onclick="deleteNotificationEmail('${item.id}')">
                                 <i class="fas fa-times"></i>
                             </span>
@@ -2302,7 +2302,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 패널 표시 제어
             infoPanels.forEach(p => {
                 p.classList.remove('active');
-                if (p.id === `panel - ${tabId} `) p.classList.add('active');
+                if (p.id === `panel-${tabId}`) p.classList.add('active');
             });
 
             // 상단으로 스크롤 방지 또는 부드러운 이동 (필요시)
@@ -2344,7 +2344,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     groupClass = 'group-middle';
                 }
 
-                html += `< tr class="${groupClass}" data - item="${row.item}" style = "border-bottom:1px solid #f1f5f9;" > `;
+                html += `<tr class="${groupClass}" data-item="${row.item}" style="border-bottom:1px solid #f1f5f9;">`;
 
                 // 검사항목 (Rowspan 로직)
                 if (isFirstOfItem) {
@@ -2354,24 +2354,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         else break;
                     }
                     html += `
-                        < td rowspan = "${rs}" class="resin-table-item" data - label="검사항목" >
+                        <td rowspan="${rs}" class="resin-table-item" data-label="검사항목">
                             ${row.item.replace(/\n/g, '<br>')}
-                        </td > `;
+                        </td>`;
                 }
 
                 // 조건
                 html += `
-                    < td class="resin-table-condition" data - label="조건" >
+                    <td class="resin-table-condition" data-label="조건">
                         ${row.condition.replace(/\n/g, '<br>')}
-                    </td > `;
+                    </td>`;
 
                 // 합부 기준
                 html += `
-                    < td class="resin-table-criteria" data - label="합부 기준" >
+                    <td class="resin-table-criteria" data-label="합부 기준">
                         <div style="padding: 2px 0;">
                             ${row.criteria}
                         </div>
-                    </td > `;
+                    </td>`;
 
                 html += '</tr>';
             });
