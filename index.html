@@ -3383,6 +3383,9 @@
                                         <th
                                             style="padding: 12px; font-size: 13px; color: #475569; width: 90px; text-align: center;">
                                             라인</th>
+                                        <th
+                                            style="padding: 12px; font-size: 13px; color: #475569; width: 90px; text-align: center;">
+                                            색상</th>
                                         <th style="padding: 12px; font-size: 13px; color: #475569; text-align: center;">
                                             불만명
                                             (제목)</th>
@@ -3474,6 +3477,14 @@
                                             <input type="text" id="modal-edit-spec">
                                         </div>
                                         <div class="form-field">
+                                            <label>색상</label>
+                                            <input type="text" id="modal-edit-color">
+                                        </div>
+                                        <div class="form-field">
+                                            <label>배치번호 (Batch)</label>
+                                            <input type="text" id="modal-edit-batch">
+                                        </div>
+                                        <div class="form-field">
                                             <label>생산라인</label>
                                             <select id="modal-edit-line">
                                                 <option value="CPL">CPL</option>
@@ -3488,6 +3499,15 @@
                                         <div class="form-field">
                                             <label>생산일자</label>
                                             <input type="date" id="modal-edit-prodDate">
+                                        </div>
+                                        <div class="form-field">
+                                            <label>납품수량</label>
+                                            <input type="number" id="modal-edit-delivery-qty" placeholder="숫자만 입력">
+                                        </div>
+                                        <div class="form-field">
+                                            <label>불만수량</label>
+                                            <input type="number" id="modal-edit-complaint-qty" placeholder="숫자만 입력"
+                                                style="color:red; font-weight:bold;">
                                         </div>
                                     </div>
                                     <div class="voc-modal-grid"

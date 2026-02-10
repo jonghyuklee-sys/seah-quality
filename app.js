@@ -1180,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const startIdx = (vocCurrentPage - 1) * vocItemsPerPage;
         const pagedItems = filtered.slice(startIdx, startIdx + vocItemsPerPage);
 
-        vocListBody.innerHTML = filtered.length === 0 ? '<tr><td colspan="8" style="text-align:center; padding:60px; color:#94a3b8; font-size:14px;">현재 등록된 고객불만 내역이 없습니다.</td></tr>' : '';
+        vocListBody.innerHTML = filtered.length === 0 ? '<tr><td colspan="10" style="text-align:center; padding:60px; color:#94a3b8; font-size:14px;">현재 등록된 고객불만 내역이 없습니다.</td></tr>' : '';
 
         pagedItems.forEach((v, idx) => {
             const tr = document.createElement('tr');
@@ -1200,6 +1200,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td style="padding:10px 8px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
                 <td style="padding:10px 8px; text-align:center; color:#475569; vertical-align:middle;">${managerDisplay}</td>
                 <td style="padding:10px 8px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
+                <td style="padding:10px 8px; text-align:center; color:#334155; font-weight:500; white-space:nowrap;">${v.color || '-'}</td>
                 <td class="voc-title-cell" style="padding:10px 8px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.title}</td>
                 <td style="padding:10px 14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
                 <td style="padding:10px 14px; text-align:center;">
@@ -1278,8 +1279,12 @@ document.addEventListener('DOMContentLoaded', function () {
             'modal-edit-team': v.team || '',
             'modal-edit-manager': v.manager,
             'modal-edit-spec': v.spec,
+            'modal-edit-color': v.color,
+            'modal-edit-batch': v.batch,
             'modal-edit-line': v.line,
             'modal-edit-prodDate': (v.prodDate || '').replace(/\./g, '-'),
+            'modal-edit-delivery-qty': v.deliveryQty,
+            'modal-edit-complaint-qty': v.complaintQty,
             'modal-edit-defect-type': v.defectType || '',
             'modal-edit-title': v.title,
             'modal-edit-description': v.description || '',
@@ -1403,8 +1408,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     team: document.getElementById('modal-edit-team').value,
                     manager: document.getElementById('modal-edit-manager').value,
                     spec: document.getElementById('modal-edit-spec').value,
+                    color: document.getElementById('modal-edit-color').value,
+                    batch: document.getElementById('modal-edit-batch').value,
                     line: document.getElementById('modal-edit-line').value,
                     prodDate: document.getElementById('modal-edit-prodDate').value,
+                    deliveryQty: document.getElementById('modal-edit-delivery-qty').value,
+                    complaintQty: document.getElementById('modal-edit-complaint-qty').value,
                     defectType: document.getElementById('modal-edit-defect-type').value,
                     title: document.getElementById('modal-edit-title').value,
                     description: document.getElementById('modal-edit-description').value,
@@ -2765,32 +2774,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 ],
                 [
                     { text: (isEng ? 'Spec' : '제품규격'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.spec || '-',
-                    { text: (isEng ? 'Line' : '생산라인'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.line || '-',
-                    { text: (isEng ? 'Type' : '불량유형'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, t.defectType
+                    { text: (isEng ? 'Color' : '색상'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.color || '-',
+                    { text: (isEng ? 'Line' : '생산라인'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.line || '-'
+                ],
+                [
+                    { text: (isEng ? 'Batch No' : '배치번호'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.batch || '-',
+                    { text: (isEng ? 'Prod. Date' : '생산일자'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, voc.prodDate || '-',
+                    { text: (isEng ? 'Defect Type' : '불량유형'), options: { fill: 'F2F2F2', bold: true, align: 'center' } }, t.defectType
                 ]
             ];
-            slide.addTable(infoRows, { x: 0.3, y: 0.9, w: 11.0, colW: [1.2, 2.4, 1.2, 2.4, 1.3, 2.5], fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'middle' });
+            // Table position y:0.9, height approx 1.2 (0.4 per row) -> Ends at 2.1
+            slide.addTable(infoRows, { x: 0.3, y: 0.9, w: 11.0, colW: [1.2, 2.4, 1.2, 2.4, 1.3, 2.5], fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'middle', rowH: 0.35 });
 
             // 2. Complaint Details & Photo
-            slide.addText('■ ' + (isEng ? 'Symptom & Photo' : '불만 상세 현상 및 사진'), { x: 0.3, y: 1.9, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
-            slide.addText(t.description, { x: 0.3, y: 2.3, w: 6.5, h: 1.8, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+            // Shifted down to y=2.2
+            slide.addText('■ ' + (isEng ? 'Symptom & Photo' : '불만 상세 현상 및 사진'), { x: 0.3, y: 2.2, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
+            slide.addText(t.description, { x: 0.3, y: 2.6, w: 6.5, h: 1.8, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
 
             if (voc.photo) {
-                slide.addImage({ data: voc.photo, x: 7.0, y: 2.3, w: 4.3, h: 1.8, sizing: { type: 'contain' } });
+                // Use path for URLs
+                slide.addImage({ path: voc.photo, x: 7.0, y: 2.6, w: 4.3, h: 1.8, sizing: { type: 'contain' } });
             } else {
-                slide.addText(isEng ? 'No Photo' : '사진 없음', { x: 7.0, y: 2.3, w: 4.3, h: 1.8, align: 'center', fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
+                slide.addText(isEng ? 'No Photo' : '사진 없음', { x: 7.0, y: 2.6, w: 4.3, h: 1.8, align: 'center', fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
             }
 
             // 3. Cause Analysis
-            slide.addText('■ ' + (isEng ? 'Root Cause Analysis' : '예상 원인 및 근본 원인 분석'), { x: 0.3, y: 4.3, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
-            slide.addText(t.cause, { x: 0.3, y: 4.7, w: 11.0, h: 1.0, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+            slide.addText('■ ' + (isEng ? 'Root Cause Analysis' : '예상 원인 및 근본 원인 분석'), { x: 0.3, y: 4.6, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
+            slide.addText(t.cause, { x: 0.3, y: 5.0, w: 11.0, h: 1.0, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
 
             // 4. Countermeasures
-            slide.addText('■ ' + (isEng ? 'Improvement & Prevention' : '개선 및 재발 방지 대책'), { x: 0.3, y: 5.9, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
-            slide.addText(`${isEng ? '[Improvement & Prevention]' : '[개선 및 재발방지]'}\n${t.countermeasure}`, { x: 0.3, y: 6.3, w: 11.0, h: 1.2, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
+            slide.addText('■ ' + (isEng ? 'Improvement & Prevention' : '개선 및 재발 방지 대책'), { x: 0.3, y: 6.2, fontSize: 12, bold: true, fontFace: fontName, color: '1e3a8a' });
+            slide.addText(`${isEng ? '[Improvement & Prevention]' : '[개선 및 재발방지]'}\n${t.countermeasure}`, { x: 0.3, y: 6.6, w: 11.0, h: 1.2, fontSize: 10, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, valign: 'top', margin: 5, fill: 'FCFCFC' });
 
             // Footer
-            slide.addText('(1)', { x: 10.5, y: 7.7, w: 0.8, align: 'right', fontSize: 9, fontFace: fontName, color: '666666' });
+            slide.addText('(1)', { x: 10.5, y: 7.9, w: 0.8, align: 'right', fontSize: 9, fontFace: fontName, color: '666666' });
 
             pptx.writeFile({ fileName: `SeAH_Report_${voc.customer}_${lang.toUpperCase()}` });
         } catch (err) {
@@ -2912,30 +2929,39 @@ document.addEventListener('DOMContentLoaded', function () {
                 slide.addShape(pptx.ShapeType.line, { x: 0.3, y: 0.6, w: 9.4, line: { color: '333333', width: 1.0 } });
                 slide.addShape(pptx.ShapeType.line, { x: 8, y: 0.63, w: 1.7, line: { color: 'f15a22', width: 2.0 } });
 
-                // Information Table
-                const infoRows = [[
-                    { text: (isEng ? 'Client' : '고객사'), options: { fill: 'F0F0F0', bold: true } }, t.customer,
-                    { text: (isEng ? 'Date' : '접수일'), options: { fill: 'F0F0F0', bold: true } }, voc.receiptDate,
-                    { text: (isEng ? 'Line' : '라인'), options: { fill: 'F0F0F0', bold: true } }, voc.line
-                ]];
-                slide.addTable(infoRows, { x: 0.3, y: 0.8, w: 9.4, colW: [1, 2.1, 1, 2.1, 1, 2.1], fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' } });
+                // Information Table (Expanded to 2 rows)
+                const infoRows = [
+                    [
+                        { text: (isEng ? 'Client' : '고객사'), options: { fill: 'F0F0F0', bold: true } }, t.customer,
+                        { text: (isEng ? 'Date' : '접수일'), options: { fill: 'F0F0F0', bold: true } }, voc.receiptDate,
+                        { text: (isEng ? 'Line' : '라인'), options: { fill: 'F0F0F0', bold: true } }, voc.line
+                    ],
+                    [
+                        { text: (isEng ? 'Spec' : '규격'), options: { fill: 'F0F0F0', bold: true } }, voc.spec || '-',
+                        { text: (isEng ? 'Batch' : '배치No'), options: { fill: 'F0F0F0', bold: true } }, voc.batch || '-',
+                        { text: (isEng ? 'Defect' : '불량유형'), options: { fill: 'F0F0F0', bold: true } }, t.defectType
+                    ]
+                ];
+                // Adjusted positions and rowH
+                slide.addTable(infoRows, { x: 0.3, y: 0.8, w: 9.4, colW: [1, 2.1, 1, 2.1, 1, 2.1], fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'CCCCCC' }, rowH: 0.35 });
 
-                // Sections
-                slide.addText('■ ' + (isEng ? 'Details' : '불만 상세 현상'), { x: 0.3, y: 1.5, fontSize: 10, bold: true, fontFace: fontName });
-                slide.addText(t.content, { x: 0.3, y: 1.8, w: 6.2, h: 1.8, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+                // Sections (Shifted down slightly)
+                slide.addText('■ ' + (isEng ? 'Details' : '불만 상세 현상'), { x: 0.3, y: 1.8, fontSize: 10, bold: true, fontFace: fontName });
+                slide.addText(t.content, { x: 0.3, y: 2.1, w: 6.2, h: 1.8, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
 
                 if (voc.photo) {
-                    slide.addImage({ data: voc.photo, x: 6.7, y: 1.8, w: 3.0, h: 1.8, sizing: { type: 'contain' } });
+                    // Use path for URLs
+                    slide.addImage({ path: voc.photo, x: 6.7, y: 2.1, w: 3.0, h: 1.8, sizing: { type: 'contain' } });
                 }
 
-                slide.addText('■ ' + (isEng ? 'Analysis' : '사고 원인 분석'), { x: 0.3, y: 3.8, fontSize: 10, bold: true, fontFace: fontName });
-                slide.addText(t.cause, { x: 0.3, y: 4.1, w: 9.4, h: 1.2, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+                slide.addText('■ ' + (isEng ? 'Analysis' : '사고 원인 분석'), { x: 0.3, y: 4.1, fontSize: 10, bold: true, fontFace: fontName });
+                slide.addText(t.cause, { x: 0.3, y: 4.4, w: 9.4, h: 1.2, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
 
-                slide.addText('■ ' + (isEng ? 'Action/Result' : '조치 내용 및 결과'), { x: 0.3, y: 5.5, fontSize: 10, bold: true, fontFace: fontName });
-                slide.addText(`${t.action}\n\n[평가] ${t.evaluation}`, { x: 0.3, y: 5.8, w: 9.4, h: 1.4, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
+                slide.addText('■ ' + (isEng ? 'Action/Result' : '조치 내용 및 결과'), { x: 0.3, y: 5.8, fontSize: 10, bold: true, fontFace: fontName });
+                slide.addText(`${t.action}\n\n[평가] ${t.evaluation}`, { x: 0.3, y: 6.1, w: 9.4, h: 1.4, fontSize: 9, fontFace: fontName, border: { pt: 0.5, color: 'DDDDDD' }, valign: 'top', margin: 5 });
 
                 // Footer
-                slide.addText(`(${i + 1})`, { x: 9.2, y: 7.3, fontSize: 8, fontFace: fontName, color: '999999' });
+                slide.addText(`(${i + 1})`, { x: 9.2, y: 7.6, fontSize: 8, fontFace: fontName, color: '999999' });
             }
 
             pptx.writeFile({ fileName: `SeAH_VOC_Full_Ledger_${monthFilter}_${lang.toUpperCase()}` });
