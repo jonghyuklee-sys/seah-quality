@@ -2061,7 +2061,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // 분석 실행 엔진 함수
                     const executeAnalysis = async () => {
                         const content = document.getElementById('gemini-content');
-                        
+
                         try {
                             // 1. 대시보드 통계 및 VOC 데이터 통합 요약 생성
                             const dashboardDataSummary = {
@@ -2069,7 +2069,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 totals: { count: total, cost: totalCost.toLocaleString() + '원' },
                                 riskFactors: { worstLine, mainDefect, claimRatio: claimRatio + '%', completionRate: completionRate + '%' },
                                 trend: trendText,
-                                costDetail: worstLineByCost && maxCost ? `${worstLineByCost} 라인 집중손실 (${(maxCost/1000000).toFixed(0)}백만원)` : '없음'
+                                costDetail: worstLineByCost && maxCost ? `${worstLineByCost} 라인 집중손실 (${(maxCost / 1000000).toFixed(0)}백만원)` : '없음'
                             };
 
                             // VOC 데이터 분류 통계 요약 (AI용)
@@ -2146,7 +2146,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     const result = await model.generateContent(prompt);
                                     const response = await result.response;
                                     const aiText = response.text().trim();
-                                    
+
                                     // 더 엄격한 섹션 파싱 (콜론 유무 유연하게 대처)
                                     const parseSection = (key) => {
                                         const regex = new RegExp(`\\[${key}\\]\\s*[:：]?\\s*([\\s\\S]*?)(?=\\s*\\[|$)`, 'i');
@@ -3162,7 +3162,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const cglGlData = {
         cq: {
             data: [
-                [0.25, null, [1140, 1219]], [0.27, 1140, [1140, 1270]], [0.30, 1250, [1250, 1270]],
+                [0.25, null, [1140, 1219]], [0.27, 1140, [1140, 1219]], [0.30, 1250, [1250, 1270]],
                 [0.35, 1300, null], [0.40, 1320, null], [0.50, 1320, null], [0.60, 1300, null],
                 [0.70, 1290, [1290, 1310]], [0.80, 1290, null], [0.90, 1270, [1270, 1290]],
                 [1.00, 1270, [1270, 1290]], [1.20, 1250, null]
@@ -3583,7 +3583,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // [추가] CGL 라인의 경우 도금량 입력 필수
         if (line.includes('cgl') && !coating) {
-            resultEl.innerHTML = '<div style="padding:15px; background:#fff1f2; border:1px solid #fecdd3; color:#e11d48; border-radius:8px;">도금량/부착량 정보를 입력해주세요. (예: Z220, AZ150)</div>';
+            let example = "예: Z80, Z180";
+            if (line === 'cgl-gl') example = "예: AZ80, AZ150";
+            resultEl.innerHTML = `<div style="padding:15px; background:#fff1f2; border:1px solid #fecdd3; color:#e11d48; border-radius:8px;">도금부착량 정보를 입력해주세요. (${example})</div>`;
             return;
         }
 
@@ -3629,7 +3631,33 @@ document.addEventListener('DOMContentLoaded', function () {
             // Gr.E 매칭을 위해 점 제거 및 소문자 변환
             const matKey = material.toLowerCase().replace('.', '');
             const subData = dataObj[matKey] || dataObj['cq'];
-            const found = subData.data.find(d => parseFloat(d[0]).toFixed(2) === thickness.toFixed(2));
+
+            // [수정] 정확한 일치가 아닌, 해당 두께를 커버하는 스펙(Lower Bound) 찾기
+            // 예: 0.36T 입력 시 0.35T 스펙 적용
+            const sortedData = subData.data.sort((a, b) => a[0] - b[0]);
+            let found = null;
+
+            // 입력 두께가 최소 두께 이상일 때만 탐색
+            if (sortedData.length > 0 && thickness >= sortedData[0][0]) {
+                // 입력값보다 작거나 같은 두께 중 가장 큰 값 (Lower Bound)
+                found = sortedData.filter(d => d[0] <= thickness).pop();
+
+                // 단, found가 되더라도 다음 구간과의 격차가 너무 크면(예: 0.5T 차이) 로직에 따라 불가 처리할 수도 있으나,
+                // 현재는 연속된 구간으로 간주하여 적용함.
+                // 만약 thicknes가 데이터의 max값보다 훨씬 큰 경우(예: 5.0T)는 별도 상한 체크가 필요할 수 있음.
+                const maxDataT = sortedData[sortedData.length - 1][0];
+                // 마지막 구간(예: 2.0T)보다 크면 생산 불가로 처리 (Strict check)
+                if (thickness > maxDataT) found = undefined;
+            }
+
+            if (found) {
+                // [추가] 협의 전용 스펙(생산 가능 폭 없음)인 경우, 두께가 정확히 일치하지 않으면 불가 처리
+                // 예: 0.25T(협의) -> 0.26T 입력 시 0.25T 규칙 적용 불가 (0.25T만 협의 가능하므로)
+                // 반면 0.35T(생산) -> 0.36T 입력 시는 0.35T 규칙 적용 허용
+                if (!found[1] && thickness > found[0] + 0.0001) {
+                    found = undefined;
+                }
+            }
 
             if (found) {
                 // [기본값 설정]
@@ -3821,9 +3849,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (line.startsWith('cgl')) {
                 coatingWrapper.style.display = 'flex';
                 if (line === 'cgl-gi') {
-                    coatingInput.placeholder = "예: Z18, Z22";
+                    coatingInput.placeholder = "예: Z80, Z180";
                 } else if (line === 'cgl-gl') {
-                    coatingInput.placeholder = "예: AZ15, AZ12";
+                    coatingInput.placeholder = "예: AZ80, AZ150";
                 }
             } else {
                 coatingWrapper.style.display = 'none';

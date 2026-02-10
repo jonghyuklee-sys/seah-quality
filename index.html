@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -386,7 +386,7 @@
                                             <h4>주요 고시 정보</h4>
                                             <ul>
                                                 <li>건축 내외장재, 가전, 자동차</li>
-                                                <li>도금량: 60 ~ 450 g/m²</li>
+                                                <li>도금부착량: 60 ~ 450 g/m²</li>
                                             </ul>
                                             <span class="label">대표 물성 범위</span>
                                             <span class="spec-highlight">Standard Grade</span>
@@ -411,7 +411,7 @@
                                             <h4>주요 고시 정보</h4>
                                             <ul>
                                                 <li>지붕/벽체, 가전 내장, 열반사</li>
-                                                <li>도금량: 70 ~ 275 g/m²</li>
+                                                <li>도금부착량: 70 ~ 275 g/m²</li>
                                             </ul>
                                             <span class="label">내마모성 등급</span>
                                             <span class="spec-highlight">High Durability</span>
@@ -436,7 +436,7 @@
                                             <h4>주요 고시 정보</h4>
                                             <ul>
                                                 <li>배기계, 오븐, 히터 부품</li>
-                                                <li>도금량: 40 ~ 120 g/m²</li>
+                                                <li>도금부착량: 40 ~ 120 g/m²</li>
                                             </ul>
                                             <span class="label">최대 가용 온도</span>
                                             <span class="spec-highlight">600 ℃</span>
@@ -462,7 +462,7 @@
                                             <h4>주요 고시 정보</h4>
                                             <ul>
                                                 <li>태양광 거치대, 축사, 해안가 인접 도로</li>
-                                                <li>도금량: 60 ~ 600 g/m²</li>
+                                                <li>도금부착량: 60 ~ 600 g/m²</li>
                                             </ul>
                                             <span class="label">내식성 등급</span>
                                             <span class="spec-highlight">Ultra High Corrosion</span>
@@ -514,7 +514,7 @@
                                             <h4>주요 고시 정보</h4>
                                             <ul>
                                                 <li>공장 지붕, 벽체, 고급 주택</li>
-                                                <li>도금량: AZ70 ~ AZ150</li>
+                                                <li>도금부착량: AZ70 ~ AZ150</li>
                                             </ul>
                                             <span class="label">권장 수지</span>
                                             <span class="spec-highlight">PVDF / HDP</span>
@@ -1741,7 +1741,8 @@
                                     </h4>
                                     <p
                                         style="margin: 0; font-size: 11.5px; color: #64748b; margin-left: 44px; font-weight: 500;">
-                                        * 자동 판단 결과는 실제와 차이가 있을 수 있으므로, 반드시 하단의 상세 스펙 그리드와 대조하여 확인하시기 바랍니다.
+                                        * 자동 판단 결과는 실제와 차이가 있을 수 있으므로, 반드시 하단의 상세 스펙 그리드와 대조하여 확인하시기 바랍니다. 일치가 안될 경우 문의
+                                        부탁드립니다.
                                     </p>
                                 </div>
                                 <button onclick="checkProductionCapability()" class="btn-primary auto-check-btn"
@@ -1793,8 +1794,8 @@
                                 </div>
                                 <div class="form-field" id="check-coating-wrapper">
                                     <label id="check-coating-label"
-                                        style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">도금량/부착량</label>
-                                    <input type="text" id="check-coating" placeholder="예: Z12, 120g"
+                                        style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">도금부착량</label>
+                                    <input type="text" id="check-coating" placeholder="예: Z60, Z180"
                                         style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
                                 </div>
                             </div>
@@ -4217,8 +4218,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <!-- Google Generative AI SDK Support -->
     <script type="module">
-      import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-      window.GoogleGenerativeAI = GoogleGenerativeAI;
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+        window.GoogleGenerativeAI = GoogleGenerativeAI;
     </script>
     <script src="firebase-config.js"></script>
 
