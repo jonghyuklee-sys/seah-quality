@@ -1919,294 +1919,125 @@ document.addEventListener('DOMContentLoaded', function () {
                 let trendText = "품질 프로세스가 일정 수준을 유지하고 있습니다.";
                 if (sortedMonths.length >= 2) {
                     const diff = monthlyMap[sortedMonths[sortedMonths.length - 1]] - monthlyMap[sortedMonths[sortedMonths.length - 2]];
-                    trendText = diff > 0 ? "최근 발생 빈도가 전월 대비 상승하여 특수 요인 변동 분석(SPC)이 권고됩니다." : diff < 0 ? "최근 발생 추세가 하향 안정화 단계에 진입하고 있습니다." : "관리 한계선 내에서 안정적인 흐름을 유지 중입니다.";
+                    trendText = diff > 0 ? "최근 발생 빈도가 전월 대비 상승하여 특수 요인 변동 분석(SPC)이 권고됩니다." : diff < 0 ? Math.abs(diff) + '건 하락' : "관리 한계선 내에서 안정적인 흐름을 유지 중입니다.";
                 }
 
-                // --- [일체형 고성능 AI 품질 진단 엔진] ---
+                // --- [전사 전략적 품질 진단 엔진 v4.5 - 텍스트 마이닝 지능형 엔진] ---
                 const runAIEngine = () => {
-                    const textPool = displayData.map(v =>
-                        (v.title || '') + ' ' + (v.description || '') + ' ' + (v.replyCause || '') + ' ' + (v.replyCountermeasure || '')
-                    ).join(' ');
+                    // 1. 데이터 분석 지표 및 텍스트 마이닝
+                    const titles = displayData.map(v => v.title).filter(t => t);
+                    const titleCounts = {};
+                    titles.forEach(t => titleCounts[t] = (titleCounts[t] || 0) + 1);
 
-                    // 1. 철강 제조 전문 심층 키워드 마이닝 (냉연/컬러강판 특화)
-                    const aiDictionary = [
-                        { key: /온도|가열|냉각|히터|오븐|PMT|경화|Curing|소성/gi, label: '열에너지/경화 제어', color: '#f0f9ff', icon: '🌡️' },
-                        { key: /습도|수분|이물|먼지|청정|연분|백청|흑변/gi, label: '환경/내식성 관리', color: '#f0fdf4', icon: '🧹' },
-                        { key: /압력|텐션|롤러|간격|세팅|보정|Reduction|압하율|Roll Mark|형상/gi, label: '설비 정밀 압하 제어', color: '#fff7ed', icon: '📏' },
-                        { key: /작업자|숙련|매뉴얼|표준|미준수|SOP|인적/gi, label: '공정 표준화 역량', color: '#f5f3ff', icon: '👷' },
-                        { key: /원판|소재|성분|경도|코일|미반응|소재결함|포스코|현대제철/gi, label: '소재 원천 품질 관리', color: '#fff1f2', icon: '⛓️' },
-                        { key: /스크래치|오염|얼룩|도막|광택|색차|Delta|박리|Pin hole|오렌지필/gi, label: '표면 물성/외관 품질', color: '#fdf2f8', icon: '✨' },
-                        { key: /농도|화성|전처리|Chromate|액관리|인산염/gi, label: '화학 반응/전처리 제어', color: '#ecfeff', icon: '🧪' }
-                    ];
+                    // 빈도수 높은 상위 불만명 3개 추출
+                    const topTitles = Object.entries(titleCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3)
+                        .map(item => item[0])
+                        .join(", ");
 
-                    const analysisResults = aiDictionary
-                        .map(item => ({ ...item, count: (textPool.match(item.key) || []).length }))
-                        .filter(item => item.count > 0)
-                        .sort((a, b) => b.count - a.count);
-
-                    const primaryFactor = analysisResults[0] || { label: '기술 표준화', icon: '⚙️' };
-                    const secondaryFactor = analysisResults[1];
-
-                    // 2. 상황별 지능형 도메인 인사이트 생성
-                    let insightContext = "";
-                    if (isCostCritical) {
-                        insightContext = `현재 <strong>${worstLineByCost}</strong> 라인의 실패 비용이 <strong>${(maxCost / 100000000).toFixed(1)}억 원</strong>을 상회하며 재무적 임계치에 도달했습니다. 단순 불량률 관리를 넘어, 고부가가치 제품군의 수율 최적화를 위한 <strong>공정 파라미터(PMT, 압하력 등)</strong>의 전면 재조교(Re-calibration)가 필요합니다.`;
-                    } else if (analysisResults.length > 0) {
-                        insightContext = `빅데이터 패턴 분석 결과, 현재 <strong>${primaryFactor.label}</strong> 요인이 품질 변동의 지배적 벡터(Vector)로 식별되었습니다. ${secondaryFactor ? `특히 <strong>${secondaryFactor.label}</strong> 요인과의 복합 상관관계가 포착되므로, 설비 정밀도와 화학적 반응성을 병행 점검하는 <strong>통합 공정 제어</strong>가 권고됩니다.` : "단일 기술적 요인에 대한 집중 공정 능력을 확보해야 하는 단계입니다."}`;
-                    } else {
-                        insightContext = "데이터 세트 내에서 특정 기술적 이상 징후는 발견되지 않았으나, 설비 노후화 및 계절적 환경 변수에 따른 미세 품질 산포(Dispersion) 관리가 수반되어야 합니다.";
-                    }
-
-                    // 3. 상황별 동적 카드 생성 로직 (우선순위 기반)
-                    const dynamicCards = [];
-
-                    // 우선순위 0: 막대한 재무 손실 (임계치 이상 시 최우선 노출)
-                    if (isCostCritical) {
-                        dynamicCards.push({
-                            title: "💰 막대한 재무적 손실 리스크",
-                            desc: `${worstLineByCost} 라인의 손실액이 전체의 대다수를 차지하고 있습니다. 단순 클레임 수량 대응을 넘어 소재 폐기 및 재작업 비용을 획기적으로 낮추기 위한 고강도 원가 방어 활동을 전개하십시오.`,
-                            color: "#fff1f2",
-                            priority: 11
-                        });
-                    }
-
-                    // 우선순위 1: 공정 기술 요인
-                    if (analysisResults.length > 0) {
-                        dynamicCards.push({
-                            title: `🚨 ${primaryFactor.label} 변동 경보`,
-                            desc: `최근 ${worstLine} 라인의 <strong>${primaryFactor.label}</strong> 관련 텍스트 패턴이 급증했습니다. 이는 <strong>${mainDefect}</strong> 발생과 직접적인 인과관계를 가질 가능성이 매우 높으므로 설비 세팅치를 정밀 재검검하십시오.`,
-                            color: primaryFactor.color,
-                            priority: 10
-                        });
-                    }
-
-                    // 우선순위 2: 중대 클레임 리스크
-                    if (claimRatio > 40) {
-                        dynamicCards.push({
-                            title: "⚠️ 고위험 클레임 집중",
-                            desc: `현재 분석 데이터 중 중대 클레임 비중이 <strong style="color:#ef4444;">${claimRatio}%</strong>에 달합니다. 품질 보증 표준의 근본적 재검토와 선행 공정의 전수 조사가 시급합니다.`,
-                            color: "#fff1f2",
-                            priority: 9
-                        });
-                    }
-
-                    // 우선순위 3: 대응 퍼포먼스 (처리율 기반)
-                    if (completionRate < 80) {
-                        dynamicCards.push({
-                            title: "🕒 처리 프로세스 지체",
-                            desc: `클레임 완료율이 <strong style="color:#f59e0b;">${completionRate}%</strong>로 관리 목표치를 하회하고 있습니다. ${worstLine} 라인의 원인 규명 속도를 높이고 협업 대응 체계를 점검하십시오.`,
-                            color: "#fffbeb",
-                            priority: 8
-                        });
-                    }
-
-                    // 우선순위 4: 통계적 추세
-                    dynamicCards.push({
-                        title: "📉 품질 변동 트렌드",
-                        desc: `${trendText} ${worstLine} 라인의 결함 집중 현상은 고착화된 공정 특성일 수 있으므로 장기 SPC 관리가 필요합니다.`,
-                        color: "#f8fafc",
-                        priority: 7
-                    });
-
-                    // 우선순위 5: 표준화 자산화 (기본)
-                    dynamicCards.push({
-                        title: "✅ 공정 표준 내실화",
-                        desc: `탐지된 <strong>${mainDefect}</strong> 패턴을 사내 지식 베이스로 등록하고, 데이터 기반의 SOP 개정을 통해 균일 품질 확보에 집중하십시오.`,
-                        color: "#f0fdf4",
-                        priority: 6
-                    });
-
-                    // 상위 3개 카드 선택 및 정렬
-                    const finalCards = dynamicCards
-                        .sort((a, b) => b.priority - a.priority)
-                        .slice(0, 3);
-
-                    // 5. 종합 인사이트 요약 생성
-                    const activeLines = lines.filter(l => l !== '-' && lineMap[l] > 0);
-                    const lineSummary = activeLines.length > 1
-                        ? `분석 대상: ${activeLines.join(', ')} (${activeLines.length}개 공정)`
-                        : `${worstLine} 라인 단일 공정 분석`;
-
-                    const analysisTitle = activeLines.length > 1
-                        ? "전체 공정 품질 종합 진단 결과"
-                        : `${worstLine} 라인 심층 품질 진단 결과`;
-
-                    // 2. 최종 UI 렌더링 (카드 기반 통합 레이아웃)
-                    totalInsightEl.innerHTML = `
-                        <div id="ai-dashboard-container" style="display:flex; flex-direction:column; gap:16px; padding: 5px 0;">
-                            <!-- [AI 정밀 진단 메인 영역] -->
-                            <div id="ai-main-card" style="background:#ffffff; border:1px solid #e2ebf0; border-left:6px solid #1e3a8a; border-radius:16px; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.05); position:relative;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
-                                    <div style="display:flex; align-items:center; gap:8px; color:#1e3a8a; font-weight:800; font-size:16px;">
-                                        <span>🤖</span> AI 품질 종합 진단 의견
-                                    </div>
-                                    <span style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #f8fafc; padding: 6px 14px; border-radius: 20px; border:1px solid #e2e8f0;">
-                                        SeAH AI Intelligent Quality Engine v2.5
-                                    </span>
-                                </div>
-                                <div id="gemini-content" style="font-size:14.5px; line-height:1.8; color:#334155; min-height:40px;">
-                                    <div style="display:flex; align-items:center; gap:12px; color:#6366f1; font-weight:600;">
-                                        <i class="fas fa-spinner fa-spin"></i> 실시간 품질 데이터를 기반으로 AI 전문가가 진단을 수행하고 있습니다...
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- [상세 분석 카드 그리드] -->
-                            <div id="ai-detail-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                                <!-- AI 성공 시 AI 기반 분석 카드로, 실패 시 시스템 추천 카드로 채워집니다 -->
-                                ${finalCards.map(rec => `
-                                    <div class="system-card" style="padding:22px; background:${rec.color}; border-radius:16px; border:1px solid rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:12px; box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.02);">
-                                        <div style="font-weight:800; color:#1e3a8a; font-size:15px; display:flex; align-items:center; gap:8px;">
-                                            <span style="font-size:18px;">💡</span> ${rec.title}
-                                        </div>
-                                        <div style="font-size:13.5px; color:#475569; line-height:1.65; word-break:keep-all;">
-                                            ${rec.desc}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-
-                    // 분석 실행 엔진 함수
-                    const executeAnalysis = async () => {
-                        const content = document.getElementById('gemini-content');
-
-                        try {
-                            // 1. 대시보드 통계 및 VOC 데이터 통합 요약 생성
-                            const dashboardDataSummary = {
-                                period: sortedMonths.join(' ~ '),
-                                totals: { count: total, cost: totalCost.toLocaleString() + '원' },
-                                riskFactors: { worstLine, mainDefect, claimRatio: claimRatio + '%', completionRate: completionRate + '%' },
-                                trend: trendText,
-                                costDetail: worstLineByCost && maxCost ? `${worstLineByCost} 라인 집중손실 (${(maxCost / 1000000).toFixed(0)}백만원)` : '없음'
-                            };
-
-                            // VOC 데이터 분류 통계 요약 (AI용)
-                            const lineStats = {};
-                            const defectStats = {};
-                            displayData.forEach(v => {
-                                lineStats[v.line] = (lineStats[v.line] || 0) + 1;
-                                defectStats[v.defectType || '기타'] = (defectStats[v.defectType || '기타'] || 0) + 1;
-                            });
-
-                            const vocSummary = `
-                                [공격적 공정 통계]: ${JSON.stringify(lineStats)}
-                                [불량 유형 정량 분포]: ${JSON.stringify(defectStats)}
-                                [심층 분석용 VOC 텍스트 데이터]:
-                                ${displayData.slice(0, 25).map(v => `- [${v.line}/${v.defectType}] ${v.title}: ${v.description?.substring(0, 80)} (원인: ${v.replyCause || '추정중'}, 대책: ${v.replyAction || '미흡'})`).join('\n')}
-                            `;
-
-                            // 2. 자체 전문가 알고리즘 (AI 실패 시 대비)
-                            const generateExpertInsight = () => {
-                                return {
-                                    summary: `분석 기간 내 전사 총 손실은 **${totalCost.toLocaleString()}원**이며, 이 중 **${worstLine}**의 **${mainDefect}** 결함이 품질 지표 하락의 결정적 요인입니다. 전체 VOC 중 클레임 비중이 **${claimRatio}%**에 달해 전사적 대응이 필요합니다.`,
-                                    details: [
-                                        { title: "🚨 공정별 원인 분석", desc: `전체 발생건 중 **${worstLine}** 라인의 집중도가 높으며, 특히 **${mainDefect}** 관련 기술 표준 미준수나 설비 노후화가 주원인으로 분석됩니다.`, color: "#fff1f2", border: "#fecaca", text: "#7f1d1d", head: "#991b1b" },
-                                        { title: "⚠️ 재무 리스크 평가", desc: `전사 누적 손실 **${totalCost.toLocaleString()}원**은 관리 임계치를 위협하고 있습니다. 손실의 상당 부분이 클레임 보상액에 집중되어 있어 수익성 개선을 위한 선제적 품질 제어가 절실합니다.`, color: "#fffbeb", border: "#fef3c7", text: "#78350f", head: "#92400e" },
-                                        { title: "✅ 전사적 조치 권고", desc: `**${worstLine}** 공정의 전수 품질 검사를 강화하고, 타 라인으로의 불량 전이 방지를 위한 범용 품질 표준(Q-Standard)을 재정립하십시오.`, color: "#f0fdf4", border: "#bbf7d0", text: "#15803d", head: "#166534" }
-                                    ]
-                                };
-                            };
-
-                            const renderExpertInsight = () => {
-                                const expert = generateExpertInsight();
-                                content.innerHTML = expert.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                                const cardContainer = document.getElementById('ai-detail-cards');
-                                if (cardContainer) {
-                                    cardContainer.innerHTML = expert.details.map(d => `
-                                        <div style="padding:18px; background:${d.color}; border-radius:14px; border:1px solid ${d.border}; display:flex; flex-direction:column; gap:8px;">
-                                            <div style="font-weight:800; color:${d.head}; font-size:13.5px;">${d.title}</div>
-                                            <div style="font-size:12.5px; color:${d.text}; line-height:1.6;">${d.desc.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
-                                        </div>
-                                    `).join('');
-                                }
-                            };
-
-                            if (window.GoogleGenerativeAI) {
-                                const apiKey = "AIzaSyDC0oj4bWHG4m1zRFIIt4HZPyndX7QVR7U";
-                                const genAI = new window.GoogleGenerativeAI(apiKey);
-                                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1beta" });
-
-                                const prompt = `
-                                    당신은 세아씨엠(SeAH CM)의 최고 품질 전략 책임자(CQO)입니다. 
-                                    제공된 통계와 VOC 데이터를 바탕으로 '전사 품질 현황'과 '특정 취약 공정'을 명확히 구분하여 전문적인 진단을 수행하십시오.
-
-                                    [데이터 통합 요약]
-                                    - 분석 대상 기간: ${dashboardDataSummary.period} (전사 통합 데이터)
-                                    - 전사 총 VOC 규모: ${dashboardDataSummary.totals.count}건 (전사 총 실패 비용: ${dashboardDataSummary.totals.cost})
-                                    - 전사 품질 지표: 클레임 비중 ${dashboardDataSummary.riskFactors.claimRatio}, 누적 조치율 ${dashboardDataSummary.riskFactors.completionRate}
-                                    - 취약 공정 타겟: ${dashboardDataSummary.riskFactors.worstLine} 라인 / ${dashboardDataSummary.riskFactors.mainDefect} 결함 집중
-                                    - VOC 상세 컨텍스트: ${vocSummary.substring(0, 1500)}
-
-                                    [리포트 작성 가이드 - 데이터 혼동 주의]
-                                    1. [종합 진단]: 전사 차원의 총 손실 비용과 품질 지표를 먼저 명시하고, 그 중 ${dashboardDataSummary.riskFactors.worstLine} 공정이 어떤 비중과 영향력을 미치고 있는지 논리적으로 서술. 
-                                       (※ 주의: 총 손실 비용(${dashboardDataSummary.totals.cost})이 특정 공정 하나만의 비용으로 오해받지 않도록 '전사 누적'임을 명확히 표현할 것)
-                                    2. [주요 원인 분석]: 취약 공정(${dashboardDataSummary.riskFactors.worstLine})의 특이점과 불량 패턴 분석.
-                                    3. [재무/운영 리스크]: 전사 총 손실액 및 조치 미흡으로 인한 잠재적 리스트 평가.
-                                    4. [전략적 조치 권고]: 현장 중심의 개선안 제시.
-
-                                    [주의사항]
-                                    - 각 섹션 명칭은 대괄호([])로 유지.
-                                    - 전문적이고 권위 있는 CQO의 어조 사용.
-                                    - 인사말 생략 및 본론 위주.
-                                `;
-
-                                try {
-                                    const result = await model.generateContent(prompt);
-                                    const response = await result.response;
-                                    const aiText = response.text().trim();
-
-                                    // 더 엄격한 섹션 파싱 (콜론 유무 유연하게 대처)
-                                    const parseSection = (key) => {
-                                        const regex = new RegExp(`\\[${key}\\]\\s*[:：]?\\s*([\\s\\S]*?)(?=\\s*\\[|$)`, 'i');
-                                        return aiText.match(regex)?.[1]?.trim() || "";
-                                    };
-
-                                    const sections = {
-                                        summary: parseSection("종합 진단") || "데이터 분석 완료",
-                                        cause: parseSection("주요 원인 분석") || "상세 분석 내용이 생성되지 않았습니다.",
-                                        risk: parseSection("재무/운영 리스크") || "리스크 평가 중입니다.",
-                                        action: parseSection("전략적 조치 권고") || "조치 권고를 확인 중입니다."
-                                    };
-
-                                    // 메인 진단 결과 업데이트
-                                    content.innerHTML = sections.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                                    // 상세 분석 카드 교체
-                                    const cardContainer = document.getElementById('ai-detail-cards');
-                                    if (cardContainer) {
-                                        cardContainer.innerHTML = `
-                                            <div class="ai-deep-card" style="padding:18px; background:#fff1f2; border-radius:14px; border:1px solid #fecaca; display:flex; flex-direction:column; gap:8px;">
-                                                <div style="font-weight:800; color:#991b1b; font-size:13.5px; display:flex; align-items:center; gap:6px;">🚨 원인 심층 분석</div>
-                                                <div style="font-size:12.5px; color:#7f1d1d; line-height:1.6;">${sections.cause.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
-                                            </div>
-                                            <div class="ai-deep-card" style="padding:18px; background:#fffbeb; border-radius:14px; border:1px solid #fef3c7; display:flex; flex-direction:column; gap:8px;">
-                                                <div style="font-weight:800; color:#92400e; font-size:13.5px; display:flex; align-items:center; gap:6px;">⚠️ 리스크 평가</div>
-                                                <div style="font-size:12.5px; color:#78350f; line-height:1.6;">${sections.risk.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
-                                            </div>
-                                            <div class="ai-deep-card" style="padding:18px; background:#f0fdf4; border-radius:14px; border:1px solid #bbf7d0; display:flex; flex-direction:column; gap:8px;">
-                                                <div style="font-weight:800; color:#166534; font-size:13.5px; display:flex; align-items:center; gap:6px;">✅ 조치 권고</div>
-                                                <div style="font-size:12.5px; color:#15803d; line-height:1.6;">${sections.action.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
-                                            </div>
-                                        `;
-                                    }
-                                } catch (innerErr) {
-                                    renderExpertInsight();
-                                }
-                            } else {
-                                renderExpertInsight();
-                            }
-                        } catch (err) {
-                            content.innerHTML = `<span style="color:#ef4444;">⚠️ 데이터 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</span>`;
-                        }
+                    const stats = {
+                        period: periodValue,
+                        totalCost: totalCost,
+                        count: total,
+                        worstLine: worstLine,
+                        mainDefect: mainDefect,
+                        topTitles: topTitles || "상세 내역 분석 중",
+                        claimRatio: claimRatio,
+                        completion: parseInt(completionRate)
                     };
 
-                    // 즉시 실행
-                    executeAnalysis();
-                };
+                    // 2. 동적 분석 문구 생성 로직
+                    const getAnalysisText = () => {
+                        let base = `분석 기간 내 전사 누적 손실은 <strong>${stats.totalCost.toLocaleString()}원</strong>이며, `;
+                        base += `이 중 <strong>${stats.worstLine}</strong> 공정에서 발생한 <strong>${stats.mainDefect}(주요 이슈: ${stats.topTitles})</strong> 건들이 전사 품질 지표 하락의 결정적 요인입니다. `;
+                        base += `현재 고객 조치 완료율은 <strong>${stats.completion}%</strong>로 `;
+                        base += stats.completion < 80 ? "장기 미결 건에 대한 집중 관리 및 현장 피드백 루프 강화가 시급한 상태입니다." : "비교적 안정적인 모니터링 체계를 유지하고 있습니다.";
+                        return base;
+                    };
 
-                // 엔진 즉시 실행 (서버 호출 없음)
+                    const getCardInsights = () => {
+                        return {
+                            cause: {
+                                title: "공정별 원인 분석",
+                                desc: `<strong>${stats.worstLine}</strong> 라인의 발생 비중이 압도적이며, 특히 <strong>"${stats.topTitles}"</strong> 등에 대한 현장 작업 표준(SOP) 미준수나 설비 정밀도 저하가 주된 통계적 원인으로 분석됩니다.`,
+                                color: "#fff1f2", border: "#fecdd3", text: "#e11d48"
+                            },
+                            risk: {
+                                title: "재무 리스크 평가",
+                                desc: `누적 실패 비용 <strong>${stats.totalCost.toLocaleString()}원</strong>은 관리 임계치를 상회하고 있습니다. 특히 <strong>${stats.mainDefect}</strong> 유형의 클레임 전환율이 <strong>${stats.claimRatio}%</strong>에 달해 비용 방어가 절실합니다.`,
+                                color: "#fffbeb", border: "#fef3c7", text: "#d97706"
+                            },
+                            action: {
+                                title: "전략적 조치 권고",
+                                desc: `클레임 발생이 잦은 <strong>"${stats.topTitles}"</strong> 항목에 대해 공정 전수 검사를 강화하고, <strong>${stats.worstLine}</strong> 공정의 설비 세팅값을 재점검하여 불량 전이를 원천 차단하십시오.`,
+                                color: "#f0fdf4", border: "#dcfce7", text: "#166534"
+                            }
+                        };
+                    };
+
+                    const insights = getCardInsights();
+
+                    // 3. 프리미엄 UI 렌더링 (모바일 최적화 대응)
+                    totalInsightEl.innerHTML = `
+                        <div id="ai-strategy-container" class="ai-responsive-view" style="display:flex; flex-direction:column; gap:12px; padding: 5px 0; animation: fadeIn 0.6s ease-out;">
+                            <!-- 메인 요약 창 -->
+                            <div class="ai-main-card" style="background:#ffffff; border:1px solid #e2ebf0; border-left:5px solid #1e3a8a; border-radius:12px; padding:20px 25px; box-shadow:0 10px 30px rgba(0,0,0,0.04); position:relative;">
+                                <div class="ai-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 10px;">
+                                    <div class="ai-title-group" style="color:#1e3a8a; font-weight:800; font-size:15px; display:flex; align-items:center; gap:8px;">
+                                        <i class="fas fa-robot" style="flex-shrink: 0;"></i> 
+                                        <span style="white-space: nowrap;">AI 품질 종합 분석</span>
+                                        <span class="ai-sub-title" style="font-weight: 400; font-size: 13px; color: #64748b; margin-left: 2px;">(Comprehensive)</span>
+                                    </div>
+                                    <span class="ai-version-tag" style="font-size: 9px; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; white-space: nowrap;">
+                                        ANALYTICS V4.5
+                                    </span>
+                                </div>
+                                <div class="ai-content" style="font-size:13.5px; line-height:1.7; color:#334155; word-break:keep-all;">
+                                    ${getAnalysisText()}
+                                </div>
+                            </div>
+
+                            <!-- 3단 상세 위젯 -->
+                            <div class="ai-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">
+                                <div class="ai-widget-card" style="background:${insights.cause.color}; border:1px solid ${insights.cause.border}; border-radius:10px; padding:16px;">
+                                    <div style="color:${insights.cause.text}; font-weight:700; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                        <i class="fas fa-industry"></i> ${insights.cause.title}
+                                    </div>
+                                    <div style="font-size:12.5px; line-height:1.6; color:#475569;">${insights.cause.desc}</div>
+                                </div>
+                                <div class="ai-widget-card" style="background:${insights.risk.color}; border:1px solid ${insights.risk.border}; border-radius:10px; padding:16px;">
+                                    <div style="color:${insights.risk.text}; font-weight:700; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                        <i class="fas fa-exclamation-triangle"></i> ${insights.risk.title}
+                                    </div>
+                                    <div style="font-size:12.5px; line-height:1.6; color:#475569;">${insights.risk.desc}</div>
+                                </div>
+                                <div class="ai-widget-card" style="background:${insights.action.color}; border:1px solid ${insights.action.border}; border-radius:10px; padding:16px;">
+                                    <div style="color:${insights.action.text}; font-weight:700; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                                        <i class="fas fa-check-circle"></i> ${insights.action.title}
+                                    </div>
+                                    <div style="font-size:12.5px; line-height:1.6; color:#475569;">${insights.action.desc}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <style>
+                            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                            #ai-strategy-container strong { color: #1e3a8a; font-weight: 700; border-bottom: 2px solid #dbeafe; padding: 0 1px; }
+                            
+                            @media (max-width: 600px) {
+                                .ai-header { flex-direction: row; align-items: center; justify-content: space-between; }
+                                .ai-sub-title { display: none; }
+                                .ai-version-tag { font-size: 8px !important; padding: 2px 8px !important; }
+                                .ai-content { font-size: 13px !important; line-height: 1.6 !important; }
+                                .ai-grid { grid-template-columns: 1fr !important; }
+                                .ai-widget-card { padding: 14px !important; }
+                            }
+                        </style>
+                    `;
+                };
+                // 엔진 즉시 실행
                 runAIEngine();
+
             }
         }
     }
@@ -2380,11 +2211,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const tag = document.createElement('div');
             tag.className = 'notify-email-tag';
             tag.innerHTML = `
-                <span>${item.email}</span>
-                <span class="remove-btn" onclick="deleteNotificationEmail('${item.id}')">
-                    <i class="fas fa-times"></i>
-                </span>
-            `;
+                        < span > ${item.email}</span >
+                            <span class="remove-btn" onclick="deleteNotificationEmail('${item.id}')">
+                                <i class="fas fa-times"></i>
+                            </span>
+                    `;
             notifyEmailList.appendChild(tag);
         });
     }
@@ -2437,7 +2268,7 @@ document.addEventListener('DOMContentLoaded', function () {
             category: vocData.category,
             customer: vocData.customer,
             title: vocData.title,
-            manager: (vocData.team ? `[${vocData.team}] ` : '') + vocData.manager,
+            manager: (vocData.team ? `[${vocData.team}]` : '') + vocData.manager,
             receipt_date: vocData.receiptDate,
             spec: vocData.spec,
             line: vocData.line,
@@ -2471,7 +2302,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 패널 표시 제어
             infoPanels.forEach(p => {
                 p.classList.remove('active');
-                if (p.id === `panel-${tabId}`) p.classList.add('active');
+                if (p.id === `panel - ${tabId} `) p.classList.add('active');
             });
 
             // 상단으로 스크롤 방지 또는 부드러운 이동 (필요시)
@@ -2513,7 +2344,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     groupClass = 'group-middle';
                 }
 
-                html += `<tr class="${groupClass}" data-item="${row.item}" style="border-bottom:1px solid #f1f5f9;">`;
+                html += `< tr class="${groupClass}" data - item="${row.item}" style = "border-bottom:1px solid #f1f5f9;" > `;
 
                 // 검사항목 (Rowspan 로직)
                 if (isFirstOfItem) {
@@ -2523,24 +2354,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         else break;
                     }
                     html += `
-                        <td rowspan="${rs}" class="resin-table-item" data-label="검사항목">
+                        < td rowspan = "${rs}" class="resin-table-item" data - label="검사항목" >
                             ${row.item.replace(/\n/g, '<br>')}
-                        </td>`;
+                        </td > `;
                 }
 
                 // 조건
                 html += `
-                    <td class="resin-table-condition" data-label="조건">
+                    < td class="resin-table-condition" data - label="조건" >
                         ${row.condition.replace(/\n/g, '<br>')}
-                    </td>`;
+                    </td > `;
 
                 // 합부 기준
                 html += `
-                    <td class="resin-table-criteria" data-label="합부 기준">
+                    < td class="resin-table-criteria" data - label="합부 기준" >
                         <div style="padding: 2px 0;">
                             ${row.criteria}
                         </div>
-                    </td>`;
+                    </td > `;
 
                 html += '</tr>';
             });
