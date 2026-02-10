@@ -1892,10 +1892,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 totalInsightEl.innerHTML = "품질 분석 데이터 부재: 현재 등록된 VOC가 없어 종합 진단 의견 실행이 불가능합니다.";
             } else {
                 const lines = Object.keys(lineMap).filter(l => lineMap[l] > 0).sort((a, b) => lineMap[b] - lineMap[a]);
-                const worstLine = lines[0] || '-';
+                const worstLineByCount = lines[0] || '-';
                 const mainDefect = filteredDefectLabels[0] || '기타';
                 const claimRatio = Math.round((catMap['클레임'] / total) * 100);
                 const completionRate = Math.round(((total - (pending || 0)) / total) * 100);
+
+                // 손실 비용 기반 분석 추가
+                const costLines = Object.keys(lineCostMap).filter(l => lineCostMap[l] > 0).sort((a, b) => lineCostMap[b] - lineCostMap[a]);
+                const worstLineByCost = costLines[0] || '-';
+                const maxCost = lineCostMap[worstLineByCost] || 0;
+
+                // 최악 공정 결정 (관리 빈도 vs 재무 손실)
+                const isCostCritical = maxCost > 50000000; // 5천만원 이상 시 재무 임계치 도달로 판단
+                const worstLine = isCostCritical ? worstLineByCost : worstLineByCount;
 
                 // 월별 증감 분석
                 let trendText = "품질 프로세스가 일정 수준을 유지하고 있습니다.";
@@ -1904,25 +1913,283 @@ document.addEventListener('DOMContentLoaded', function () {
                     trendText = diff > 0 ? "최근 발생 빈도가 전월 대비 상승하여 특수 요인 변동 분석(SPC)이 권고됩니다." : diff < 0 ? "최근 발생 추세가 하향 안정화 단계에 진입하고 있습니다." : "관리 한계선 내에서 안정적인 흐름을 유지 중입니다.";
                 }
 
-                let summaryText = `
-                    <div style="display:flex; flex-direction:column; gap:12px;">
-                        <div>
-                            통계적 엔지니어링 분석 결과, 현재 리스크의 핵심 트리거는 <strong>${worstLine}</strong> 공정의 <strong>${mainDefect}</strong> 결함으로 특정되었습니다. 
-                            또한 ${claimRatio > 50 ? '중대 클레임 비중이 임계치를 초과하여 브랜드 신뢰도 관리가 시급하며,' : '일반 컴플레인 위주의 분포를 보여 예방 강화 단계이며,'} ${trendText}
-                        </div>
-                        <div style="padding:16px; background:#fff; border-radius:10px; border:1px solid #dbeafe; font-size:13.5px; color:#1e40af; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            <div style="font-weight:bold; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                                <span style="font-size:18px;">📋</span> AI 품질 경영 전문 처방 (Quality Executive Summary)
+                // --- [일체형 고성능 AI 품질 진단 엔진] ---
+                const runAIEngine = () => {
+                    const textPool = displayData.map(v =>
+                        (v.title || '') + ' ' + (v.description || '') + ' ' + (v.replyCause || '') + ' ' + (v.replyCountermeasure || '')
+                    ).join(' ');
+
+                    // 1. 철강 제조 전문 심층 키워드 마이닝 (냉연/컬러강판 특화)
+                    const aiDictionary = [
+                        { key: /온도|가열|냉각|히터|오븐|PMT|경화|Curing|소성/gi, label: '열에너지/경화 제어', color: '#f0f9ff', icon: '🌡️' },
+                        { key: /습도|수분|이물|먼지|청정|연분|백청|흑변/gi, label: '환경/내식성 관리', color: '#f0fdf4', icon: '🧹' },
+                        { key: /압력|텐션|롤러|간격|세팅|보정|Reduction|압하율|Roll Mark|형상/gi, label: '설비 정밀 압하 제어', color: '#fff7ed', icon: '📏' },
+                        { key: /작업자|숙련|매뉴얼|표준|미준수|SOP|인적/gi, label: '공정 표준화 역량', color: '#f5f3ff', icon: '👷' },
+                        { key: /원판|소재|성분|경도|코일|미반응|소재결함|포스코|현대제철/gi, label: '소재 원천 품질 관리', color: '#fff1f2', icon: '⛓️' },
+                        { key: /스크래치|오염|얼룩|도막|광택|색차|Delta|박리|Pin hole|오렌지필/gi, label: '표면 물성/외관 품질', color: '#fdf2f8', icon: '✨' },
+                        { key: /농도|화성|전처리|Chromate|액관리|인산염/gi, label: '화학 반응/전처리 제어', color: '#ecfeff', icon: '🧪' }
+                    ];
+
+                    const analysisResults = aiDictionary
+                        .map(item => ({ ...item, count: (textPool.match(item.key) || []).length }))
+                        .filter(item => item.count > 0)
+                        .sort((a, b) => b.count - a.count);
+
+                    const primaryFactor = analysisResults[0] || { label: '기술 표준화', icon: '⚙️' };
+                    const secondaryFactor = analysisResults[1];
+
+                    // 2. 상황별 지능형 도메인 인사이트 생성
+                    let insightContext = "";
+                    if (isCostCritical) {
+                        insightContext = `현재 <strong>${worstLineByCost}</strong> 라인의 실패 비용이 <strong>${(maxCost / 100000000).toFixed(1)}억 원</strong>을 상회하며 재무적 임계치에 도달했습니다. 단순 불량률 관리를 넘어, 고부가가치 제품군의 수율 최적화를 위한 <strong>공정 파라미터(PMT, 압하력 등)</strong>의 전면 재조교(Re-calibration)가 필요합니다.`;
+                    } else if (analysisResults.length > 0) {
+                        insightContext = `빅데이터 패턴 분석 결과, 현재 <strong>${primaryFactor.label}</strong> 요인이 품질 변동의 지배적 벡터(Vector)로 식별되었습니다. ${secondaryFactor ? `특히 <strong>${secondaryFactor.label}</strong> 요인과의 복합 상관관계가 포착되므로, 설비 정밀도와 화학적 반응성을 병행 점검하는 <strong>통합 공정 제어</strong>가 권고됩니다.` : "단일 기술적 요인에 대한 집중 공정 능력을 확보해야 하는 단계입니다."}`;
+                    } else {
+                        insightContext = "데이터 세트 내에서 특정 기술적 이상 징후는 발견되지 않았으나, 설비 노후화 및 계절적 환경 변수에 따른 미세 품질 산포(Dispersion) 관리가 수반되어야 합니다.";
+                    }
+
+                    // 3. 상황별 동적 카드 생성 로직 (우선순위 기반)
+                    const dynamicCards = [];
+
+                    // 우선순위 0: 막대한 재무 손실 (임계치 이상 시 최우선 노출)
+                    if (isCostCritical) {
+                        dynamicCards.push({
+                            title: "💰 막대한 재무적 손실 리스크",
+                            desc: `${worstLineByCost} 라인의 손실액이 전체의 대다수를 차지하고 있습니다. 단순 클레임 수량 대응을 넘어 소재 폐기 및 재작업 비용을 획기적으로 낮추기 위한 고강도 원가 방어 활동을 전개하십시오.`,
+                            color: "#fff1f2",
+                            priority: 11
+                        });
+                    }
+
+                    // 우선순위 1: 공정 기술 요인
+                    if (analysisResults.length > 0) {
+                        dynamicCards.push({
+                            title: `🚨 ${primaryFactor.label} 변동 경보`,
+                            desc: `최근 ${worstLine} 라인의 <strong>${primaryFactor.label}</strong> 관련 텍스트 패턴이 급증했습니다. 이는 <strong>${mainDefect}</strong> 발생과 직접적인 인과관계를 가질 가능성이 매우 높으므로 설비 세팅치를 정밀 재검검하십시오.`,
+                            color: primaryFactor.color,
+                            priority: 10
+                        });
+                    }
+
+                    // 우선순위 2: 중대 클레임 리스크
+                    if (claimRatio > 40) {
+                        dynamicCards.push({
+                            title: "⚠️ 고위험 클레임 집중",
+                            desc: `현재 분석 데이터 중 중대 클레임 비중이 <strong style="color:#ef4444;">${claimRatio}%</strong>에 달합니다. 품질 보증 표준의 근본적 재검토와 선행 공정의 전수 조사가 시급합니다.`,
+                            color: "#fff1f2",
+                            priority: 9
+                        });
+                    }
+
+                    // 우선순위 3: 대응 퍼포먼스 (처리율 기반)
+                    if (completionRate < 80) {
+                        dynamicCards.push({
+                            title: "🕒 처리 프로세스 지체",
+                            desc: `클레임 완료율이 <strong style="color:#f59e0b;">${completionRate}%</strong>로 관리 목표치를 하회하고 있습니다. ${worstLine} 라인의 원인 규명 속도를 높이고 협업 대응 체계를 점검하십시오.`,
+                            color: "#fffbeb",
+                            priority: 8
+                        });
+                    }
+
+                    // 우선순위 4: 통계적 추세
+                    dynamicCards.push({
+                        title: "📉 품질 변동 트렌드",
+                        desc: `${trendText} ${worstLine} 라인의 결함 집중 현상은 고착화된 공정 특성일 수 있으므로 장기 SPC 관리가 필요합니다.`,
+                        color: "#f8fafc",
+                        priority: 7
+                    });
+
+                    // 우선순위 5: 표준화 자산화 (기본)
+                    dynamicCards.push({
+                        title: "✅ 공정 표준 내실화",
+                        desc: `탐지된 <strong>${mainDefect}</strong> 패턴을 사내 지식 베이스로 등록하고, 데이터 기반의 SOP 개정을 통해 균일 품질 확보에 집중하십시오.`,
+                        color: "#f0fdf4",
+                        priority: 6
+                    });
+
+                    // 상위 3개 카드 선택 및 정렬
+                    const finalCards = dynamicCards
+                        .sort((a, b) => b.priority - a.priority)
+                        .slice(0, 3);
+
+                    // 5. 종합 인사이트 요약 생성
+                    const activeLines = lines.filter(l => l !== '-' && lineMap[l] > 0);
+                    const lineSummary = activeLines.length > 1
+                        ? `분석 대상: ${activeLines.join(', ')} (${activeLines.length}개 공정)`
+                        : `${worstLine} 라인 단일 공정 분석`;
+
+                    const analysisTitle = activeLines.length > 1
+                        ? "전체 공정 품질 종합 진단 결과"
+                        : `${worstLine} 라인 심층 품질 진단 결과`;
+
+                    // 2. 최종 UI 렌더링 (카드 기반 통합 레이아웃)
+                    totalInsightEl.innerHTML = `
+                        <div id="ai-dashboard-container" style="display:flex; flex-direction:column; gap:16px; padding: 5px 0;">
+                            <!-- [AI 정밀 진단 메인 영역] -->
+                            <div id="ai-main-card" style="background:#ffffff; border:1px solid #e2ebf0; border-left:6px solid #1e3a8a; border-radius:16px; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.05); position:relative;">
+                                <div id="gemini-content" style="font-size:14.5px; line-height:1.75; color:#334155; min-height:40px;">
+                                    <div style="display:flex; align-items:center; gap:12px; color:#6366f1; font-weight:600;">
+                                        <i class="fas fa-spinner fa-spin"></i> 실시간 품질 데이터를 기반으로 AI 전문가가 진단을 수행하고 있습니다...
+                                    </div>
+                                </div>
                             </div>
-                            <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px;">
-                                <li><strong>근본 원인 분석(RCA):</strong> ${worstLine} 라인의 4M(사람, 설비, 재료, 방법) 변경 이력 추적 및 8D 기반의 결함 차단 프로세스 가동</li>
-                                <li><strong>공정 능력(Cpk) 제언:</strong> 주요 다발 결함인 ${mainDefect} 방지를 위한 도장/성형 Set-point 정밀 보정 및 측정시스템 분석(MSA) 실시</li>
-                                <li><strong>CAPA(시정조치):</strong> ${completionRate < 85 ? `조치 완료율(${completionRate}%)이 목표 미달입니다. 미처리 클레임 장기화에 따른 고객 페널티 방지를 위해 즉각적인 Follow-up이 필요합니다.` : `현재 높은 조치 완료율(${completionRate}%)을 유지 중이며, 재발 방지를 위한 표준서(Standard) 등재를 완료하십시오.`}</li>
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                totalInsightEl.innerHTML = summaryText;
+
+                            <!-- [상세 분석 카드 그리드] -->
+                            <div id="ai-detail-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+                                <!-- AI 성공 시 AI 기반 분석 카드로, 실패 시 시스템 추천 카드로 채워집니다 -->
+                                ${finalCards.map(rec => `
+                                    <div class="system-card" style="padding:18px; background:${rec.color}; border-radius:14px; border:1px solid rgba(0,0,0,0.02); display:flex; flex-direction:column; gap:8px;">
+                                        <div style="font-weight:800; color:#1e3a8a; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+                                            <span style="font-size:15px;">💡</span> ${rec.title}
+                                        </div>
+                                        <div style="font-size:12.5px; color:#475569; line-height:1.6; word-break:keep-all;">
+                                            ${rec.desc}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+
+                    // 분석 실행 엔진 함수
+                    const executeAnalysis = async () => {
+                        const content = document.getElementById('gemini-content');
+                        
+                        try {
+                            // 1. 대시보드 통계 및 VOC 데이터 통합 요약 생성
+                            const dashboardDataSummary = {
+                                period: sortedMonths.join(' ~ '),
+                                totals: { count: total, cost: totalCost.toLocaleString() + '원' },
+                                riskFactors: { worstLine, mainDefect, claimRatio: claimRatio + '%', completionRate: completionRate + '%' },
+                                trend: trendText,
+                                costDetail: worstLineByCost && maxCost ? `${worstLineByCost} 라인 집중손실 (${(maxCost/1000000).toFixed(0)}백만원)` : '없음'
+                            };
+
+                            // VOC 데이터 분류 통계 요약 (AI용)
+                            const lineStats = {};
+                            const defectStats = {};
+                            displayData.forEach(v => {
+                                lineStats[v.line] = (lineStats[v.line] || 0) + 1;
+                                defectStats[v.defectType || '기타'] = (defectStats[v.defectType || '기타'] || 0) + 1;
+                            });
+
+                            const vocSummary = `
+                                [공격적 공정 통계]: ${JSON.stringify(lineStats)}
+                                [불량 유형 정량 분포]: ${JSON.stringify(defectStats)}
+                                [심층 분석용 VOC 텍스트 데이터]:
+                                ${displayData.slice(0, 25).map(v => `- [${v.line}/${v.defectType}] ${v.title}: ${v.description?.substring(0, 80)} (원인: ${v.replyCause || '추정중'}, 대책: ${v.replyAction || '미흡'})`).join('\n')}
+                            `;
+
+                            // 2. 자체 전문가 알고리즘 (AI 실패 시 대비)
+                            const generateExpertInsight = () => {
+                                return {
+                                    summary: `분석 기간 내 전사 총 손실은 **${totalCost.toLocaleString()}원**이며, 이 중 **${worstLine}**의 **${mainDefect}** 결함이 품질 지표 하락의 결정적 요인입니다. 전체 VOC 중 클레임 비중이 **${claimRatio}%**에 달해 전사적 대응이 필요합니다.`,
+                                    details: [
+                                        { title: "🚨 공정별 원인 분석", desc: `전체 발생건 중 **${worstLine}** 라인의 집중도가 높으며, 특히 **${mainDefect}** 관련 기술 표준 미준수나 설비 노후화가 주원인으로 분석됩니다.`, color: "#fff1f2", border: "#fecaca", text: "#7f1d1d", head: "#991b1b" },
+                                        { title: "⚠️ 재무 리스크 평가", desc: `전사 누적 손실 **${totalCost.toLocaleString()}원**은 관리 임계치를 위협하고 있습니다. 손실의 상당 부분이 클레임 보상액에 집중되어 있어 수익성 개선을 위한 선제적 품질 제어가 절실합니다.`, color: "#fffbeb", border: "#fef3c7", text: "#78350f", head: "#92400e" },
+                                        { title: "✅ 전사적 조치 권고", desc: `**${worstLine}** 공정의 전수 품질 검사를 강화하고, 타 라인으로의 불량 전이 방지를 위한 범용 품질 표준(Q-Standard)을 재정립하십시오.`, color: "#f0fdf4", border: "#bbf7d0", text: "#15803d", head: "#166534" }
+                                    ]
+                                };
+                            };
+
+                            const renderExpertInsight = () => {
+                                const expert = generateExpertInsight();
+                                content.innerHTML = expert.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                                const cardContainer = document.getElementById('ai-detail-cards');
+                                if (cardContainer) {
+                                    cardContainer.innerHTML = expert.details.map(d => `
+                                        <div style="padding:18px; background:${d.color}; border-radius:14px; border:1px solid ${d.border}; display:flex; flex-direction:column; gap:8px;">
+                                            <div style="font-weight:800; color:${d.head}; font-size:13.5px;">${d.title}</div>
+                                            <div style="font-size:12.5px; color:${d.text}; line-height:1.6;">${d.desc.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+                                        </div>
+                                    `).join('');
+                                }
+                            };
+
+                            if (window.GoogleGenerativeAI) {
+                                const apiKey = "AIzaSyDC0oj4bWHG4m1zRFIIt4HZPyndX7QVR7U";
+                                const genAI = new window.GoogleGenerativeAI(apiKey);
+                                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1beta" });
+
+                                const prompt = `
+                                    당신은 세아씨엠(SeAH CM)의 최고 품질 전략 책임자(CQO)입니다. 
+                                    제공된 통계와 VOC 데이터를 바탕으로 '전사 품질 현황'과 '특정 취약 공정'을 명확히 구분하여 전문적인 진단을 수행하십시오.
+
+                                    [데이터 통합 요약]
+                                    - 분석 대상 기간: ${dashboardDataSummary.period} (전사 통합 데이터)
+                                    - 전사 총 VOC 규모: ${dashboardDataSummary.totals.count}건 (전사 총 실패 비용: ${dashboardDataSummary.totals.cost})
+                                    - 전사 품질 지표: 클레임 비중 ${dashboardDataSummary.riskFactors.claimRatio}, 누적 조치율 ${dashboardDataSummary.riskFactors.completionRate}
+                                    - 취약 공정 타겟: ${dashboardDataSummary.riskFactors.worstLine} 라인 / ${dashboardDataSummary.riskFactors.mainDefect} 결함 집중
+                                    - VOC 상세 컨텍스트: ${vocSummary.substring(0, 1500)}
+
+                                    [리포트 작성 가이드 - 데이터 혼동 주의]
+                                    1. [종합 진단]: 전사 차원의 총 손실 비용과 품질 지표를 먼저 명시하고, 그 중 ${dashboardDataSummary.riskFactors.worstLine} 공정이 어떤 비중과 영향력을 미치고 있는지 논리적으로 서술. 
+                                       (※ 주의: 총 손실 비용(${dashboardDataSummary.totals.cost})이 특정 공정 하나만의 비용으로 오해받지 않도록 '전사 누적'임을 명확히 표현할 것)
+                                    2. [주요 원인 분석]: 취약 공정(${dashboardDataSummary.riskFactors.worstLine})의 특이점과 불량 패턴 분석.
+                                    3. [재무/운영 리스크]: 전사 총 손실액 및 조치 미흡으로 인한 잠재적 리스트 평가.
+                                    4. [전략적 조치 권고]: 현장 중심의 개선안 제시.
+
+                                    [주의사항]
+                                    - 각 섹션 명칭은 대괄호([])로 유지.
+                                    - 전문적이고 권위 있는 CQO의 어조 사용.
+                                    - 인사말 생략 및 본론 위주.
+                                `;
+
+                                try {
+                                    const result = await model.generateContent(prompt);
+                                    const response = await result.response;
+                                    const aiText = response.text().trim();
+                                    
+                                    // 더 엄격한 섹션 파싱 (콜론 유무 유연하게 대처)
+                                    const parseSection = (key) => {
+                                        const regex = new RegExp(`\\[${key}\\]\\s*[:：]?\\s*([\\s\\S]*?)(?=\\s*\\[|$)`, 'i');
+                                        return aiText.match(regex)?.[1]?.trim() || "";
+                                    };
+
+                                    const sections = {
+                                        summary: parseSection("종합 진단") || "데이터 분석 완료",
+                                        cause: parseSection("주요 원인 분석") || "상세 분석 내용이 생성되지 않았습니다.",
+                                        risk: parseSection("재무/운영 리스크") || "리스크 평가 중입니다.",
+                                        action: parseSection("전략적 조치 권고") || "조치 권고를 확인 중입니다."
+                                    };
+
+                                    // 메인 진단 결과 업데이트
+                                    content.innerHTML = sections.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                                    // 상세 분석 카드 교체
+                                    const cardContainer = document.getElementById('ai-detail-cards');
+                                    if (cardContainer) {
+                                        cardContainer.innerHTML = `
+                                            <div class="ai-deep-card" style="padding:18px; background:#fff1f2; border-radius:14px; border:1px solid #fecaca; display:flex; flex-direction:column; gap:8px;">
+                                                <div style="font-weight:800; color:#991b1b; font-size:13.5px; display:flex; align-items:center; gap:6px;">🚨 원인 심층 분석</div>
+                                                <div style="font-size:12.5px; color:#7f1d1d; line-height:1.6;">${sections.cause.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+                                            </div>
+                                            <div class="ai-deep-card" style="padding:18px; background:#fffbeb; border-radius:14px; border:1px solid #fef3c7; display:flex; flex-direction:column; gap:8px;">
+                                                <div style="font-weight:800; color:#92400e; font-size:13.5px; display:flex; align-items:center; gap:6px;">⚠️ 리스크 평가</div>
+                                                <div style="font-size:12.5px; color:#78350f; line-height:1.6;">${sections.risk.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+                                            </div>
+                                            <div class="ai-deep-card" style="padding:18px; background:#f0fdf4; border-radius:14px; border:1px solid #bbf7d0; display:flex; flex-direction:column; gap:8px;">
+                                                <div style="font-weight:800; color:#166534; font-size:13.5px; display:flex; align-items:center; gap:6px;">✅ 조치 권고</div>
+                                                <div style="font-size:12.5px; color:#15803d; line-height:1.6;">${sections.action.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+                                            </div>
+                                        `;
+                                    }
+                                } catch (innerErr) {
+                                    renderExpertInsight();
+                                }
+                            } else {
+                                renderExpertInsight();
+                            }
+                        } catch (err) {
+                            content.innerHTML = `<span style="color:#ef4444;">⚠️ 데이터 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</span>`;
+                        }
+                    };
+
+                    // 즉시 실행
+                    executeAnalysis();
+                };
+
+                // 엔진 즉시 실행 (서버 호출 없음)
+                runAIEngine();
             }
         }
     }

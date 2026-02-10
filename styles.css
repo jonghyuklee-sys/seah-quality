@@ -404,25 +404,25 @@ body.admin-mode button.admin-only {
 
 .stat-card {
     background: var(--bg-card);
-    padding: 16px;
+    padding: 12px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
     text-align: center;
 }
 
 .stat-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
 }
 
 .stat-value {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--primary);
 }
@@ -4256,6 +4256,48 @@ body.viewer-open::after {
         font-size: 8px !important;
         gap: 4px !important;
         flex-wrap: wrap;
+    }
+
+    /* 자동 판단 헤더 모바일 최적화 */
+    .auto-check-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+        text-align: center !important;
+        padding-bottom: 20px !important;
+    }
+
+    .auto-check-header>div {
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    .auto-check-header h4 {
+        justify-content: center !important;
+        font-size: 17px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .auto-check-header h4 .header-icon {
+        margin-right: 8px !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 14px !important;
+    }
+
+    .auto-check-header p {
+        margin-left: 0 !important;
+        text-align: center !important;
+        font-size: 10.5px !important;
+        line-height: 1.6 !important;
+        padding: 0 10px !important;
+        word-break: keep-all !important;
+    }
+
+    .auto-check-btn {
+        width: 100% !important;
+        padding: 12px !important;
+        justify-content: center !important;
     }
 }
 
