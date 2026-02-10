@@ -1855,7 +1855,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (total > 0) {
             const domestic = marketMap['내수'] || 0;
             const exportC = marketMap['수출'] || 0;
-            marketAnalysis = `내수(<strong>${domestic}건</strong>)와 수출(<strong>${exportC}건</strong>) 비중 데이터가 집계되었으며, <strong>${domestic >= exportC ? '국내 고객사' : '해외 수출품'}</strong>를 중심으로 품질 관리가 집중되고 있습니다.`;
+            marketAnalysis = `내수(<strong>${domestic}건</strong>)와 수출(<strong>${exportC}건</strong>) 클레임 접수 현황이 집계되었으며, <strong>${domestic >= exportC ? '국내 고객사' : '해외 수출품'}</strong>에서 상대적으로 많은 품질 이슈가 발생하고 있습니다.`;
             updateInterpretation('marketShareChart-desc', marketAnalysis);
         }
 
@@ -1863,7 +1863,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (total > 0) {
             const teams = Object.keys(teamMap).filter(t => teamMap[t] > 0).sort((a, b) => teamMap[b] - teamMap[a]);
             if (teams.length > 0) {
-                updateInterpretation('teamShareChart-desc', `<strong>${teams[0]}</strong>의 품질 대응 점유율이 가장 높으며, 전사적 품질 개선 활동이 활발히 진행 중입니다.`);
+                updateInterpretation('teamShareChart-desc', `<strong>${teams[0]}</strong>에 가장 많은 VOC가 접수되었으며, 해당 조직을 중심으로 원인 분석 및 신속한 고객 대응이 필요한 상황입니다.`);
             }
         }
 
@@ -2027,7 +2027,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div id="ai-dashboard-container" style="display:flex; flex-direction:column; gap:16px; padding: 5px 0;">
                             <!-- [AI 정밀 진단 메인 영역] -->
                             <div id="ai-main-card" style="background:#ffffff; border:1px solid #e2ebf0; border-left:6px solid #1e3a8a; border-radius:16px; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.05); position:relative;">
-                                <div id="gemini-content" style="font-size:14.5px; line-height:1.75; color:#334155; min-height:40px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div style="display:flex; align-items:center; gap:8px; color:#1e3a8a; font-weight:800; font-size:16px;">
+                                        <span>🤖</span> AI 품질 종합 진단 의견
+                                    </div>
+                                    <span style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #f8fafc; padding: 6px 14px; border-radius: 20px; border:1px solid #e2e8f0;">
+                                        SeAH AI Intelligent Quality Engine v2.5
+                                    </span>
+                                </div>
+                                <div id="gemini-content" style="font-size:14.5px; line-height:1.8; color:#334155; min-height:40px;">
                                     <div style="display:flex; align-items:center; gap:12px; color:#6366f1; font-weight:600;">
                                         <i class="fas fa-spinner fa-spin"></i> 실시간 품질 데이터를 기반으로 AI 전문가가 진단을 수행하고 있습니다...
                                     </div>
@@ -2035,14 +2043,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
 
                             <!-- [상세 분석 카드 그리드] -->
-                            <div id="ai-detail-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+                            <div id="ai-detail-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
                                 <!-- AI 성공 시 AI 기반 분석 카드로, 실패 시 시스템 추천 카드로 채워집니다 -->
                                 ${finalCards.map(rec => `
-                                    <div class="system-card" style="padding:18px; background:${rec.color}; border-radius:14px; border:1px solid rgba(0,0,0,0.02); display:flex; flex-direction:column; gap:8px;">
-                                        <div style="font-weight:800; color:#1e3a8a; font-size:13.5px; display:flex; align-items:center; gap:6px;">
-                                            <span style="font-size:15px;">💡</span> ${rec.title}
+                                    <div class="system-card" style="padding:22px; background:${rec.color}; border-radius:16px; border:1px solid rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:12px; box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.02);">
+                                        <div style="font-weight:800; color:#1e3a8a; font-size:15px; display:flex; align-items:center; gap:8px;">
+                                            <span style="font-size:18px;">💡</span> ${rec.title}
                                         </div>
-                                        <div style="font-size:12.5px; color:#475569; line-height:1.6; word-break:keep-all;">
+                                        <div style="font-size:13.5px; color:#475569; line-height:1.65; word-break:keep-all;">
                                             ${rec.desc}
                                         </div>
                                     </div>
