@@ -112,6 +112,9 @@ body.admin-mode button.admin-only {
     .main-area {
         margin-left: 0 !important;
         max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        /* Allow scroll if content is wide */
     }
 }
 
@@ -350,7 +353,7 @@ body.admin-mode button.admin-only {
 }
 
 .criteria-item::before {
-    content: "??;
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--primary-light);
@@ -992,7 +995,7 @@ body.admin-mode button.admin-only {
 }
 
 .standard-card li::before {
-    content: "??;
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--primary-light);
@@ -1254,7 +1257,7 @@ body.admin-mode button.admin-only {
 }
 
 .info-spec-box li::before {
-    content: "??;
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--success);
@@ -3712,7 +3715,7 @@ body.admin-mode button.admin-only {
     /* Process Diagram: Flatten structure and use Grid for continuous flow */
     .process-map-container {
         padding: 15px;
-        overflow-x: visible;
+        overflow-x: auto;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px 10px;
@@ -4781,81 +4784,114 @@ body.viewer-open::after {
 }
 
 /* ============================================================ */
-/* Tablet Landscape & Large Tablet Optimization (Max 1200px)    */
+
+/* ============================================================ */
+/* Tablet & Mobile Comprehensive Optimization (Max 1200px)      */
 /* ============================================================ */
 @media screen and (max-width: 1200px) {
+
     /* Ensure main content takes full width when sidebar is hidden */
     .main-area {
         margin-left: 0 !important;
         width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
     }
 
-    /* Content padding adjustment */
+    /* Content Padding - Ensure it stretches */
     .content-padding {
-        padding: 15px !important;
+        padding: 10px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
     }
 
-    /* Warranty Guide Table - Ensure horizontal scroll */
+    /* Tab Layout Fixes - Stretch to fill gap */
+    .tab-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        align-items: stretch !important;
+        margin: 15px 0 !important;
+        padding: 0 !important;
+    }
+
+    .tab-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 10px !important;
+        box-sizing: border-box;
+        overflow-x: auto !important;
+    }
+
+    /* Warranty Guide Optimization - Fills Right Side Gap */
     #warranty-guide-view .tab-content {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 15px;
-    }
-    
-    #warranty-guide-view table {
-        min-width: 900px !important; /* Force min-width to prevent squeezing */
+        padding: 15px 0 !important;
     }
 
-    /* Process Diagrams - Ensure horizontal scroll and prevent squeezing */
-    .process-visual-side {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 10px;
+    #warranty-guide-view .warranty-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    #warranty-guide-view table,
+    #warranty-guide-view .data-table {
+        width: 100% !important;
+        min-width: 900px !important;
+        table-layout: auto !important;
+    }
+
+    /* AL Fluorine Grid Fix for Tablets */
+    .warranty-al-grid {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    .warranty-al-grid>div {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+
+    /* Line Spec / Process Diagrams Optimization */
+    .line-spec-header {
+        padding: 0 5px !important;
+        margin-bottom: 20px !important;
     }
 
     .process-map-container {
-        min-width: 1000px !important; /* Ensure enough room for process icons */
-        padding: 30px 20px !important;
-    }
-
-    .process-row {
-        justify-content: flex-start !important;
-        gap: 25px !important;
-    }
-
-    .process-station {
-        flex-shrink: 0 !important;
-        min-width: 110px !important;
-    }
-
-    /* General Table responsiveness */
-    .table-container {
+        padding: 15px 5px !important;
         overflow-x: auto !important;
-        margin-bottom: 20px;
-    }
-    
-    .table-container table {
-        min-width: 800px;
+        -webkit-overflow-scrolling: touch;
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 20px 8px !important;
+        width: 100% !important;
+        box-sizing: border-box;
+        min-width: 900px !important;
+        /* Ensure enough room to avoid squeezing icons */
     }
 
-    /* Sidebar Overlay visibility */
+    /* Portrait Tablet Check (e.g. 800px width) */
+    @media (max-width: 850px) {
+        .process-map-container {
+            grid-template-columns: repeat(2, 1fr) !important;
+            min-width: unset !important;
+            gap: 15px !important;
+        }
+
+        .process-station {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+    }
+
+    /* Sidebar and Overlay */
+    .sidebar {
+        z-index: 2000 !important;
+    }
+
     .sidebar-overlay.active {
         display: block !important;
-    }
-}
-
-/* Additional Tablet Search Grid Polish */
-@media screen and (max-width: 1200px) {
-    .search-form-grid {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 12px !important;
-    }
-    .search-form-grid > button {
-        grid-column: span 2;
-        margin-top: 5px;
-    }
-    #integrated-comparison .standard-grid {
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
+        z-index: 1999 !important;
     }
 }
