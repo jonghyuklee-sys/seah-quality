@@ -588,8 +588,7 @@
 
                         <!-- 탭 헤더 -->
                         <div class="tab-container">
-                            <div class="tab-header" id="process-spec-tabs"
-                                style="overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; display: flex; gap: 10px; padding: 10px;">
+                            <div class="tab-header" id="process-spec-tabs">
                                 <button class="tab-btn process-tab-btn active" data-process-tab="cpl">CPL</button>
                                 <button class="tab-btn process-tab-btn" data-process-tab="crm">CRM</button>
                                 <button class="tab-btn process-tab-btn" data-process-tab="cgl">CGL</button>
@@ -607,9 +606,8 @@
                                     </div>
                                     <div class="modern-process-grid"
                                         style="display: flex; flex-direction: column; gap: 30px;">
-                                        <div class="process-visual-side" style="width: 100%; overflow-x: auto;">
-                                            <div class="process-map-container"
-                                                style="padding: 30px; min-width: max-content;">
+                                        <div class="process-visual-side">
+                                            <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
                                                         <div class="station-icon" style="color: #1e3a8a;"><i
@@ -769,9 +767,8 @@
                                     </div>
                                     <div class="modern-process-grid"
                                         style="display: flex; flex-direction: column; gap: 30px;">
-                                        <div class="process-visual-side" style="width: 100%; overflow-x: auto;">
-                                            <div class="process-map-container"
-                                                style="padding: 30px; min-width: max-content;">
+                                        <div class="process-visual-side">
+                                            <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 0;">
                                                     <!-- 입측 -->
                                                     <div class="process-station">
@@ -926,9 +923,8 @@
                                     </div>
                                     <div class="modern-process-grid"
                                         style="display: flex; flex-direction: column; gap: 30px;">
-                                        <div class="process-visual-side" style="width: 100%; overflow-x: auto;">
-                                            <div class="process-map-container"
-                                                style="padding: 30px; min-width: max-content;">
+                                        <div class="process-visual-side">
+                                            <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
                                                         <div class="station-icon" style="color: #1e3a8a;"><i
@@ -1107,9 +1103,8 @@
                                     </div>
                                     <div class="modern-process-grid"
                                         style="display: flex; flex-direction: column; gap: 30px;">
-                                        <div class="process-visual-side" style="width: 100%; overflow-x: auto;">
-                                            <div class="process-map-container"
-                                                style="padding: 30px; min-width: max-content;">
+                                        <div class="process-visual-side">
+                                            <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
                                                         <div class="station-icon" style="color: #1e3a8a;"><i
@@ -1299,9 +1294,8 @@
                                     </div>
                                     <div class="modern-process-grid"
                                         style="display: flex; flex-direction: column; gap: 30px;">
-                                        <div class="process-visual-side" style="width: 100%; overflow-x: auto;">
-                                            <div class="process-map-container"
-                                                style="padding: 30px; min-width: max-content;">
+                                        <div class="process-visual-side">
+                                            <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
                                                         <div class="station-icon" style="color: #1e3a8a;"><i
@@ -1509,9 +1503,8 @@
                                     <div class="modern-process-grid"
                                         style="display: flex; flex-direction: column; gap: 30px;">
                                         <!-- 위쪽: 공정 비주얼 (HTML/CSS로 직접 구현) -->
-                                        <div class="process-visual-side" style="width: 100%; overflow-x: auto;">
-                                            <div class="process-map-container"
-                                                style="padding: 30px; min-width: max-content;">
+                                        <div class="process-visual-side">
+                                            <div class="process-map-container">
                                                 <!-- 첫 번째 줄: 입측 ~ 상도 공정 (11개) -->
                                                 <div class="process-row" style="margin-bottom: 70px;">
                                                     <div class="process-station">
@@ -2604,9 +2597,9 @@
 
                         <!-- 2. 테이블 섹션 (탭 구성) -->
                         <div class="tab-container"
-                            style="box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-radius: 16px; background: white;">
+                            style="box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-radius: 16px; overflow: hidden; background: white;">
                             <div class="tab-header" id="warranty-tab-header"
-                                style="background: #f8fafc; padding: 15px 20px; display: flex; justify-content: center; gap: 15px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+                                style="background: #f8fafc; padding: 15px 20px; display: flex; justify-content: center; gap: 15px;">
                                 <button class="tab-btn warranty-tab-btn active" data-warranty-tab="high-risk"
                                     style="border-radius: 10px;">위도 5~30° (고위험)</button>
                                 <button class="tab-btn warranty-tab-btn" data-warranty-tab="low-risk"
@@ -2625,9 +2618,9 @@
                                         <span class="badge badge-orange" style="font-size: 11px;">High Risk</span>
                                     </div>
                                     <div class="table-container pc-only-table"
-                                        style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%;">
+                                        style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0;">
                                         <table class="data-table"
-                                            style="min-width: 800px; width: 100%; text-align: center; border: none;">
+                                            style="min-width: 1000px; text-align: center; border: none;">
                                             <thead>
                                                 <tr style="background: #1e3a8a; color: #ffffff !important;">
                                                     <th rowspan="2"
@@ -2821,9 +2814,9 @@
                                         <span class="badge badge-blue" style="font-size: 11px;">Low Risk</span>
                                     </div>
                                     <div class="table-container pc-only-table"
-                                        style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%;">
+                                        style="overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0;">
                                         <table class="data-table"
-                                            style="min-width: 800px; width: 100%; text-align: center; border: none;">
+                                            style="min-width: 1000px; text-align: center; border: none;">
                                             <thead>
                                                 <tr style="background: #1e3a8a; color: #ffffff !important;">
                                                     <th rowspan="2"
@@ -3016,7 +3009,7 @@
                                             거리별 보증)</h4>
                                     </div>
                                     <div class="warranty-al-grid"
-                                        style="display: flex; gap: 20px; align-items: start; width: 100%; overflow-x: auto;">
+                                        style="display: flex; gap: 20px; align-items: start; width: 100%;">
                                         <!-- 고위험 -->
                                         <div class="search-container pc-only-table"
                                             style="flex: 1; padding: 20px; border-radius: 12px; border-top: 4px solid #ef4444; margin: 0; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto;">
