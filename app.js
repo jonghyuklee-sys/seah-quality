@@ -1711,12 +1711,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // [6] 라인별 예상 손실 비용 (Bar)
         const lineCostMap = { 'CPL': 0, 'CRM': 0, 'CGL': 0, '1CCL': 0, '2CCL': 0, '3CCL': 0, 'SSCL': 0 };
+        const lineCountMap = { 'CPL': 0, 'CRM': 0, 'CGL': 0, '1CCL': 0, '2CCL': 0, '3CCL': 0, 'SSCL': 0 };
         displayData.forEach(v => {
             if (v.line && lineCostMap.hasOwnProperty(v.line)) {
-                const val = v.cost ? v.cost.toString().replace(/[^0-9]/g, '') : 0;
+                const val = v.cost ? v.cost.toString().replace(/[^0-9]/g, '') : '0';
                 lineCostMap[v.line] += (parseInt(val) || 0);
+                lineCountMap[v.line]++;
             }
         });
+
+        // 비용 합계가 0이면 발생 건수 기반으로 차트 표시
+        const hasCostData = Object.values(lineCostMap).some(v => v > 0);
+        const lineCostChartData = hasCostData ? Object.values(lineCostMap) : Object.values(lineCountMap);
+        const lineCostChartLabel = hasCostData ? '손실 비용(원)' : '발생 건수';
+        const lineCostUnit = hasCostData ? ' 원' : ' 건';
 
         const costCtx = document.getElementById('lineCostChart');
         if (costCtx) {
@@ -1726,8 +1734,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: {
                     labels: Object.keys(lineCostMap),
                     datasets: [{
-                        label: '손실 비용(원)',
-                        data: Object.values(lineCostMap),
+                        label: lineCostChartLabel,
+                        data: lineCostChartData,
                         backgroundColor: 'rgba(239, 68, 68, 0.7)',
                         borderColor: '#ef4444',
                         borderWidth: 1, borderRadius: 5
@@ -1739,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         legend: { display: false },
                         datalabels: {
                             anchor: 'end', align: 'top', color: '#ef4444', font: { weight: 'bold', size: 10 },
-                            formatter: (v) => v > 0 ? v.toLocaleString() + ' 원' : ''
+                            formatter: (v) => v > 0 ? (hasCostData ? v.toLocaleString() + ' 원' : v + ' 건') : ''
                         }
                     },
                     layout: { padding: { top: 30 } },
@@ -1777,8 +1785,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // 비용이 0보다 큰 항목만 필터링 후 비용 순으로 정렬
-        const filteredDefectLabels = Object.keys(defectMap).filter(k => defectMap[k] > 0).sort((a, b) => defectMap[b] - defectMap[a]);
-        const filteredDefectValues = filteredDefectLabels.map(k => defectMap[k]);
+        let filteredDefectLabels = Object.keys(defectMap).filter(k => defectMap[k] > 0).sort((a, b) => defectMap[b] - defectMap[a]);
+        let filteredDefectValues = filteredDefectLabels.map(k => defectMap[k]);
+        let defectChartIsCostBased = true;
+
+        // 비용이 모두 0원이면, 발생 건수로 대체하여 차트 표시
+        if (filteredDefectLabels.length === 0 && total > 0) {
+            defectChartIsCostBased = false;
+            const defectCountMap = {};
+            displayData.forEach(v => {
+                let dType = v.defectType || '기타';
+                if (dType.includes('(')) dType = dType.split('(')[0].trim();
+                defectCountMap[dType] = (defectCountMap[dType] || 0) + 1;
+            });
+            filteredDefectLabels = Object.keys(defectCountMap).sort((a, b) => defectCountMap[b] - defectCountMap[a]);
+            filteredDefectValues = filteredDefectLabels.map(k => defectCountMap[k]);
+        }
 
         const defectCtx = document.getElementById('defectTypeChart');
         if (defectCtx) {
@@ -1788,7 +1810,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: {
                     labels: filteredDefectLabels,
                     datasets: [{
-                        label: '손실 금액',
+                        label: defectChartIsCostBased ? '손실 금액' : '발생 건수',
                         data: filteredDefectValues,
                         backgroundColor: 'rgba(245, 158, 11, 0.7)',
                         borderColor: '#f59e0b',
@@ -1798,7 +1820,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 options: {
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#f59e0b', font: { weight: 'bold' }, formatter: (v) => v > 0 ? v.toLocaleString() + ' 원' : '' } },
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#f59e0b', font: { weight: 'bold' }, formatter: (v) => v > 0 ? (defectChartIsCostBased ? v.toLocaleString() + ' 원' : v + ' 건') : '' } },
                     layout: { padding: { right: 80 } },
                     scales: { x: { beginAtZero: true, grace: '35%', grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
                 }
@@ -1883,16 +1905,28 @@ document.addEventListener('DOMContentLoaded', function () {
             const topCostLine = costLines[0];
             const costRatio = Math.round((lineCostMap[topCostLine] / totalCost) * 100);
             costAnalysis = `실패 비용 분석 결과, <strong>${topCostLine}</strong> 라인이 전체 손실액의 <strong>${costRatio}%</strong>를 차지하여 집중 관리가 필요합니다.`;
-            updateInterpretation('lineCostChart-desc', costAnalysis);
+        } else if (total > 0) {
+            const countLines = Object.keys(lineCountMap).filter(l => lineCountMap[l] > 0).sort((a, b) => lineCountMap[b] - lineCountMap[a]);
+            if (countLines.length > 0) {
+                costAnalysis = `예상 손실 비용이 아직 입력되지 않아 <strong>발생 건수</strong> 기준으로 표시합니다. <strong>${countLines[0]}</strong> 라인에서 가장 많은 VOC가 발생했습니다. VOC 상세 정보에서 비용을 입력하면 비용 기반 분석이 제공됩니다.`;
+            }
+        } else {
+            costAnalysis = "현재 집계된 VOC 데이터가 없습니다.";
         }
+        updateInterpretation('lineCostChart-desc', costAnalysis);
 
         // 7. Defect Type Analysis (불량 유형 해석)
         let defectAnalysis = "";
-        if (filteredDefectLabels.length > 0) {
+        if (filteredDefectLabels.length > 0 && defectChartIsCostBased) {
             const topDefects = filteredDefectLabels.slice(0, 2).join(', ');
             defectAnalysis = `주요 결함 항목은 <strong>${topDefects}</strong>이며, 해당 유형에 대한 공정 점검 및 기술 표준 준수가 강화되어야 합니다.`;
-            updateInterpretation('defectTypeChart-desc', defectAnalysis);
+        } else if (filteredDefectLabels.length > 0) {
+            const topDefects = filteredDefectLabels.slice(0, 2).join(', ');
+            defectAnalysis = `비용 미입력 상태로 <strong>발생 건수</strong> 기준 분석입니다. 주요 불량 유형은 <strong>${topDefects}</strong>이며, VOC 상세에서 비용을 입력하면 비용 기반 분석이 제공됩니다.`;
+        } else {
+            defectAnalysis = "분석 가능한 불량 유형 데이터가 없습니다.";
         }
+        updateInterpretation('defectTypeChart-desc', defectAnalysis);
 
         // --- AI Integrated Insight (전체 종합 진단 및 전략 제언) ---
         const totalInsightEl = document.getElementById('ai-total-analysis');
