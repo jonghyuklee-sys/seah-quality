@@ -1098,7 +1098,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let isGlobalGridEditMode = false;
     let isPaintingGrid = false;
     let currentPaintStatus = 0;
-    let activeAnnotations = []; // [{x, y, color}]
 
 
     if (vocMonthFilterEl) {
@@ -1318,9 +1317,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const mediaGallery = document.getElementById('modal-voc-media-gallery');
         const imgPreview = document.getElementById('modal-edit-photo-preview');
         const videoPreview = document.getElementById('modal-edit-video-preview');
-        const canvas = document.getElementById('annotation-canvas');
-
-        activeAnnotations = v.annotations || [];
         const mediaList = v.media || (v.photo ? [{ url: v.photo, type: 'image' }] : []);
 
         if (photoContainer && mediaGallery) {
@@ -1332,12 +1328,59 @@ document.addEventListener('DOMContentLoaded', function () {
                     const thumb = document.createElement('div');
                     thumb.className = 'media-preview-item';
                     thumb.style.cursor = 'pointer';
+                    thumb.style.position = 'relative';
                     thumb.style.border = idx === 0 ? '2px solid var(--primary)' : '1px solid #e2e8f0';
 
                     if (m.type === 'video') {
                         thumb.innerHTML = `<video src="${m.url}" style="width:100%; height:100%; object-fit:cover;"></video><span style="position:absolute; bottom:2px; right:2px; font-size:10px; color:white; background:rgba(0,0,0,0.5); padding:0 2px;">▶</span>`;
                     } else {
                         thumb.innerHTML = `<img src="${m.url}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+
+                    // 삭제 버튼 (관리자/VOC 인증 사용자만 표시)
+                    if (isAdmin || isVocAuthenticated) {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.innerHTML = '✕';
+                        deleteBtn.title = '이 미디어 삭제';
+                        deleteBtn.style.cssText = 'position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10; box-shadow:0 2px 6px rgba(0,0,0,0.3); transition:transform 0.15s, background 0.15s; line-height:1; padding:0;';
+                        deleteBtn.onmouseover = () => { deleteBtn.style.background = '#dc2626'; deleteBtn.style.transform = 'scale(1.15)'; };
+                        deleteBtn.onmouseout = () => { deleteBtn.style.background = '#ef4444'; deleteBtn.style.transform = 'scale(1)'; };
+                        deleteBtn.onclick = async (e) => {
+                            e.stopPropagation();
+                            if (!confirm('이 미디어를 삭제하시겠습니까?')) return;
+                            deleteBtn.innerHTML = '⏳';
+                            deleteBtn.disabled = true;
+                            try {
+                                // 1. Storage에서 파일 삭제
+                                try {
+                                    const fileRef = storage.refFromURL(m.url);
+                                    await fileRef.delete();
+                                } catch (storageErr) {
+                                    console.warn('Storage 파일 삭제 실패 (이미 삭제되었을 수 있음):', storageErr);
+                                }
+                                // 2. Firestore에서 media 배열 업데이트
+                                const currentDoc = await db.collection("complaints").doc(currentVocId).get();
+                                const currentData = currentDoc.data();
+                                const updatedMedia = (currentData.media || []).filter(item => item.url !== m.url);
+                                const updatedPhoto = updatedMedia.find(item => item.type === 'image')?.url || (updatedMedia.length > 0 ? updatedMedia[0].url : null);
+                                await db.collection("complaints").doc(currentVocId).update({
+                                    media: updatedMedia,
+                                    photo: updatedPhoto
+                                });
+                                // 3. 로컬 데이터 갱신 후 모달 다시 열기
+                                const localIdx = localComplaints.findIndex(x => x.id === currentVocId);
+                                if (localIdx !== -1) {
+                                    localComplaints[localIdx].media = updatedMedia;
+                                    localComplaints[localIdx].photo = updatedPhoto;
+                                }
+                                openVocModal(currentVocId);
+                            } catch (err) {
+                                alert('미디어 삭제 실패: ' + err.message);
+                                deleteBtn.innerHTML = '✕';
+                                deleteBtn.disabled = false;
+                            }
+                        };
+                        thumb.appendChild(deleteBtn);
                     }
 
                     thumb.onclick = () => {
@@ -1350,16 +1393,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             imgPreview.style.display = 'none';
                             videoPreview.src = m.url;
                             videoPreview.style.display = 'block';
-                            if (canvas) canvas.style.display = 'none'; // 비디오 위에는 마킹 불가 (단순화)
                         } else {
                             videoPreview.style.display = 'none';
                             videoPreview.src = '';
                             imgPreview.src = m.url;
                             imgPreview.style.display = 'block';
-                            if (canvas) {
-                                canvas.style.display = 'block';
-                                initAnnotationCanvas();
-                            }
                         }
                     };
                     mediaGallery.appendChild(thumb);
@@ -1370,10 +1408,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 imgPreview.style.display = 'none';
                 videoPreview.style.display = 'none';
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
+
             }
         }
 
@@ -1535,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
                     replyEvaluation: document.getElementById('modal-reply-evaluation').value,
                     status: document.getElementById('modal-reply-status').value,
-                    annotations: activeAnnotations,
+
                     media: finalMedia,
                     photo: finalMedia.find(m => m.type === 'image')?.url || (finalMedia.length > 0 ? finalMedia[0].url : null)
                 };
@@ -2607,54 +2642,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // Idea #4: 사진 마킹 (Annotation)
-    window.initAnnotationCanvas = () => {
-        const canvas = document.getElementById('annotation-canvas');
-        const img = document.getElementById('modal-edit-photo-preview');
-        if (!canvas || !img) return;
 
-        canvas.width = img.clientWidth;
-        canvas.height = img.clientHeight;
-
-        redrawAnnotations();
-
-        canvas.onclick = (e) => {
-            if (!isAdmin) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / canvas.width;
-            const y = (e.clientY - rect.top) / canvas.height;
-            activeAnnotations.push({ x, y, color: '#ef4444' });
-            redrawAnnotations();
-        };
-    };
-
-    function redrawAnnotations() {
-        const canvas = document.getElementById('annotation-canvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        activeAnnotations.forEach(ann => {
-            ctx.beginPath();
-            ctx.arc(ann.x * canvas.width, ann.y * canvas.height, 10, 0, 2 * Math.PI);
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = ann.color;
-            ctx.stroke();
-
-            // 외곽 흰색 테두리 (가독성용)
-            ctx.beginPath();
-            ctx.arc(ann.x * canvas.width, ann.y * canvas.height, 12, 0, 2 * Math.PI);
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = '#fff';
-            ctx.stroke();
-        });
-    }
-
-    window.clearAnnotation = () => {
-        if (!isAdmin) return;
-        activeAnnotations = [];
-        redrawAnnotations();
-    };
 
     // Idea #5: 대시보드 리포트 PDF 출력
     window.exportDashboardReport = async (e) => {
