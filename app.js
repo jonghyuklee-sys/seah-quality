@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (confirm('관리자 모드를 종료하시겠습니까?')) {
                     isAdmin = false;
                     isVocAuthenticated = false; // VOC 인증도 해제
+                    sessionStorage.removeItem('seahVocAuth');
                     document.body.classList.remove('voc-auth-mode');
                     sessionStorage.removeItem('seahAdminMode');
                     updateAdminUI();
@@ -125,17 +126,23 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // --- [VOC 접근 보안 로직] ---
-    let isVocAuthenticated = false; // VOC 인증 상태
+    let isVocAuthenticated = sessionStorage.getItem('seahVocAuth') === 'true'; // VOC 인증 상태 (sessionStorage로 새로고침 시 유지)
     const vocPasswordModal = document.getElementById('voc-password-modal');
     const vocPasswordInput = document.getElementById('voc-password');
     const confirmVocLoginBtn = document.getElementById('confirm-voc-login');
     const cancelVocLoginBtn = document.getElementById('cancel-voc-login');
     const vocLoginStatusMsg = document.getElementById('voc-login-status');
 
+    // 페이지 로드 시 VOC 인증 상태 복원
+    if (isVocAuthenticated) {
+        document.body.classList.add('voc-auth-mode');
+    }
+
     if (confirmVocLoginBtn) {
         confirmVocLoginBtn.onclick = () => {
             if (vocPasswordInput.value === '2017') { // 암호 확인
                 isVocAuthenticated = true;
+                sessionStorage.setItem('seahVocAuth', 'true'); // 새로고침 시에도 인증 유지
                 document.body.classList.add('voc-auth-mode'); // 추가
                 vocPasswordModal.style.display = 'none';
                 showSection('voc-log-view'); // 인증 성공 시 VOC 화면으로 이동
