@@ -88,6 +88,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isAdmin) {
                 if (confirm('관리자 모드를 종료하시겠습니까?')) {
                     isAdmin = false;
+                    isVocAuthenticated = false; // VOC 인증도 해제
+                    document.body.classList.remove('voc-auth-mode');
                     sessionStorage.removeItem('seahAdminMode');
                     updateAdminUI();
                     showSection('search-view');
@@ -134,8 +136,10 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmVocLoginBtn.onclick = () => {
             if (vocPasswordInput.value === '2017') { // 암호 확인
                 isVocAuthenticated = true;
+                document.body.classList.add('voc-auth-mode'); // 추가
                 vocPasswordModal.style.display = 'none';
                 showSection('voc-log-view'); // 인증 성공 시 VOC 화면으로 이동
+                renderVocTable(); // 버튼 가시성 업데이트를 위해 재렌더링
                 vocPasswordInput.value = '';
                 if (vocLoginStatusMsg) vocLoginStatusMsg.style.display = 'none';
             } else {
@@ -1215,10 +1219,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 </td>
                 <td style="padding:10px 14px; text-align:center;">
                     <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <button class="admin-only" style="border:none; background:#e0f2fe; color:#0284c7; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" onclick="event.stopPropagation(); openVocModal('${v.id}')">
+                        <button class="voc-admin-only" style="border:none; background:#e0f2fe; color:#0284c7; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" onclick="event.stopPropagation(); openVocModal('${v.id}')">
                             <i class="fas fa-edit" style="font-size:12px;"></i>
                         </button>
-                        <button class="admin-only" style="border:none; background:#fee2e2; color:#ef4444; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="event.stopPropagation(); deleteVoc('${v.id}')">
+                        <button class="voc-admin-only" style="border:none; background:#fee2e2; color:#ef4444; width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" onclick="event.stopPropagation(); deleteVoc('${v.id}')">
                             <i class="fas fa-trash-alt" style="font-size:12px;"></i>
                         </button>
                     </div>
@@ -1304,18 +1308,61 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 사진 및 어노테이션 처리
         const photoContainer = document.getElementById('modal-edit-photo-container');
-        const photoPreview = document.getElementById('modal-edit-photo-preview');
+        const mediaGallery = document.getElementById('modal-voc-media-gallery');
+        const imgPreview = document.getElementById('modal-edit-photo-preview');
+        const videoPreview = document.getElementById('modal-edit-video-preview');
         const canvas = document.getElementById('annotation-canvas');
 
         activeAnnotations = v.annotations || [];
+        const mediaList = v.media || (v.photo ? [{ url: v.photo, type: 'image' }] : []);
 
-        if (photoContainer && photoPreview) {
-            if (v.photo) {
-                photoPreview.src = v.photo;
-                photoContainer.style.display = 'block';
-                photoPreview.onload = () => initAnnotationCanvas();
+        if (photoContainer && mediaGallery) {
+            photoContainer.style.display = (isAdmin || isVocAuthenticated || mediaList.length > 0) ? 'block' : 'none';
+            mediaGallery.innerHTML = '';
+
+            if (mediaList.length > 0) {
+                mediaList.forEach((m, idx) => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'media-preview-item';
+                    thumb.style.cursor = 'pointer';
+                    thumb.style.border = idx === 0 ? '2px solid var(--primary)' : '1px solid #e2e8f0';
+
+                    if (m.type === 'video') {
+                        thumb.innerHTML = `<video src="${m.url}" style="width:100%; height:100%; object-fit:cover;"></video><span style="position:absolute; bottom:2px; right:2px; font-size:10px; color:white; background:rgba(0,0,0,0.5); padding:0 2px;">▶</span>`;
+                    } else {
+                        thumb.innerHTML = `<img src="${m.url}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+
+                    thumb.onclick = () => {
+                        // 모든 썸네일 테두리 초기화
+                        mediaGallery.querySelectorAll('.media-preview-item').forEach(t => t.style.border = '1px solid #e2e8f0');
+                        thumb.style.border = '2px solid var(--primary)';
+
+                        // 메인 프리뷰 전환
+                        if (m.type === 'video') {
+                            imgPreview.style.display = 'none';
+                            videoPreview.src = m.url;
+                            videoPreview.style.display = 'block';
+                            if (canvas) canvas.style.display = 'none'; // 비디오 위에는 마킹 불가 (단순화)
+                        } else {
+                            videoPreview.style.display = 'none';
+                            videoPreview.src = '';
+                            imgPreview.src = m.url;
+                            imgPreview.style.display = 'block';
+                            if (canvas) {
+                                canvas.style.display = 'block';
+                                initAnnotationCanvas();
+                            }
+                        }
+                    };
+                    mediaGallery.appendChild(thumb);
+                });
+
+                // 첫 번째 항목 자동 선택
+                mediaGallery.children[0].click();
             } else {
-                photoContainer.style.display = isAdmin ? 'block' : 'none';
+                imgPreview.style.display = 'none';
+                videoPreview.style.display = 'none';
                 if (canvas) {
                     const ctx = canvas.getContext('2d');
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1325,59 +1372,112 @@ document.addEventListener('DOMContentLoaded', function () {
 
         updateRecommendedActions();
         vocModal.style.display = 'flex';
-        vocModal.querySelectorAll('input, select, textarea').forEach(i => i.disabled = !isAdmin);
+        vocModal.querySelectorAll('input, select, textarea').forEach(i => i.disabled = !(isAdmin || isVocAuthenticated));
         const saveBtn = document.getElementById('modal-voc-save-btn');
-        if (saveBtn) saveBtn.style.display = isAdmin ? 'block' : 'none';
+        if (saveBtn) saveBtn.style.display = (isAdmin || isVocAuthenticated) ? 'block' : 'none';
     };
+
+    // --- [미디어 프리뷰 및 업로드 로직] ---
+    const vocPhotoInput = document.getElementById('voc-photo');
+    const vocPreviewContainer = document.getElementById('voc-media-preview-container');
+    let vocSelectedFiles = [];
+
+    if (vocPhotoInput) {
+        vocPhotoInput.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            vocSelectedFiles = files;
+            renderPreview(files, vocPreviewContainer);
+        };
+    }
+
+    function renderPreview(files, container) {
+        if (!container) return;
+        container.innerHTML = '';
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const item = document.createElement('div');
+                item.className = 'media-preview-item';
+
+                if (file.type.startsWith('image/')) {
+                    item.innerHTML = `<img src="${event.target.result}">`;
+                } else {
+                    item.innerHTML = `<video src="${event.target.result}"></video><span style="position:absolute; bottom:2px; right:2px; font-size:10px; color:white; background:rgba(0,0,0,0.5); padding:0 2px;">▶</span>`;
+                }
+
+                container.appendChild(item);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function uploadMultipleMedia(files) {
+        const results = [];
+        for (const file of files) {
+            const ref = storage.ref(`complaints/${Date.now()}_${file.name}`);
+            await ref.put(file);
+            const url = await ref.getDownloadURL();
+            results.push({
+                url,
+                type: file.type.startsWith('video') ? 'video' : 'image',
+                name: file.name
+            });
+        }
+        return results;
+    }
 
     // --- VOC 신규 등록 및 수정 로직 복구 ---
     if (vocForm) {
         vocForm.onsubmit = async (e) => {
             e.preventDefault();
-            const photoFile = document.getElementById('voc-photo').files[0];
-            let photoUrl = null;
+            const submitBtn = vocForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 업로드 중...';
+            submitBtn.disabled = true;
 
-            if (photoFile) {
-                const ref = storage.ref(`complaints/${Date.now()}_${photoFile.name}`);
-                await ref.put(photoFile);
-                photoUrl = await ref.getDownloadURL();
-            }
+            try {
+                const mediaItems = await uploadMultipleMedia(vocSelectedFiles);
+                const primaryPhoto = mediaItems.find(m => m.type === 'image')?.url || (mediaItems.length > 0 ? mediaItems[0].url : null);
 
-            const vocData = {
-                category: document.getElementById('voc-category').value,
-                market: document.getElementById('voc-market').value,
-                receiptDate: document.getElementById('voc-receipt-date').value,
-                customer: document.getElementById('voc-customer').value,
-                team: document.getElementById('voc-team').value,
-                manager: document.getElementById('voc-manager').value,
-                spec: document.getElementById('voc-spec').value,
-                color: document.getElementById('voc-color').value,
-                batch: document.getElementById('voc-batch').value,
-                line: document.getElementById('voc-line').value,
-                prodDate: document.getElementById('voc-prod-date').value,
-                defectType: document.getElementById('voc-defect-type').value,
-                deliveryQty: document.getElementById('voc-delivery-qty').value,
-                complaintQty: document.getElementById('voc-complaint-qty').value,
-                title: document.getElementById('voc-title').value,
-                description: document.getElementById('voc-desc').value,
-                photo: photoUrl,
-                status: '접수',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            // status: '접수',
-            // createdAt: new Date().toISOString()
-            // };
+                const vocData = {
+                    category: document.getElementById('voc-category').value,
+                    market: document.getElementById('voc-market').value,
+                    receiptDate: document.getElementById('voc-receipt-date').value,
+                    customer: document.getElementById('voc-customer').value,
+                    team: document.getElementById('voc-team').value,
+                    manager: document.getElementById('voc-manager').value,
+                    spec: document.getElementById('voc-spec').value,
+                    color: document.getElementById('voc-color').value,
+                    batch: document.getElementById('voc-batch').value,
+                    line: document.getElementById('voc-line').value,
+                    prodDate: document.getElementById('voc-prod-date').value,
+                    defectType: document.getElementById('voc-defect-type').value,
+                    deliveryQty: document.getElementById('voc-delivery-qty').value,
+                    complaintQty: document.getElementById('voc-complaint-qty').value,
+                    title: document.getElementById('voc-title').value,
+                    description: document.getElementById('voc-desc').value,
+                    photo: primaryPhoto, // 호환성을 위해 첫 번째 사진 유지
+                    media: mediaItems,   // 전체 미디어 배열 저장
+                    status: '접수',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
 
-            db.collection("complaints").add(vocData).then(async (docRef) => {
+                await db.collection("complaints").add(vocData);
                 alert('VOC가 성공적으로 접수되었습니다.');
                 vocForm.reset();
+                if (vocPreviewContainer) vocPreviewContainer.innerHTML = '';
+                vocSelectedFiles = [];
                 loadLocalComplaints();
 
-                // 담당자 메일 발송 (EmailJS 방식)
                 if (localNotifyEmails.length > 0) {
                     await sendVocNotification(vocData);
                 }
-            }).catch(err => alert('오류 발생: ' + err.message));
+            } catch (err) {
+                alert('오류 발생: ' + err.message);
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
         };
     }
 
@@ -1391,14 +1491,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             try {
                 const photoInput = document.getElementById('modal-edit-photo-input');
-                let newPhotoUrl = null;
+                let newMediaItems = [];
 
-                if (photoInput && photoInput.files && photoInput.files[0]) {
-                    const file = photoInput.files[0];
-                    const ref = storage.ref(`complaints/${Date.now()}_${file.name}`);
-                    await ref.put(file);
-                    newPhotoUrl = await ref.getDownloadURL();
+                if (photoInput && photoInput.files && photoInput.files.length > 0) {
+                    newMediaItems = await uploadMultipleMedia(Array.from(photoInput.files));
                 }
+
+                const currentVoc = localComplaints.find(v => v.id === currentVocId);
+                let finalMedia = (currentVoc.media || []);
+                if (currentVoc.photo && finalMedia.length === 0) {
+                    finalMedia.push({ url: currentVoc.photo, type: 'image' });
+                }
+                finalMedia = [...finalMedia, ...newMediaItems];
 
                 const updatedData = {
                     category: document.getElementById('modal-edit-category').value,
@@ -1424,10 +1528,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     replyCountermeasure: document.getElementById('modal-reply-countermeasure').value,
                     replyEvaluation: document.getElementById('modal-reply-evaluation').value,
                     status: document.getElementById('modal-reply-status').value,
-                    annotations: activeAnnotations
+                    annotations: activeAnnotations,
+                    media: finalMedia,
+                    photo: finalMedia.find(m => m.type === 'image')?.url || (finalMedia.length > 0 ? finalMedia[0].url : null)
                 };
-
-                if (newPhotoUrl) updatedData.photo = newPhotoUrl;
 
                 await db.collection("complaints").doc(currentVocId).update(updatedData);
                 alert('변경 사항이 저장되었습니다.');
@@ -1456,6 +1560,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.deleteVoc = async (id) => {
+        if (!(isAdmin || isVocAuthenticated)) {
+            alert("삭제 권한이 없습니다.");
+            return;
+        }
         if (!confirm('삭제하시겠습니까?')) return;
         try {
             const doc = await db.collection("complaints").doc(id).get();
@@ -1465,6 +1573,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     const fileRef = storage.refFromURL(data.photo);
                     await fileRef.delete();
                 } catch (e) { console.warn("VOC photo already deleted or error:", e); }
+            }
+            // 전체 미디어 삭제 로직 추가 (필요시)
+            if (data && data.media && data.media.length > 0) {
+                for (const m of data.media) {
+                    try {
+                        const mRef = storage.refFromURL(m.url);
+                        await mRef.delete();
+                    } catch (e) { console.warn("Media delete error:", e); }
+                }
             }
             await db.collection("complaints").doc(id).delete();
             loadLocalComplaints();

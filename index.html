@@ -32,6 +32,65 @@
             emailjs.init("q2oGtAPYvvyOlL3Kq");
         })();
     </script>
+    <style>
+        /* 추가 권한 처리: voc-admin-only */
+        .voc-admin-only {
+            display: none !important;
+        }
+
+        body.admin-mode .voc-admin-only,
+        body.voc-auth-mode .voc-admin-only {
+            display: block !important;
+        }
+
+        body.admin-mode .voc-admin-only.admin-flex,
+        body.voc-auth-mode .voc-admin-only.admin-flex {
+            display: flex !important;
+            gap: 8px;
+            align-items: center;
+        }
+
+        body.admin-mode button.voc-admin-only,
+        body.voc-auth-mode button.voc-admin-only {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+        }
+
+        .media-preview-item img,
+        .media-preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -3304,11 +3363,16 @@
                                     <option value="기타">기타 (Others)</option>
                                 </select>
                             </div>
-                            <div class="form-field">
-                                <label>📷 현장 사진</label>
-                                <div style="text-align: center;">
-                                    <input type="file" id="voc-photo" accept="image/*"
-                                        style="font-size: 12px; width: 100%;">
+                            <div class="form-field" style="grid-column: span 4;">
+                                <label>📷 현장 사진 및 동영상 (여러 개 선택 가능)</label>
+                                <div
+                                    style="border: 2px dashed #e2e8f0; border-radius: 12px; padding: 15px; background: #f8fafc;">
+                                    <input type="file" id="voc-photo" accept="image/*,video/*" multiple
+                                        style="font-size: 13px; width: 100%; cursor: pointer;">
+                                    <div id="voc-media-preview-container"
+                                        style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                                        <!-- 선택된 미디어 미리보기가 여기에 표시됩니다 -->
+                                    </div>
                                 </div>
                             </div>
 
@@ -3539,23 +3603,34 @@
                                     <div id="modal-edit-photo-container" style="margin-top: 12px; display: none;">
                                         <div
                                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                            <label>현장 사진 (클릭하여 마킹)</label>
+                                            <label>현장 미디어 (클릭하여 마킹/확대)</label>
                                             <button type="button" onclick="clearAnnotation()"
-                                                style="font-size: 10px; padding: 2px 6px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; border-radius: 4px;">지우기</button>
+                                                style="font-size: 10px; padding: 2px 6px; background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; border-radius: 4px;">마킹
+                                                지우기</button>
                                         </div>
+
+                                        <!-- 미디어 갤러리 (Thumbnail List) -->
+                                        <div id="modal-voc-media-gallery"
+                                            style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px;">
+                                            <!-- 미리보기 썸네일들이 여기에 추가됨 -->
+                                        </div>
+
                                         <div id="annotation-wrapper"
-                                            style="position: relative; cursor: crosshair; overflow: hidden; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                            style="position: relative; cursor: crosshair; overflow: hidden; border-radius: 8px; border: 2px solid #e2e8f0; background: #000; min-height: 200px; display: flex; align-items: center; justify-content: center;">
                                             <img id="modal-edit-photo-preview" src=""
-                                                style="width: 100%; display: block;">
+                                                style="max-width: 100%; max-height: 400px; display: none;">
+                                            <video id="modal-edit-video-preview" controls
+                                                style="max-width: 100%; max-height: 400px; display: none;"></video>
                                             <canvas id="annotation-canvas"
                                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto;"></canvas>
                                         </div>
-                                        <div class="admin-only" style="margin-top: 10px;">
+
+                                        <div class="voc-admin-only" style="margin-top: 10px;">
                                             <label
                                                 style="display:block; font-size:12px; color:var(--primary); margin-bottom:5px; font-weight:700;">📸
-                                                사진 변경 (관리자 전용)</label>
-                                            <input type="file" id="modal-edit-photo-input" accept="image/*"
-                                                style="font-size:12px; width:100%;">
+                                                미디어 추가 (이미지/동영상)</label>
+                                            <input type="file" id="modal-edit-photo-input" accept="image/*,video/*"
+                                                multiple style="font-size:12px; width:100%;">
                                         </div>
                                     </div>
                                 </div>
