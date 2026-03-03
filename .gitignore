@@ -86,3 +86,6 @@ public/
 
 # Firebase cache
 .firebase/
+
+# Firebase config (contains API keys)
+firebase-config.js
