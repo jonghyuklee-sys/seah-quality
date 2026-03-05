@@ -2574,14 +2574,62 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     });
 
-    // --- [초기화] ---
-    function init() {
-        loadLocalFiles();
-        loadLocalComplaints();
-        loadLocalDefects();
-        loadNotificationEmails(); // 추가
+    // --- [초기화 및 데이터 동기화 관리] ---
+    async function init(isManual = false) {
+        const overlay = document.getElementById('loading-overlay');
+        const statusBar = document.getElementById('data-status-bar');
+
+        if (isManual && overlay) {
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+        }
+
+        try {
+            // [병렬 실행] 세 가지 주요 데이터를 동시에 로드하여 전체 시간 단축
+            console.time("⏱️ Initial Data Load");
+            await Promise.all([
+                loadLocalFiles(),
+                loadLocalComplaints(),
+                loadLocalDefects(),
+                loadNotificationEmails()
+            ]);
+            console.timeEnd("⏱️ Initial Data Load");
+
+            // 로딩 오버레이 제거 (짧은 지연으로 여유 부여)
+            setTimeout(() => {
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        document.body.classList.remove('loading-active');
+                    }, 500);
+                }
+
+                // 동기화 성공 배너 표시
+                if (statusBar) {
+                    statusBar.classList.add('show');
+                    setTimeout(() => statusBar.classList.remove('show'), 3000);
+                }
+            }, 300);
+
+        } catch (err) {
+            console.error("데이터 초기화 중 오류 발생:", err);
+            if (overlay) {
+                const text = overlay.querySelector('.loading-text');
+                const subtext = overlay.querySelector('.loading-subtext');
+                if (text) text.textContent = "데이터 로드 실패";
+                if (subtext) subtext.innerHTML = `오류: ${err.message}<br><button onclick="location.reload()" style="margin-top:15px; padding:8px 16px; border-radius:6px; cursor:pointer;">새로고침</button>`;
+            }
+        }
     }
-    init();
+    window.init = init; // 외부(HTML)에서 호출 가능하도록 전역 등록
+
+    // 문서 로드 즉시 실행
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     // --- [보안: 다운로드 및 무단 복제 방지] ---
     // 1. 우클릭 방지
