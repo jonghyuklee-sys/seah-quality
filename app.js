@@ -4355,48 +4355,57 @@ window.deleteCertification = async (docId) => {
         if (!feasibilityModal || !feasibilityForm) return;
         feasibilityForm.reset();
         document.getElementById('feasibility-id').value = id || '';
-
         const titleEl = document.getElementById('feasibility-modal-title');
         if (titleEl) titleEl.textContent = id ? '📋 생산 가능성 검토 상세' : '📋 신규 검토 요청 등록';
 
+        // 1. 모든 입력 필드(전체)에 대한 읽기/쓰기 권한 제어
+        const allInputs = feasibilityModal.querySelectorAll('input, select, textarea');
+        const saveBtn = document.getElementById('save-feasibility-btn');
+
+        if (id) {
+            // 기존 건 조회 시
+            if (window.isAdmin) {
+                // 관리자는 모든 필드 수정 가능
+                allInputs.forEach(inp => {
+                    inp.disabled = false;
+                    inp.style.backgroundColor = '#fff';
+                    inp.style.cursor = 'auto';
+                });
+                if (saveBtn) saveBtn.style.display = 'flex';
+            } else {
+                // 비관리자는 모든 필드 읽기 전용
+                allInputs.forEach(inp => {
+                    inp.disabled = true;
+                    inp.style.backgroundColor = '#f8fafc';
+                    inp.style.cursor = 'not-allowed';
+                });
+                if (saveBtn) saveBtn.style.display = 'none';
+            }
+        } else {
+            // 신규 등록 시
+            allInputs.forEach(inp => {
+                inp.disabled = false;
+                inp.style.backgroundColor = '#fff';
+                inp.style.cursor = 'auto';
+            });
+            if (saveBtn) saveBtn.style.display = 'flex';
+        }
+
+        // 2. 관리자 전용 섹션(검토 결과) 추가 제어
         const adminSections = feasibilityModal.querySelectorAll('.admin-only');
         adminSections.forEach(el => {
-            // 기존 건 조회 시: 항상 표시하되, 비관리자는 읽기 전용(Disabled)
-            // 신규 등록 시: 관리자만 표시
             if (id) {
+                // 기존 건은 항상 표시하되 권한은 위에서 처리됨 (관리자만 수정 가능)
                 el.style.setProperty('display', 'block', 'important');
-                const inputs = el.querySelectorAll('input, select, textarea');
-                inputs.forEach(inp => {
-                    inp.disabled = !window.isAdmin;
-                    // 비활성화 시 시각적 처리
-                    if (!window.isAdmin) {
-                        inp.style.backgroundColor = '#f8fafc';
-                        inp.style.cursor = 'not-allowed';
-                    } else {
-                        inp.style.backgroundColor = '#fff';
-                        inp.style.cursor = 'auto';
-                    }
-                });
             } else {
+                // 신규 등록 시에는 관리자만 검토 결과 섹션이 보임
                 if (window.isAdmin) {
                     el.style.setProperty('display', 'block', 'important');
                 } else {
                     el.style.setProperty('display', 'none', 'important');
                 }
-                const inputs = el.querySelectorAll('input, select, textarea');
-                inputs.forEach(inp => inp.disabled = false); // 신규 등록 시 초기화
             }
         });
-
-        // 저장 버튼 제어: 비관리자가 이미 완료된 건(승인/불가 등)을 수정하지 못하게 할 수도 있으나, 
-        // 우선 요청하신 '검토결과' 필드에 대해서만 비활성화 처리를 강화했습니다.
-        const saveBtn = document.getElementById('save-feasibility-btn');
-        if (saveBtn) {
-            // 기존 건이고 비관리자라면? (일단 버튼은 두되 필드만 막는 것이 일반적)
-            // 만약 저장 자체를 막으려면 아래 주석 해제
-            // if (id && !window.isAdmin) saveBtn.style.display = 'none';
-            // else saveBtn.style.display = 'flex';
-        }
 
         if (id) {
             const req = localFeasibilityRequests.find(r => r.id === id);
