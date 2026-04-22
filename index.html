@@ -3299,15 +3299,19 @@
 
                 <!-- 생산 가능성 검토 섹션 -->
                 <section id="prod-feasibility-view" class="page-section" style="display: none;">
-                    <div class="page-header" style="text-align: center; margin-bottom: 16px; padding-bottom: 10px;">
-                        <h2>🔬 생산 가능성 검토</h2>
-                        <p style="margin-bottom: 0;">영업 부문의 신규 사양 검토 요청을 품질경영팀에서 기술적으로 분석하고 검토 결과를 공유합니다.</p>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 10px;">
+                        <div>
+                            <h2 style="margin-bottom: 4px;">🔬 생산 가능성 검토</h2>
+                            <p style="margin-bottom: 0;">영업 부문의 신규 사양 검토 요청을 품질경영팀에서 기술적으로 분석하고 검토 결과를 공유합니다.</p>
+                        </div>
+                        <button id="add-feasibility-btn" class="btn-primary"
+                            style="width: auto; padding: 12px 24px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 10px; font-weight: 700; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
+                            <i class="fas fa-plus-circle"></i> 신규 검토 요청
+                        </button>
                     </div>
 
-                    <!-- 대시보드 요약 카드 + 신규 요청 버튼 -->
-                    <div style="display: flex; align-items: stretch; gap: 12px; max-width: 1200px; margin: 0 auto 16px auto;">
-                        <!-- 카드 그리드 -->
-                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; flex: 1;">
+                    <!-- 대시보드 요약 카드 -->
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 1200px; margin: 0 auto 16px auto;">
                             <!-- 전체 요청 -->
                             <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border-radius: 12px; padding: 14px 16px; color: white; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
                                 <div style="position: absolute; right: -8px; top: -8px; width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
@@ -3353,12 +3357,6 @@
                                     <span style="font-size: 11px; color: #fca5a5;">건</span>
                                 </div>
                             </div>
-                        </div>
-                        <!-- 신규 검토 요청 버튼 -->
-                        <button id="add-feasibility-btn" class="btn-primary"
-                            style="width: auto; min-width: 130px; padding: 0 20px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 12px; font-weight: 700; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
-                            <i class="fas fa-plus-circle"></i> 신규 검토 요청
-                        </button>
                     </div>
 
                     <!-- 필터 (인라인 1행) -->
