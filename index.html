@@ -95,6 +95,66 @@
             justify-content: center;
         }
 
+        /* [추가] 생산 가능성 검토 모듈 반응형 스타일 */
+        .feas-dash-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            width: 100%;
+        }
+
+        .feas-filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 0.6fr;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .feas-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .feas-dash-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .feas-filter-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .prod-feasibility-header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center !important;
+            }
+            .prod-feasibility-header .btn-primary {
+                position: static !important;
+                width: 100% !important;
+            }
+            .feas-dash-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .feas-filter-grid {
+                grid-template-columns: 1fr;
+            }
+            .feas-modal-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .feas-dash-grid {
+                grid-template-columns: 1fr;
+            }
+            .feas-modal-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* [추가] 글로벌 로딩 스피너 및 알림바 스타일 */
         .loading-overlay {
             position: fixed;
@@ -3299,7 +3359,7 @@
 
                 <!-- 생산 가능성 검토 섹션 -->
                 <section id="prod-feasibility-view" class="page-section" style="display: none;">
-                    <div class="page-header" style="position: relative; text-align: center; margin-bottom: 24px; padding-bottom: 10px;">
+                    <div class="page-header prod-feasibility-header" style="position: relative; text-align: center; margin-bottom: 24px; padding-bottom: 10px; display: flex; justify-content: center; align-items: center;">
                         <div style="display: inline-block;">
                             <h2 style="margin-bottom: 8px;">🔬 생산 가능성 검토</h2>
                             <p style="margin-bottom: 0; color: #64748b;">영업 부문의 신규 사양 검토 요청을 품질경영팀에서 기술적으로 분석하고 검토 결과를 공유합니다.</p>
@@ -3311,7 +3371,7 @@
                     </div>
 
                     <!-- 대시보드 요약 카드 -->
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; max-width: 1200px; margin: 0 auto 16px auto;">
+                    <div class="feas-dash-grid" style="max-width: 1200px; margin: 0 auto 16px auto;">
                             <!-- 전체 요청 -->
                             <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border-radius: 12px; padding: 14px 16px; color: white; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
                                 <div style="position: absolute; right: -8px; top: -8px; width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
@@ -3361,7 +3421,7 @@
 
                     <!-- 필터 (인라인 1행) -->
                     <div class="search-container" style="margin: 0 auto 12px auto; max-width: 1200px; padding: 12px 20px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 2fr 0.6fr; gap: 12px; align-items: center;">
+                        <div class="feas-filter-grid">
                             <select id="feasibility-status-filter" onchange="renderFeasibilityTable()" style="height: 38px; border-radius: 8px; border: 1px solid #e2e8f0; padding: 0 10px; font-size: 13px; color: #475569;">
                                 <option value="all">전체 상태</option>
                                 <option value="접수">⏳ 접수 대기</option>
@@ -3442,8 +3502,7 @@
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Requester
                                         Info</span>
                                 </div>
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px;">
+                                <div class="feas-modal-grid" style="margin-bottom: 28px;">
                                     <div class="form-field">
                                         <label>요청 일자 <span style="color:#ef4444;">*</span></label>
                                         <input type="date" id="feas-request-date" required>
@@ -3472,8 +3531,7 @@
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Product
                                         Specification</span>
                                 </div>
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="feas-modal-grid" style="margin-bottom: 16px;">
                                     <div class="form-field">
                                         <label>적용 소재 <span style="color:#ef4444;">*</span></label>
                                         <select id="feas-material" required>
@@ -3495,8 +3553,7 @@
                                         <input type="text" id="feas-standard" placeholder="예: KS D 3520, JIS G 3322">
                                     </div>
                                 </div>
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="feas-modal-grid" style="margin-bottom: 16px;">
                                     <div class="form-field">
                                         <label>두께 (mm)</label>
                                         <input type="text" id="feas-thickness" placeholder="예: 0.50">
@@ -3510,8 +3567,7 @@
                                         <input type="text" id="feas-coating" placeholder="예: Z18, AZ150, 20/5μ">
                                     </div>
                                 </div>
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="feas-modal-grid" style="margin-bottom: 16px;">
                                     <div class="form-field">
                                         <label>수지 종류 </label>
                                         <select id="feas-resin">
@@ -3566,8 +3622,7 @@
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Customer & Site
                                         Info</span>
                                 </div>
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="feas-modal-grid" style="margin-bottom: 16px;">
                                     <div class="form-field">
                                         <label>고객사명 <span style="color:#ef4444;">*</span></label>
                                         <input type="text" id="feas-customer" placeholder="고객사명 입력" required>
@@ -3584,8 +3639,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="feas-modal-grid" style="margin-bottom: 16px;">
                                     <div class="form-field">
                                         <label>용도 <span style="color:#ef4444;">*</span></label>
                                         <input type="text" id="feas-usage" placeholder="예: 지붕재, 벽체, 가전, 건축 내장 등"
@@ -3621,8 +3675,7 @@
                                         <span style="font-size: 12px; color: #e53e3e; margin-left: auto;">Quality Review
                                             Result</span>
                                     </div>
-                                    <div
-                                        style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                    <div class="feas-modal-grid" style="margin-bottom: 16px;">
                                         <div class="form-field">
                                             <label style="color: #991b1b;">검토 상태</label>
                                             <select id="feas-reply-status">
