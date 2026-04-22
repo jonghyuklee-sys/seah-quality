@@ -4331,10 +4331,11 @@ window.deleteCertification = async (docId) => {
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569; white-space:nowrap;">${req.requestDate || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px;">${requesterDisp}</td>
                 <td style="padding:10px 6px; text-align:center;"><span style="background:#eff6ff; color:#1e3a8a; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">${req.material || '-'}</span></td>
+                <td style="padding:10px 6px; text-align:center; font-size:11px; color:#475569; font-family:'Roboto Mono',monospace;">${specStr}</td>
+                <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569;">${req.steelGrade || '-'}</td>
+                <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569;">${req.standard || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; font-weight:700; color:#1e293b; font-size:13px;">${req.customer || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; color:#475569; font-size:12px;">${req.usage || '-'}${req.country ? ' <span style="color:#94a3b8;">(' + req.country + ')</span>' : ''}</td>
-                <td style="padding:10px 6px; text-align:center; font-size:11px; color:#475569; font-family:'Roboto Mono',monospace;">${specStr}</td>
-
                 <td style="padding:10px 6px; text-align:center;">
                     <span style="background:${st.c}12; color:${st.c}; padding:4px 8px; border-radius:5px; font-size:10px; font-weight:800; border:1px solid ${st.c}25; white-space:nowrap;">
                         ${st.i} ${req.status || '접수'}
