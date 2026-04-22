@@ -4364,7 +4364,7 @@ window.deleteCertification = async (docId) => {
             // 기존 건 조회 시: 항상 표시하되, 비관리자는 읽기 전용(Disabled)
             // 신규 등록 시: 관리자만 표시
             if (id) {
-                el.style.display = 'block';
+                el.style.setProperty('display', 'block', 'important');
                 const inputs = el.querySelectorAll('input, select, textarea');
                 inputs.forEach(inp => {
                     inp.disabled = !window.isAdmin;
@@ -4378,7 +4378,11 @@ window.deleteCertification = async (docId) => {
                     }
                 });
             } else {
-                el.style.display = window.isAdmin ? 'block' : 'none';
+                if (window.isAdmin) {
+                    el.style.setProperty('display', 'block', 'important');
+                } else {
+                    el.style.setProperty('display', 'none', 'important');
+                }
                 const inputs = el.querySelectorAll('input, select, textarea');
                 inputs.forEach(inp => inp.disabled = false); // 신규 등록 시 초기화
             }
