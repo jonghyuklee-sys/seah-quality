@@ -3400,7 +3400,7 @@
                                         <th style="padding: 14px 8px; font-size: 12px;">고객사</th>
                                         <th style="padding: 14px 8px; font-size: 12px;">용도 / 국가</th>
                                         <th style="padding: 14px 8px; font-size: 12px; width: 130px;">제품 스펙</th>
-                                        <th style="padding: 14px 8px; font-size: 12px; width: 90px;">희망일</th>
+
                                         <th style="padding: 14px 8px; font-size: 12px; width: 90px;">상태</th>
                                         <th style="padding: 14px 8px; font-size: 12px; width: 70px;">관리</th>
                                     </tr>
@@ -3442,7 +3442,7 @@
                                         Info</span>
                                 </div>
                                 <div
-                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px;">
+                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px;">
                                     <div class="form-field">
                                         <label>요청 일자 <span style="color:#ef4444;">*</span></label>
                                         <input type="date" id="feas-request-date" required>
@@ -3460,10 +3460,6 @@
                                     <div class="form-field">
                                         <label>요청자명 <span style="color:#ef4444;">*</span></label>
                                         <input type="text" id="feas-requester-name" placeholder="담당자 성함" required>
-                                    </div>
-                                    <div class="form-field">
-                                        <label>희망 완료일</label>
-                                        <input type="date" id="feas-target-date">
                                     </div>
                                 </div>
 
@@ -3518,6 +3514,7 @@
                                     <div class="form-field">
                                         <label>수지 종류 </label>
                                         <select id="feas-resin">
+                                            <option value="해당없음">해당없음</option>
                                             <option value="RMP">RMP</option>
                                             <option value="SMP">SMP</option>
                                             <option value="HDP">HDP</option>
@@ -3530,6 +3527,7 @@
                                     <div class="form-field">
                                         <label>도장 구조</label>
                                         <select id="feas-paint-structure">
+                                            <option value="해당없음">해당없음</option>
                                             <option value="1C1B">1 Coat / 1 Bake</option>
                                             <option value="2C2B">2 Coat / 2 Bake</option>
                                             <option value="3C3B">3 Coat / 3 Bake</option>

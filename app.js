@@ -4334,7 +4334,7 @@ window.deleteCertification = async (docId) => {
                 <td style="padding:10px 6px; text-align:center; font-weight:700; color:#1e293b; font-size:13px;">${req.customer || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; color:#475569; font-size:12px;">${req.usage || '-'}${req.country ? ' <span style="color:#94a3b8;">(' + req.country + ')</span>' : ''}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:11px; color:#475569; font-family:'Roboto Mono',monospace;">${specStr}</td>
-                <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569; white-space:nowrap;">${req.targetDate || '-'}</td>
+
                 <td style="padding:10px 6px; text-align:center;">
                     <span style="background:${st.c}12; color:${st.c}; padding:4px 8px; border-radius:5px; font-size:10px; font-weight:800; border:1px solid ${st.c}25; white-space:nowrap;">
                         ${st.i} ${req.status || '접수'}
@@ -4392,7 +4392,7 @@ window.deleteCertification = async (docId) => {
                 if (teamCustom) teamCustom.value = '';
             }
             setVal('feas-requester-name', req.requesterName);
-            setVal('feas-target-date', req.targetDate);
+
             setVal('feas-material', req.material);
             setVal('feas-steel-grade', req.steelGrade);
             setVal('feas-standard', req.standard);
@@ -4446,7 +4446,7 @@ window.deleteCertification = async (docId) => {
                 requestDate: getVal('feas-request-date'),
                 requesterTeam: teamValue,
                 requesterName: getVal('feas-requester-name'),
-                targetDate: getVal('feas-target-date'),
+
                 material: getVal('feas-material'),
                 steelGrade: getVal('feas-steel-grade'),
                 standard: getVal('feas-standard'),
