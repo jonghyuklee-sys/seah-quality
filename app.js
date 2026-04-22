@@ -4361,17 +4361,38 @@ window.deleteCertification = async (docId) => {
 
         const adminSections = feasibilityModal.querySelectorAll('.admin-only');
         adminSections.forEach(el => {
-            // 기존 건 조회 시: 항상 표시 (비관리자는 읽기 전용)
+            // 기존 건 조회 시: 항상 표시하되, 비관리자는 읽기 전용(Disabled)
             // 신규 등록 시: 관리자만 표시
             if (id) {
                 el.style.display = 'block';
-                // 비관리자면 모든 입력 비활성화
                 const inputs = el.querySelectorAll('input, select, textarea');
-                inputs.forEach(inp => inp.disabled = !window.isAdmin);
+                inputs.forEach(inp => {
+                    inp.disabled = !window.isAdmin;
+                    // 비활성화 시 시각적 처리
+                    if (!window.isAdmin) {
+                        inp.style.backgroundColor = '#f8fafc';
+                        inp.style.cursor = 'not-allowed';
+                    } else {
+                        inp.style.backgroundColor = '#fff';
+                        inp.style.cursor = 'auto';
+                    }
+                });
             } else {
                 el.style.display = window.isAdmin ? 'block' : 'none';
+                const inputs = el.querySelectorAll('input, select, textarea');
+                inputs.forEach(inp => inp.disabled = false); // 신규 등록 시 초기화
             }
         });
+
+        // 저장 버튼 제어: 비관리자가 이미 완료된 건(승인/불가 등)을 수정하지 못하게 할 수도 있으나, 
+        // 우선 요청하신 '검토결과' 필드에 대해서만 비활성화 처리를 강화했습니다.
+        const saveBtn = document.getElementById('save-feasibility-btn');
+        if (saveBtn) {
+            // 기존 건이고 비관리자라면? (일단 버튼은 두되 필드만 막는 것이 일반적)
+            // 만약 저장 자체를 막으려면 아래 주석 해제
+            // if (id && !window.isAdmin) saveBtn.style.display = 'none';
+            // else saveBtn.style.display = 'flex';
+        }
 
         if (id) {
             const req = localFeasibilityRequests.find(r => r.id === id);
