@@ -2,7 +2,8 @@
 let localFiles = [];
 let localComplaints = [];
 let localDefects = [];
-let localNotifyEmails = []; 
+let localNotifyEmails = [];
+let localCertifications = []; 
 
 // --- [알림 메일 담당자 관리 및 발송 엔진] ---
 async function loadNotificationEmails() {
@@ -1015,8 +1016,10 @@ document.addEventListener('DOMContentLoaded', function () {
             renderDefectGrid();
         } catch (e) {
             console.error("Error loading defects:", e);
-            // 사용자에게 직접적인 alert보다는 로그로 남기고 init의 메인 에러 핸들러가 처리하도록 함
-            throw e; 
+            if (localDefects.length === 0) {
+                localDefects = defaultDefects.map(d => ({ ...d }));
+                renderDefectGrid();
+            }
         }
 
         // VOC 불량 유형 선택박스 동기화
@@ -2450,11 +2453,15 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             // [병렬 실행] 세 가지 주요 데이터를 동시에 로드하여 전체 시간 단축
             console.time("⏱️ Initial Data Load");
-            await Promise.all([
-                loadLocalFiles(),
-                loadLocalComplaints(),
-                loadLocalDefects(),
-                loadNotificationEmails()
+            const loadTimeout = new Promise(resolve => setTimeout(resolve, 15000));
+            await Promise.race([
+                Promise.all([
+                    loadLocalFiles(),
+                    loadLocalComplaints(),
+                    loadLocalDefects(),
+                    loadNotificationEmails()
+                ]),
+                loadTimeout
             ]);
             console.timeEnd("⏱️ Initial Data Load");
 
@@ -3985,7 +3992,6 @@ document.addEventListener('keydown', function (event) {
 
 // --- [14. Certification Status Logic] ---
 // --- [14. Certification Status Logic (Dynamic)] ---
-let localCertifications = [];
 // Initial Seed Data (Only used if DB is empty)
 const initialCertData = [
     { id: 1, name: "ISO 9001", item: "품질경영시스템 (ISO 9001:2015)", org: "한국표준협회", firstDate: "2000-12-01", recentDate: "2024.10.10", validDate: "2027.10.09", note: "3년 주기\n(1년 정기 심사)" },

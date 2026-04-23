@@ -4940,7 +4940,20 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <script src="data.js"></script>
-    <script src="app.js?v=4.3"></script>
+    <script src="app.js?v=4.5"></script>
+    <script>
+        // 안전망: JS 오류로 init()가 실행되지 않아도 20초 후 로딩 화면 강제 제거
+        setTimeout(function() {
+            var overlay = document.getElementById('loading-overlay');
+            if (overlay && overlay.style.display !== 'none') {
+                overlay.style.opacity = '0';
+                setTimeout(function() {
+                    overlay.style.display = 'none';
+                    document.body.classList.remove('loading-active');
+                }, 500);
+            }
+        }, 20000);
+    </script>
     </div>
 
     <!-- 보안 블랙아웃 레이어 -->
