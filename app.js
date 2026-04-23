@@ -3916,7 +3916,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
-});
 
 // --- 전역 함수: 이미지 확대 모달 (Lightbox) ---
 function openImageModal(src, caption) {
@@ -4722,5 +4721,6 @@ window.deleteCertification = async (docId) => {
     // Initialize
     loadCertifications();
     loadFeasibilityRequests();
-    loadNotificationEmails(); // 추가
+    loadNotificationEmails();
+});
 
