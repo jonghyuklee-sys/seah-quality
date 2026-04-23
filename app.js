@@ -4669,9 +4669,7 @@ window.deleteCertification = async (docId) => {
                     await db.collection("feasibility_requests").add(data);
                     
                     // 신규 등록 시 알림 메일 발송
-                    if (localNotifyEmails.length > 0) {
-                        await sendFeasibilityNotification(data);
-                    }
+                    await sendFeasibilityNotification(data);
                 }
                 alert(id ? '검토 요청이 업데이트되었습니다.' : '신규 검토 요청이 등록되었습니다.');
                 feasibilityModal.style.display = 'none';
