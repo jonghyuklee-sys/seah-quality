@@ -3548,8 +3548,8 @@
                                         <input type="date" id="feas-request-date" required>
                                     </div>
                                     <div class="form-field">
-                                        <label>요청팀</label>
-                                        <select id="feas-requester-team">
+                                        <label>요청팀 <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-requester-team" required>
                                             <option value="">팀 선택</option>
                                             <option value="영업1팀">영업1팀</option>
                                             <option value="영업2팀">영업2팀</option>
@@ -3585,38 +3585,39 @@
                                         </select>
                                     </div>
                                     <div class="form-field">
-                                        <label>강종 (Steel Grade)</label>
-                                        <input type="text" id="feas-steel-grade" placeholder="예: SGCC, SGCD1, SGCD2">
+                                        <label>강종 (Steel Grade) <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-steel-grade" placeholder="예: SGCC, SGCD1, SGCD2" required>
                                     </div>
                                     <div class="form-field">
-                                        <label>적용 규격</label>
-                                        <input type="text" id="feas-standard" placeholder="예: KS D 3520, JIS G 3322">
-                                    </div>
-                                </div>
-                                <div class="feas-modal-grid"
-                                    style="margin-bottom: 16px; grid-template-columns: repeat(4, 1fr);">
-                                    <div class="form-field">
-                                        <label>두께 (mm)</label>
-                                        <input type="text" id="feas-thickness" placeholder="예: 0.50">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>폭 (mm)</label>
-                                        <input type="text" id="feas-width" placeholder="예: 1219">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>도금량</label>
-                                        <input type="text" id="feas-coating" placeholder="예: Z18, AZ150">
-                                    </div>
-                                    <div class="form-field">
-                                        <label>도막 스펙</label>
-                                        <input type="text" id="feas-paint-spec" placeholder="예: 5+20μm">
+                                        <label>적용 규격 <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-standard" placeholder="예: KS D 3520, JIS G 3322" required>
                                     </div>
                                 </div>
                                 <div class="feas-modal-grid"
                                     style="margin-bottom: 16px; grid-template-columns: repeat(4, 1fr);">
                                     <div class="form-field">
-                                        <label>수지 종류 (TOP)</label>
-                                        <select id="feas-resin-top">
+                                        <label>두께 (mm) <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-thickness" placeholder="예: 0.50" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>폭 (mm) <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-width" placeholder="예: 1219" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>도금량 <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-coating" placeholder="예: Z18, AZ150" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>도막 스펙 <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-paint-spec" placeholder="예: 5+20μm" required>
+                                    </div>
+                                </div>
+                                <div class="feas-modal-grid"
+                                    style="margin-bottom: 16px; grid-template-columns: repeat(4, 1fr);">
+                                    <div class="form-field">
+                                        <label>수지 종류 (TOP) <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-resin-top" required>
+                                            <option value="">수지 선택</option>
                                             <option value="해당없음">해당없음</option>
                                             <option value="RMP">RMP</option>
                                             <option value="SMP">SMP</option>
@@ -3628,8 +3629,9 @@
                                         </select>
                                     </div>
                                     <div class="form-field">
-                                        <label>수지 종류 (BACK)</label>
-                                        <select id="feas-resin-back">
+                                        <label>수지 종류 (BACK) <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-resin-back" required>
+                                            <option value="">수지 선택</option>
                                             <option value="해당없음">해당없음</option>
                                             <option value="EPOXY">EPOXY</option>
                                             <option value="RMP">RMP</option>
@@ -3639,8 +3641,9 @@
                                         </select>
                                     </div>
                                     <div class="form-field">
-                                        <label>도장 구조</label>
-                                        <select id="feas-paint-structure">
+                                        <label>도장 구조 <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-paint-structure" required>
+                                            <option value="">구조 선택</option>
                                             <option value="해당없음">해당없음</option>
                                             <option value="1C1B">1 Coat / 1 Bake</option>
                                             <option value="2C2B">2 Coat / 2 Bake</option>
@@ -3648,15 +3651,15 @@
                                         </select>
                                     </div>
                                     <div class="form-field">
-                                        <label>색상 및 광택</label>
-                                        <input type="text" id="feas-color" placeholder="예: Ivory White, Gloss 30%">
+                                        <label>색상 및 광택 <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-color" placeholder="예: Ivory White, Gloss 30%" required>
                                     </div>
                                 </div>
                                 <div
                                     style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px;">
                                     <div class="form-field">
-                                        <label>보호필름</label>
-                                        <select id="feas-film">
+                                        <label>보호필름 <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-film" required>
                                             <option value="무">없음 (None)</option>
                                             <option value="유">LDPE(일반 투명)</option>
                                             <option value="유">블랙앤화이트</option>
@@ -3664,12 +3667,12 @@
                                         </select>
                                     </div>
                                     <div class="form-field">
-                                        <label>예상 수량 (톤)</label>
-                                        <input type="text" id="feas-quantity" placeholder="예: 500톤, 20,000매 등">
+                                        <label>예상 수량 (톤) <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-quantity" placeholder="예: 500톤, 20,000매 등" required>
                                     </div>
                                     <div class="form-field">
-                                        <label>보증 요구 기간</label>
-                                        <input type="text" id="feas-warranty" placeholder="예: 천공 15년, 박리 10년">
+                                        <label>보증 요구 기간 <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-warranty" placeholder="예: 천공 15년, 박리 10년" required>
                                     </div>
                                 </div>
 
@@ -3691,8 +3694,8 @@
                                         <input type="text" id="feas-country" placeholder="예: 한국, 북미, 일본, 호주" required>
                                     </div>
                                     <div class="form-field">
-                                        <label>내수 / 수출</label>
-                                        <select id="feas-market">
+                                        <label>내수 / 수출 <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-market" required>
                                             <option value="내수">내수</option>
                                             <option value="수출">수출</option>
                                         </select>
@@ -3705,9 +3708,9 @@
                                             required>
                                     </div>
                                     <div class="form-field">
-                                        <label>설치 환경</label>
-                                        <select id="feas-environment">
-                                            <option value="">환경 선택 (선택)</option>
+                                        <label>설치 환경 <span style="color:#ef4444;">*</span></label>
+                                        <select id="feas-environment" required>
+                                            <option value="">환경 선택</option>
                                             <option value="일반">일반 환경</option>
                                             <option value="해안가">해안가</option>
                                             <option value="산업지역">산업 지역</option>
