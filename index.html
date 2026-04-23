@@ -3567,7 +3567,8 @@
                                 <div
                                     style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">
                                     <i class="fas fa-cogs" style="font-size: 18px; color: #1e3a8a;"></i>
-                                    <span style="font-size: 15px; font-weight: 800; color: #1e3a8a;">제품 사양 정보</span>
+                                    <span style="font-size: 15px; font-weight: 800; color: #1e3a8a;">제품 사양 정보 (기준 없으면
+                                        해당 없음 명기)</span>
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Product
                                         Specification</span>
                                 </div>
@@ -3595,16 +3596,44 @@
                                             required>
                                     </div>
                                 </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
+                                    <div class="form-field">
+                                        <label style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                            두께 (mm) <span style="color:#ef4444;">*</span>
+                                            <label
+                                                style="display:inline-flex; align-items:center; gap:6px; font-weight:400; font-size:12px; color:#64748b; cursor:pointer; margin:0; white-space:nowrap;">
+                                                <input type="checkbox" id="feas-thickness-std"
+                                                    style="width:auto; margin:0; cursor:pointer; flex-shrink:0;">적용규격에
+                                                따름
+                                            </label>
+                                        </label>
+                                        <div style="display:flex; gap:8px;">
+                                            <input type="text" id="feas-thickness-min" placeholder="최소" style="flex:1;"
+                                                required>
+                                            <input type="text" id="feas-thickness-max" placeholder="최대" style="flex:1;"
+                                                required>
+                                        </div>
+                                    </div>
+                                    <div class="form-field">
+                                        <label style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                            폭 (mm) <span style="color:#ef4444;">*</span>
+                                            <label
+                                                style="display:inline-flex; align-items:center; gap:6px; font-weight:400; font-size:12px; color:#64748b; cursor:pointer; margin:0; white-space:nowrap;">
+                                                <input type="checkbox" id="feas-width-std"
+                                                    style="width:auto; margin:0; cursor:pointer; flex-shrink:0;">적용규격에
+                                                따름
+                                            </label>
+                                        </label>
+                                        <div style="display:flex; gap:8px;">
+                                            <input type="text" id="feas-width-min" placeholder="최소" style="flex:1;"
+                                                required>
+                                            <input type="text" id="feas-width-max" placeholder="최대" style="flex:1;"
+                                                required>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="feas-modal-grid"
-                                    style="margin-bottom: 16px; grid-template-columns: repeat(4, 1fr);">
-                                    <div class="form-field">
-                                        <label>두께 (mm) <span style="color:#ef4444;">*</span></label>
-                                        <input type="text" id="feas-thickness" placeholder="예: 0.50" required>
-                                    </div>
-                                    <div class="form-field">
-                                        <label>폭 (mm) <span style="color:#ef4444;">*</span></label>
-                                        <input type="text" id="feas-width" placeholder="예: 1219" required>
-                                    </div>
+                                    style="margin-bottom: 16px; grid-template-columns: repeat(3, 1fr);">
                                     <div class="form-field">
                                         <label>도금량 <span style="color:#ef4444;">*</span></label>
                                         <input type="text" id="feas-coating" placeholder="예: Z18, AZ150" required>
@@ -3612,6 +3641,10 @@
                                     <div class="form-field">
                                         <label>도막 스펙 <span style="color:#ef4444;">*</span></label>
                                         <input type="text" id="feas-paint-spec" placeholder="예: 5+20μm" required>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>톤당 길이 (m/ton) <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" id="feas-length-per-ton" placeholder="예: 200, 250" required>
                                     </div>
                                 </div>
                                 <div class="feas-modal-grid"
@@ -4940,14 +4973,14 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <script src="data.js"></script>
-    <script src="app.js?v=4.5"></script>
+    <script src="app.js?v=4.6"></script>
     <script>
         // 안전망: JS 오류로 init()가 실행되지 않아도 20초 후 로딩 화면 강제 제거
-        setTimeout(function() {
+        setTimeout(function () {
             var overlay = document.getElementById('loading-overlay');
             if (overlay && overlay.style.display !== 'none') {
                 overlay.style.opacity = '0';
-                setTimeout(function() {
+                setTimeout(function () {
                     overlay.style.display = 'none';
                     document.body.classList.remove('loading-active');
                 }, 500);

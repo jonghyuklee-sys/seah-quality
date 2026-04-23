@@ -83,7 +83,7 @@ async function sendFeasibilityNotification(data) {
         to_emails: emailListStr,
         category: "생산 가능성 검토 요청",
         customer: data.customer || '-',
-        title: `${data.material || ''} / ${data.color || ''} (${data.thickness || ''}x${data.width || ''})`.trim(),
+        title: `${data.material || ''} / ${data.color || ''} (${data.thicknessStd ? '적용규격' : [data.thicknessMin, data.thicknessMax].filter(Boolean).join('~') || ''}x${data.widthStd ? '적용규격' : [data.widthMin, data.widthMax].filter(Boolean).join('~') || ''})`.trim(),
         manager: `${data.requesterTeam || ''} ${data.requesterName || ''}`.trim(),
         receipt_date: data.requestDate || '-',
         spec: `${data.standard || ''} / ${data.coating || ''} / ${data.paintSpec || ''}`.trim(),
@@ -4254,6 +4254,24 @@ window.deleteCertification = async (docId) => {
         feasUploadTrigger.onclick = () => feasAttachmentInput.click();
     }
 
+    // 두께/폭 "적용규격에 따름" 체크박스 토글
+    const setupStdCheckbox = (checkboxId, inputIds) => {
+        const cb = document.getElementById(checkboxId);
+        if (!cb) return;
+        cb.addEventListener('change', () => {
+            inputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.disabled = cb.checked;
+                el.style.backgroundColor = cb.checked ? '#f1f5f9' : '';
+                el.style.color = cb.checked ? '#94a3b8' : '';
+                if (cb.checked) el.value = '';
+            });
+        });
+    };
+    setupStdCheckbox('feas-thickness-std', ['feas-thickness-min', 'feas-thickness-max']);
+    setupStdCheckbox('feas-width-std', ['feas-width-min', 'feas-width-max']);
+
     if (feasAttachmentInput) {
         feasAttachmentInput.onchange = (e) => {
             const files = Array.from(e.target.files);
@@ -4434,7 +4452,9 @@ window.deleteCertification = async (docId) => {
 
             const statusMap = { '접수': {c:'#64748b',i:'⏳'}, '검토중': {c:'#3b82f6',i:'🔍'}, '승인': {c:'#10b981',i:'✅'}, '불가': {c:'#ef4444',i:'❌'}, '보완요청': {c:'#f59e0b',i:'⚠️'} };
             const st = statusMap[req.status] || statusMap['접수'];
-            const specStr = [req.thickness ? req.thickness + 'T' : '', req.width ? req.width + 'W' : ''].filter(Boolean).join(' × ') || '-';
+            const tDisp = req.thicknessStd ? '규격' : ([req.thicknessMin, req.thicknessMax].filter(Boolean).join('~') || req.thickness || '');
+            const wDisp = req.widthStd ? '규격' : ([req.widthMin, req.widthMax].filter(Boolean).join('~') || req.width || '');
+            const specStr = [tDisp ? tDisp + 'T' : '', wDisp ? wDisp + 'W' : ''].filter(Boolean).join(' × ') || '-';
             const requesterDisp = (req.requesterTeam ? `<div style="font-size:10px;color:#94a3b8;">[${req.requesterTeam}]</div>` : '') + `<div style="font-weight:600;color:#334155;">${req.requesterName || '-'}</div>`;
 
             let deleteHtml = '';
@@ -4559,8 +4579,23 @@ window.deleteCertification = async (docId) => {
             setVal('feas-material', req.material);
             setVal('feas-steel-grade', req.steelGrade);
             setVal('feas-standard', req.standard);
-            setVal('feas-thickness', req.thickness);
-            setVal('feas-width', req.width);
+            // 두께 복원
+            const tStdEl = document.getElementById('feas-thickness-std');
+            if (tStdEl) {
+                tStdEl.checked = req.thicknessStd || false;
+                ['feas-thickness-min','feas-thickness-max'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = req.thicknessStd || false; });
+            }
+            setVal('feas-thickness-min', req.thicknessMin || '');
+            setVal('feas-thickness-max', req.thicknessMax || '');
+            // 폭 복원
+            const wStdEl = document.getElementById('feas-width-std');
+            if (wStdEl) {
+                wStdEl.checked = req.widthStd || false;
+                ['feas-width-min','feas-width-max'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = req.widthStd || false; });
+            }
+            setVal('feas-width-min', req.widthMin || '');
+            setVal('feas-width-max', req.widthMax || '');
+            setVal('feas-length-per-ton', req.lengthPerTon || '');
             setVal('feas-coating', req.coating);
             setVal('feas-paint-spec', req.paintSpec);
             setVal('feas-resin-top', req.resinTop || req.resin); // 하위 호환성 위해 resin도 체크
@@ -4588,6 +4623,14 @@ window.deleteCertification = async (docId) => {
             if (replyStatus) replyStatus.value = '접수';
             const teamWrap = document.getElementById('feas-team-custom-wrap');
             if (teamWrap) teamWrap.style.display = 'none';
+            // 새 폼: 두께/폭 체크박스 초기화
+            ['feas-thickness-std','feas-width-std'].forEach(id => {
+                const cb = document.getElementById(id); if (cb) cb.checked = false;
+            });
+            ['feas-thickness-min','feas-thickness-max','feas-width-min','feas-width-max'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.disabled = false; el.style.backgroundColor = ''; el.style.color = ''; }
+            });
         }
         feasibilityModal.style.display = 'flex';
     };
@@ -4640,8 +4683,13 @@ window.deleteCertification = async (docId) => {
                     material: getVal('feas-material'),
                     steelGrade: getVal('feas-steel-grade'),
                     standard: getVal('feas-standard'),
-                    thickness: getVal('feas-thickness'),
-                    width: getVal('feas-width'),
+                    thicknessStd: document.getElementById('feas-thickness-std')?.checked || false,
+                    thicknessMin: getVal('feas-thickness-min'),
+                    thicknessMax: getVal('feas-thickness-max'),
+                    widthStd: document.getElementById('feas-width-std')?.checked || false,
+                    widthMin: getVal('feas-width-min'),
+                    widthMax: getVal('feas-width-max'),
+                    lengthPerTon: getVal('feas-length-per-ton'),
                     coating: getVal('feas-coating'),
                     paintSpec: getVal('feas-paint-spec'),
                     resinTop: getVal('feas-resin-top'),

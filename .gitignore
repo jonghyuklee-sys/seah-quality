@@ -86,3 +86,4 @@ public/
 
 # Firebase cache
 .firebase/
+.claude/
