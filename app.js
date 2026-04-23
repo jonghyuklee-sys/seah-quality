@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.classList.add('viewer-open');
         document.body.style.overflow = 'hidden';
 
-        const isPdf = url.toLowerCase().includes('.pdf') || url.includes('blob:') || url.includes('gs://') || url.includes('firebasestorage');
+        const isPdf = url.toLowerCase().includes('.pdf') || (url.includes('firebasestorage') && !url.toLowerCase().includes('.jpg') && !url.toLowerCase().includes('.jpeg') && !url.toLowerCase().includes('.png') && !url.toLowerCase().includes('.gif') && !url.toLowerCase().includes('.webp'));
 
         if (isPdf) {
             const cleanUrl = url.split('#')[0];
@@ -2351,6 +2351,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    /**
+     * 생산 가능성 검토 알림 메일 발송 (EmailJS 기반)
+     */
+    async function sendFeasibilityNotification(data) {
+        if (localNotifyEmails.length === 0) return;
+
+        const emailListStr = localNotifyEmails.map(item => item.email).join(', ');
+
+        const templateParams = {
+            to_emails: emailListStr,
+            category: "생산 가능성 검토 요청",
+            customer: data.customer || '-',
+            title: `${data.material || ''} / ${data.color || ''} (${data.thickness || ''}x${data.width || ''})`.trim(),
+            manager: `${data.requesterTeam || ''} ${data.requesterName || ''}`.trim(),
+            receipt_date: data.requestDate || '-',
+            // 적용 규격, 도금량, 도막 스펙 포함
+            spec: `${data.standard || ''} / ${data.coating || ''} / ${data.paintSpec || ''}`.trim(),
+            line: data.replyLine || '-',
+            link: window.location.href
+        };
+
+        try {
+            await emailjs.send('service_hxi7rk6', 'template_44ro4gq', templateParams);
+            console.log("✅ 생산 가능성 검토 알림 메일이 성공적으로 발송되었습니다.");
+        } catch (error) {
+            console.error("⚠️ 생산 가능성 검토 메일 발송 실패:", error);
+        }
+    }
+
 
     // --- [9. 강종 상세 정보 탭 시스템] ---
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -4247,9 +4276,130 @@ window.deleteCertification = async (docId) => {
 
     // --- [12. 생산 가능성 검토 (Feasibility) 엔진 - 전면 재구축] ---
     let localFeasibilityRequests = [];
+    let selectedFeasFiles = []; // 신규 첨부 파일 저장용
     const feasibilityListBody = document.getElementById('feasibility-list-body');
     const feasibilityForm = document.getElementById('feasibility-form');
     const feasibilityModal = document.getElementById('feasibility-modal');
+    const feasAttachmentInput = document.getElementById('feas-attachments');
+    const feasUploadTrigger = document.getElementById('feas-upload-trigger');
+    const feasFilePreview = document.getElementById('feas-file-preview');
+
+    if (feasUploadTrigger && feasAttachmentInput) {
+        feasUploadTrigger.onclick = () => feasAttachmentInput.click();
+    }
+
+    if (feasAttachmentInput) {
+        feasAttachmentInput.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            selectedFeasFiles = [...selectedFeasFiles, ...files];
+            renderFeasFilePreview();
+        };
+    }
+
+    function renderFeasFilePreview(existingAttachments = [], requestId = null) {
+        if (!feasFilePreview) return;
+        feasFilePreview.innerHTML = '';
+
+        if (selectedFeasFiles.length === 0 && existingAttachments.length === 0) {
+            feasFilePreview.innerHTML = '<p style="font-size: 12px; color: #94a3b8; margin: 0;">선택된 파일이 없습니다.</p>';
+            return;
+        }
+
+        // 1. 기존 업로드된 파일 표시
+        existingAttachments.forEach((file, idx) => {
+            const div = document.createElement('div');
+            div.className = 'media-preview-item';
+            div.style.cssText = 'width: 70px; height: 70px; position:relative;';
+            
+            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name) || file.url.includes('image');
+            if (isImage) {
+                div.innerHTML = `<img src="${file.url}" alt="${file.name}" onclick="window.openSecureViewer('${file.url}')" style="cursor:pointer;">`;
+            } else {
+                div.innerHTML = `<div onclick="window.openSecureViewer('${file.url}')" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; background:#f1f5f9; color:#64748b;"><i class="fas fa-file-alt"></i></div>`;
+            }
+            
+            // 삭제 버튼 (관리자 또는 작성 권한 확인 로직을 넣을 수 있지만 일단 관리자 모드거나 수정 가능 상태일 때 노출)
+            if (requestId && (window.isAdmin || document.getElementById('save-feasibility-btn').style.display !== 'none')) {
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'media-remove-btn';
+                delBtn.innerHTML = '×';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteUploadedFeasFile(requestId, idx);
+                };
+                div.appendChild(delBtn);
+            }
+            
+            feasFilePreview.appendChild(div);
+        });
+
+        // 2. 새로 선택한 파일 표시
+        selectedFeasFiles.forEach((file, idx) => {
+            const div = document.createElement('div');
+            div.className = 'media-preview-item';
+            div.style.cssText = 'width: 70px; height: 70px; position:relative;';
+            
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="${file.name}">
+                        <button type="button" class="media-remove-btn" onclick="removeSelectedFeasFile(${idx})">×</button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                div.innerHTML = `
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:24px; background:#f1f5f9; color:#64748b;"><i class="fas fa-file-alt"></i></div>
+                    <button type="button" class="media-remove-btn" onclick="removeSelectedFeasFile(${idx})">×</button>
+                    <div style="position:absolute; bottom:0; width:100%; font-size:8px; background:rgba(0,0,0,0.5); color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:2px;">${file.name}</div>
+                `;
+            }
+            feasFilePreview.appendChild(div);
+        });
+    }
+
+    window.removeSelectedFeasFile = (idx) => {
+        selectedFeasFiles.splice(idx, 1);
+        renderFeasFilePreview();
+    };
+
+    window.deleteUploadedFeasFile = async (requestId, fileIdx) => {
+        if (!confirm('이 파일을 서버에서 완전히 삭제하시겠습니까?')) return;
+        
+        try {
+            const doc = await db.collection("feasibility_requests").doc(requestId).get();
+            const data = doc.data();
+            if (!data || !data.attachments) return;
+            
+            const fileToDelete = data.attachments[fileIdx];
+            
+            // 1. Storage에서 파일 삭제
+            try {
+                const fileRef = storage.refFromURL(fileToDelete.url);
+                await fileRef.delete();
+            } catch (e) { console.warn("Storage delete failed (already gone?):", e); }
+            
+            // 2. Firestore 데이터 업데이트
+            const newAttachments = data.attachments.filter((_, i) => i !== fileIdx);
+            await db.collection("feasibility_requests").doc(requestId).update({
+                attachments: newAttachments,
+                updatedAt: new Date().toISOString()
+            });
+            
+            alert('파일이 삭제되었습니다.');
+            
+            // 3. UI 업데이트 (목록 새로고침 및 모달 리렌더링)
+            await loadFeasibilityRequests();
+            const updatedReq = localFeasibilityRequests.find(r => r.id === requestId);
+            if (updatedReq) {
+                renderFeasFilePreview(updatedReq.attachments, requestId);
+            }
+        } catch (err) {
+            alert('파일 삭제 실패: ' + err.message);
+        }
+    };
 
     async function loadFeasibilityRequests() {
         if (!db) return;
@@ -4326,6 +4476,9 @@ window.deleteCertification = async (docId) => {
                 deleteHtml = `<button class="feas-delete-btn" onclick="event.stopPropagation(); deleteFeasibility('${req.id}')" style="border:none; background:#fee2e2; color:#ef4444; width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:11px; transition:all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"><i class="fas fa-trash-alt"></i></button>`;
             }
 
+            const hasAttachments = req.attachments && req.attachments.length > 0;
+            const attachmentIcon = hasAttachments ? `<i class="fas fa-paperclip" style="font-size:10px; color:#3b82f6; margin-left:5px;" title="첨부파일 ${req.attachments.length}개"></i>` : '';
+
             tr.innerHTML = `
                 <td style="padding:10px 6px; text-align:center; color:#94a3b8; font-size:12px;">${filtered.length - idx}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569; white-space:nowrap;">${req.requestDate || '-'}</td>
@@ -4334,7 +4487,7 @@ window.deleteCertification = async (docId) => {
                 <td style="padding:10px 6px; text-align:center; font-size:11px; color:#475569; font-family:'Roboto Mono',monospace;">${specStr}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569;">${req.steelGrade || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569;">${req.standard || '-'}</td>
-                <td style="padding:10px 6px; text-align:center; font-weight:700; color:#1e293b; font-size:13px;">${req.customer || '-'}</td>
+                <td style="padding:10px 6px; text-align:center; font-weight:700; color:#1e293b; font-size:13px;">${req.customer || '-'}${attachmentIcon}</td>
                 <td style="padding:10px 6px; text-align:center; color:#475569; font-size:12px;">${req.usage || '-'}${req.country ? ' <span style="color:#94a3b8;">(' + req.country + ')</span>' : ''}</td>
                 <td style="padding:10px 6px; text-align:center;">
                     <span style="background:${st.c}12; color:${st.c}; padding:4px 8px; border-radius:5px; font-size:10px; font-weight:800; border:1px solid ${st.c}25; white-space:nowrap;">
@@ -4407,9 +4560,18 @@ window.deleteCertification = async (docId) => {
             }
         });
 
+        selectedFeasFiles = []; // 초기화
+        renderFeasFilePreview();
+
         if (id) {
             const req = localFeasibilityRequests.find(r => r.id === id);
             if (!req) return;
+
+            // 기존 첨부파일 표시
+            if (req.attachments && req.attachments.length > 0) {
+                renderFeasFilePreview(req.attachments, id);
+            }
+
             const setVal = (elId, val) => { const e = document.getElementById(elId); if (e) e.value = val || ''; };
             setVal('feas-request-date', req.requestDate);
             // 직접입력 팀명 복원
@@ -4434,7 +4596,9 @@ window.deleteCertification = async (docId) => {
             setVal('feas-thickness', req.thickness);
             setVal('feas-width', req.width);
             setVal('feas-coating', req.coating);
-            setVal('feas-resin', req.resin);
+            setVal('feas-paint-spec', req.paintSpec);
+            setVal('feas-resin-top', req.resinTop || req.resin); // 하위 호환성 위해 resin도 체크
+            setVal('feas-resin-back', req.resinBack);
             setVal('feas-paint-structure', req.paintStructure);
             setVal('feas-color', req.color);
             setVal('feas-film', req.film || '무');
@@ -4477,50 +4641,83 @@ window.deleteCertification = async (docId) => {
             if (teamValue === '직접입력') {
                 teamValue = getVal('feas-team-custom') || '직접입력';
             }
-            const data = {
-                requestDate: getVal('feas-request-date'),
-                requesterTeam: teamValue,
-                requesterName: getVal('feas-requester-name'),
-
-                material: getVal('feas-material'),
-                steelGrade: getVal('feas-steel-grade'),
-                standard: getVal('feas-standard'),
-                thickness: getVal('feas-thickness'),
-                width: getVal('feas-width'),
-                coating: getVal('feas-coating'),
-                resin: getVal('feas-resin'),
-                paintStructure: getVal('feas-paint-structure'),
-                color: getVal('feas-color'),
-                film: getVal('feas-film'),
-                quantity: getVal('feas-quantity'),
-                warranty: getVal('feas-warranty'),
-                customer: getVal('feas-customer'),
-                country: getVal('feas-country'),
-                market: getVal('feas-market'),
-                usage: getVal('feas-usage'),
-                environment: getVal('feas-environment'),
-                remarks: getVal('feas-remarks'),
-                status: getVal('feas-reply-status') || '접수',
-                replyManager: getVal('feas-reply-manager'),
-                replyDate: getVal('feas-reply-date'),
-                replyLine: getVal('feas-reply-line'),
-                replyCondition: getVal('feas-reply-condition'),
-                replyComment: getVal('feas-reply-comment'),
-                updatedAt: new Date().toISOString()
-            };
-
             try {
+                // [파일 업로드 처리]
+                let attachments = [];
+                // 기존 데이터가 있으면 유지 (수정 시)
+                if (id) {
+                    const existingReq = localFeasibilityRequests.find(r => r.id === id);
+                    if (existingReq && existingReq.attachments) {
+                        attachments = [...existingReq.attachments];
+                    }
+                }
+
+                if (selectedFeasFiles.length > 0) {
+                    for (const file of selectedFeasFiles) {
+                        const fileRef = storage.ref(`feasibility/${Date.now()}_${file.name}`);
+                        const uploadTask = await fileRef.put(file);
+                        const downloadURL = await uploadTask.ref.getDownloadURL();
+                        attachments.push({
+                            name: file.name,
+                            url: downloadURL,
+                            type: file.type,
+                            uploadedAt: new Date().toISOString()
+                        });
+                    }
+                }
+
+                const data = {
+                    requestDate: getVal('feas-request-date'),
+                    requesterTeam: teamValue,
+                    requesterName: getVal('feas-requester-name'),
+    
+                    material: getVal('feas-material'),
+                    steelGrade: getVal('feas-steel-grade'),
+                    standard: getVal('feas-standard'),
+                    thickness: getVal('feas-thickness'),
+                    width: getVal('feas-width'),
+                    coating: getVal('feas-coating'),
+                    paintSpec: getVal('feas-paint-spec'),
+                    resinTop: getVal('feas-resin-top'),
+                resinBack: getVal('feas-resin-back'),
+                    paintStructure: getVal('feas-paint-structure'),
+                    color: getVal('feas-color'),
+                    film: getVal('feas-film'),
+                    quantity: getVal('feas-quantity'),
+                    warranty: getVal('feas-warranty'),
+                    customer: getVal('feas-customer'),
+                    country: getVal('feas-country'),
+                    market: getVal('feas-market'),
+                    usage: getVal('feas-usage'),
+                    environment: getVal('feas-environment'),
+                    remarks: getVal('feas-remarks'),
+                    attachments: attachments, // 첨부파일 추가
+                    status: getVal('feas-reply-status') || '접수',
+                    replyManager: getVal('feas-reply-manager'),
+                    replyDate: getVal('feas-reply-date'),
+                    replyLine: getVal('feas-reply-line'),
+                    replyCondition: getVal('feas-reply-condition'),
+                    replyComment: getVal('feas-reply-comment'),
+                    updatedAt: new Date().toISOString()
+                };
+
                 if (id) {
                     await db.collection("feasibility_requests").doc(id).update(data);
                 } else {
                     data.createdAt = new Date().toISOString();
                     await db.collection("feasibility_requests").add(data);
+                    
+                    // 신규 등록 시 알림 메일 발송
+                    if (localNotifyEmails.length > 0) {
+                        await sendFeasibilityNotification(data);
+                    }
                 }
                 alert(id ? '검토 요청이 업데이트되었습니다.' : '신규 검토 요청이 등록되었습니다.');
                 feasibilityModal.style.display = 'none';
                 loadFeasibilityRequests();
             } catch (err) {
                 alert('저장 실패: ' + err.message);
+                console.error(err);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalHTML;
@@ -4530,8 +4727,18 @@ window.deleteCertification = async (docId) => {
 
     window.deleteFeasibility = async (id) => {
         if (!window.isAdmin) { alert('관리자 권한이 필요합니다.'); return; }
-        if (!confirm('이 검토 요청을 삭제하시겠습니까?')) return;
+        if (!confirm('이 검토 요청을 삭제하시겠습니까?\n첨부된 파일도 모두 삭제됩니다.')) return;
         try {
+            const doc = await db.collection("feasibility_requests").doc(id).get();
+            const data = doc.data();
+            if (data && data.attachments && data.attachments.length > 0) {
+                for (const file of data.attachments) {
+                    try {
+                        const fileRef = storage.refFromURL(file.url);
+                        await fileRef.delete();
+                    } catch (e) { console.warn("Storage file delete failed:", e); }
+                }
+            }
             await db.collection("feasibility_requests").doc(id).delete();
             loadFeasibilityRequests();
         } catch (err) { alert('삭제 실패: ' + err.message); }
