@@ -1,4 +1,102 @@
 // 세아씨엠 품질조회 및 고객불만관리(VOC) 통합 엔진
+let localFiles = [];
+let localComplaints = [];
+let localDefects = [];
+let localNotifyEmails = []; 
+
+// --- [알림 메일 담당자 관리 및 발송 엔진] ---
+async function loadNotificationEmails() {
+    if (typeof db === 'undefined') return;
+    try {
+        const snap = await db.collection("notification_settings").get();
+        localNotifyEmails = [];
+        snap.forEach(doc => localNotifyEmails.push({ id: doc.id, ...doc.data() }));
+        if (typeof renderNotificationEmails === 'function') renderNotificationEmails();
+    } catch (e) {
+        console.error("알림 메일 로드 실패:", e);
+    }
+}
+
+function renderNotificationEmails() {
+    const notifyEmailList = document.getElementById('notify-email-list');
+    if (!notifyEmailList) return;
+    if (localNotifyEmails.length === 0) {
+        notifyEmailList.innerHTML = '<div style="color: #94a3b8; font-size: 13px; width: 100%; text-align: center;">등록된 이메일이 없습니다.</div>';
+        return;
+    }
+
+    notifyEmailList.innerHTML = '';
+    localNotifyEmails.forEach(item => {
+        const tag = document.createElement('div');
+        tag.className = 'notify-email-tag';
+        tag.innerHTML = `
+            <span>${item.email}</span>
+            <span class="remove-btn" onclick="deleteNotificationEmail('${item.id}')">
+                <i class="fas fa-times"></i>
+            </span>
+        `;
+        notifyEmailList.appendChild(tag);
+    });
+}
+
+window.deleteNotificationEmail = async (id) => {
+    if (!confirm('해당 이메일을 알림 명단에서 삭제하시겠습니까?')) return;
+    try {
+        await db.collection("notification_settings").doc(id).delete();
+        loadNotificationEmails();
+    } catch (e) {
+        alert('삭제 실패: ' + e.message);
+    }
+};
+
+async function sendVocNotification(vocData) {
+    if (localNotifyEmails.length === 0) await loadNotificationEmails();
+    if (localNotifyEmails.length === 0) return;
+
+    const emailListStr = localNotifyEmails.map(item => item.email).join(', ');
+    const templateParams = {
+        to_emails: emailListStr,
+        category: vocData.category,
+        customer: vocData.customer,
+        title: vocData.title,
+        manager: (vocData.team ? `[${vocData.team}]` : '') + vocData.manager,
+        receipt_date: vocData.receiptDate,
+        spec: vocData.spec,
+        line: vocData.line,
+        link: window.location.href
+    };
+    try {
+        await emailjs.send('service_hxi7rk6', 'template_pb45hu3', templateParams);
+        console.log("✅ VOC 알림 메일 발송 성공");
+    } catch (error) {
+        console.error("⚠️ VOC 메일 발송 실패:", error);
+    }
+}
+
+async function sendFeasibilityNotification(data) {
+    if (localNotifyEmails.length === 0) await loadNotificationEmails();
+    if (localNotifyEmails.length === 0) return;
+
+    const emailListStr = localNotifyEmails.map(item => item.email).join(', ');
+    const templateParams = {
+        to_emails: emailListStr,
+        category: "생산 가능성 검토 요청",
+        customer: data.customer || '-',
+        title: `${data.material || ''} / ${data.color || ''} (${data.thickness || ''}x${data.width || ''})`.trim(),
+        manager: `${data.requesterTeam || ''} ${data.requesterName || ''}`.trim(),
+        receipt_date: data.requestDate || '-',
+        spec: `${data.standard || ''} / ${data.coating || ''} / ${data.paintSpec || ''}`.trim(),
+        line: data.replyLine || '-',
+        link: window.location.href
+    };
+    try {
+        await emailjs.send('service_hxi7rk6', 'template_44ro4gq', templateParams);
+        console.log("✅ 생산 가능성 검토 알림 메일 발송 성공");
+    } catch (error) {
+        console.error("⚠️ 생산 가능성 검토 메일 발송 실패:", error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // --- [1. 전역 상태 및 엘리먼트 참조] ---
     const steelTypeSelect = document.getElementById('steel-type');
@@ -15,12 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    window.isAdmin = sessionStorage.getItem('seahAdminMode') === 'true'; // 전역 스코프로 확장
+    window.isAdmin = sessionStorage.getItem('seahAdminMode') === 'true';
     let isAdmin = window.isAdmin;
-    let localFiles = [];
-    let localComplaints = [];
-    let localDefects = [];
-    let localNotifyEmails = []; // 추가
     let resultsCardWasVisible = false;
 
     // VOC 페이지네이션 및 필터 상태
@@ -2247,139 +2341,6 @@ document.addEventListener('DOMContentLoaded', function () {
             { item: '내염수성\n(5% NaCl)', condition: 'Blister / Rust\n/ Scribe', criteria: '<span class="highlight-blue">1,000 Hr 경과 후</span><br><span class="criteria-item">각 항목 4점 이상</span><span class="criteria-item">Scribe 편측 2mm 이내 침투</span>' }
         ],
     };
-
-    // --- [8.1 VOC 알림 담당자 관리 로직] ---
-    const notifyEmailList = document.getElementById('notify-email-list');
-    const addNotifyEmailBtn = document.getElementById('add-notify-email-btn');
-    const newNotifyEmailInput = document.getElementById('new-notify-email');
-
-    async function loadNotificationEmails() {
-        if (!db) return;
-        try {
-            const snap = await db.collection("notification_settings").get();
-            localNotifyEmails = [];
-            snap.forEach(doc => localNotifyEmails.push({ id: doc.id, ...doc.data() }));
-            renderNotificationEmails();
-        } catch (e) {
-            console.error("알림 메일 로드 실패:", e);
-        }
-    }
-
-    function renderNotificationEmails() {
-        if (!notifyEmailList) return;
-        if (localNotifyEmails.length === 0) {
-            notifyEmailList.innerHTML = '<div style="color: #94a3b8; font-size: 13px; width: 100%; text-align: center;">등록된 이메일이 없습니다.</div>';
-            return;
-        }
-
-        notifyEmailList.innerHTML = '';
-        localNotifyEmails.forEach(item => {
-            const tag = document.createElement('div');
-            tag.className = 'notify-email-tag';
-            tag.innerHTML = `
-                        <span>${item.email}</span>
-                            <span class="remove-btn" onclick="deleteNotificationEmail('${item.id}')">
-                                <i class="fas fa-times"></i>
-                            </span>
-                    `;
-            notifyEmailList.appendChild(tag);
-        });
-    }
-
-    if (addNotifyEmailBtn) {
-        addNotifyEmailBtn.onclick = async () => {
-            const email = newNotifyEmailInput.value.trim();
-            if (!email) return alert('이메일 주소를 입력해주세요.');
-            if (!email.includes('@')) return alert('유효한 이메일 주소를 입력해주세요.');
-
-            if (localNotifyEmails.some(item => item.email === email)) {
-                return alert('이미 등록된 이메일입니다.');
-            }
-
-            try {
-                await db.collection("notification_settings").add({
-                    email: email,
-                    createdAt: new Date().toISOString()
-                });
-                newNotifyEmailInput.value = '';
-                loadNotificationEmails();
-            } catch (e) {
-                alert('추가 실패: ' + e.message);
-            }
-        };
-    }
-
-    window.deleteNotificationEmail = async (id) => {
-        if (!confirm('해당 이메일을 알림 명단에서 삭제하시겠습니까?')) return;
-        try {
-            await db.collection("notification_settings").doc(id).delete();
-            loadNotificationEmails();
-        } catch (e) {
-            alert('삭제 실패: ' + e.message);
-        }
-    };
-
-    /**
-     * VOC 알림 메일 발송 (EmailJS 기반)
-     */
-    async function sendVocNotification(vocData) {
-        if (localNotifyEmails.length === 0) return;
-
-        // 등록된 모든 메일 주소를 콤마로 연결
-        const emailListStr = localNotifyEmails.map(item => item.email).join(', ');
-
-        // 메일 템플릿에 전달할 데이터
-        const templateParams = {
-            to_emails: emailListStr,
-            category: vocData.category,
-            customer: vocData.customer,
-            title: vocData.title,
-            manager: (vocData.team ? `[${vocData.team}]` : '') + vocData.manager,
-            receipt_date: vocData.receiptDate,
-            spec: vocData.spec,
-            line: vocData.line,
-            link: window.location.href
-        };
-
-        try {
-            // 모든 연동 정보 업데이트 완료 (Service: service_hxi7rk6, Template: template_pb45hu3)
-            await emailjs.send('service_hxi7rk6', 'template_pb45hu3', templateParams);
-            console.log("✅ 알림 메일이 성공적으로 발송되었습니다.");
-        } catch (error) {
-            console.error("⚠️ 메일 발송 실패:", error);
-            alert("메일 발송 중 오류가 발생했습니다: " + JSON.stringify(error));
-        }
-    }
-
-    /**
-     * 생산 가능성 검토 알림 메일 발송 (EmailJS 기반)
-     */
-    async function sendFeasibilityNotification(data) {
-        if (localNotifyEmails.length === 0) return;
-
-        const emailListStr = localNotifyEmails.map(item => item.email).join(', ');
-
-        const templateParams = {
-            to_emails: emailListStr,
-            category: "생산 가능성 검토 요청",
-            customer: data.customer || '-',
-            title: `${data.material || ''} / ${data.color || ''} (${data.thickness || ''}x${data.width || ''})`.trim(),
-            manager: `${data.requesterTeam || ''} ${data.requesterName || ''}`.trim(),
-            receipt_date: data.requestDate || '-',
-            // 적용 규격, 도금량, 도막 스펙 포함
-            spec: `${data.standard || ''} / ${data.coating || ''} / ${data.paintSpec || ''}`.trim(),
-            line: data.replyLine || '-',
-            link: window.location.href
-        };
-
-        try {
-            await emailjs.send('service_hxi7rk6', 'template_44ro4gq', templateParams);
-            console.log("✅ 생산 가능성 검토 알림 메일이 성공적으로 발송되었습니다.");
-        } catch (error) {
-            console.error("⚠️ 생산 가능성 검토 메일 발송 실패:", error);
-        }
-    }
-
 
     // --- [9. 강종 상세 정보 탭 시스템] ---
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -4763,4 +4724,5 @@ window.deleteCertification = async (docId) => {
     // Initialize
     loadCertifications();
     loadFeasibilityRequests();
+    loadNotificationEmails(); // 추가
 
