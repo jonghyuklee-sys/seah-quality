@@ -1290,6 +1290,24 @@ document.addEventListener('DOMContentLoaded', function () {
             filtered = localComplaints.filter(v => v.receiptDate && v.receiptDate.startsWith(vocMonthFilter));
         }
 
+        // 접수일 내림차순 정렬 (최신이 위)
+        filtered = [...filtered].sort((a, b) => {
+            const da = a.receiptDate || '';
+            const db = b.receiptDate || '';
+            return db.localeCompare(da);
+        });
+
+        // New 배지 판단 (등록일 기준 3일 이내)
+        const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+        function isNewEntry(v) {
+            let t = v.createdAt;
+            if (!t) return false;
+            if (t.toDate) t = t.toDate();
+            else if (t.seconds) t = new Date(t.seconds * 1000);
+            else t = new Date(t);
+            return t >= threeDaysAgo;
+        }
+
         // 2. Pagination Calculation
         const totalItems = filtered.length;
         const totalPages = Math.ceil(totalItems / vocItemsPerPage);
@@ -1321,7 +1339,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td style="padding:10px 8px; text-align:center; color:#475569; vertical-align:middle;">${managerDisplay}</td>
                 <td style="padding:10px 8px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
                 <td style="padding:10px 8px; text-align:center; color:#334155; font-weight:500; white-space:nowrap;">${v.color || '-'}</td>
-                <td class="voc-title-cell" style="padding:10px 8px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.title}</td>
+                <td class="voc-title-cell" style="padding:10px 8px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${isNewEntry(v) ? '<span style="display:inline-block; background:#10b981; color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px; vertical-align:middle; letter-spacing:0.5px;">NEW</span>' : ''}${v.title}</td>
                 <td style="padding:10px 14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
                 <td style="padding:10px 14px; text-align:center;">
                     <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
