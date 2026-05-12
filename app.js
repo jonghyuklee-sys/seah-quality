@@ -1461,6 +1461,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (m.type === 'video') {
                         thumb.innerHTML = `<video src="${m.url}" style="width:100%; height:100%; object-fit:cover;"></video><span style="position:absolute; bottom:2px; right:2px; font-size:10px; color:white; background:rgba(0,0,0,0.5); padding:0 2px;">▶</span>`;
+                    } else if (m.type === 'document') {
+                        const ext = (m.name || '').split('.').pop().toLowerCase();
+                        const docIcons = { pdf: '📕', xls: '📊', xlsx: '📊', ppt: '📙', pptx: '📙' };
+                        const docColors = { pdf: '#ef4444', xls: '#10b981', xlsx: '#10b981', ppt: '#f59e0b', pptx: '#f59e0b' };
+                        const icon = docIcons[ext] || '📄';
+                        const color = docColors[ext] || '#64748b';
+                        const extLabel = ext.toUpperCase();
+                        thumb.innerHTML = `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;gap:2px;"><span style="font-size:22px;">${icon}</span><span style="font-size:8px;font-weight:800;color:${color};">${extLabel}</span></div>`;
                     } else {
                         thumb.innerHTML = `<img src="${m.url}" style="width:100%; height:100%; object-fit:cover;">`;
                     }
@@ -1521,11 +1529,44 @@ document.addEventListener('DOMContentLoaded', function () {
                             imgPreview.style.display = 'none';
                             videoPreview.src = m.url;
                             videoPreview.style.display = 'block';
+                            // 문서 프리뷰 숨기기
+                            const docPrev = document.getElementById('modal-edit-doc-preview');
+                            if (docPrev) docPrev.style.display = 'none';
+                        } else if (m.type === 'document') {
+                            imgPreview.style.display = 'none';
+                            videoPreview.style.display = 'none';
+                            videoPreview.src = '';
+                            // 문서 프리뷰 표시
+                            let docPrev = document.getElementById('modal-edit-doc-preview');
+                            if (!docPrev) {
+                                docPrev = document.createElement('div');
+                                docPrev.id = 'modal-edit-doc-preview';
+                                document.getElementById('annotation-wrapper').appendChild(docPrev);
+                            }
+                            const ext = (m.name || '').split('.').pop().toLowerCase();
+                            const docIcons = { pdf: '📕', xls: '📊', xlsx: '📊', ppt: '📙', pptx: '📙' };
+                            const docColors = { pdf: '#ef4444', xls: '#10b981', xlsx: '#10b981', ppt: '#f59e0b', pptx: '#f59e0b' };
+                            const icon = docIcons[ext] || '📄';
+                            const color = docColors[ext] || '#64748b';
+                            const fileName = m.name || '첨부파일';
+                            docPrev.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:12px;width:100%;';
+                            docPrev.innerHTML = `
+                                <span style="font-size:56px;">${icon}</span>
+                                <span style="font-size:14px;font-weight:700;color:${color};">${ext.toUpperCase()} 파일</span>
+                                <span style="font-size:12px;color:#64748b;word-break:break-all;text-align:center;max-width:90%;">${fileName}</span>
+                                <a href="${m.url}" target="_blank" rel="noopener noreferrer" 
+                                   style="margin-top:8px;padding:8px 20px;background:${color};color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:opacity 0.2s;"
+                                   onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                                    📥 파일 열기 / 다운로드
+                                </a>`;
                         } else {
                             videoPreview.style.display = 'none';
                             videoPreview.src = '';
                             imgPreview.src = m.url;
                             imgPreview.style.display = 'block';
+                            // 문서 프리뷰 숨기기
+                            const docPrev = document.getElementById('modal-edit-doc-preview');
+                            if (docPrev) docPrev.style.display = 'none';
                         }
                     };
                     mediaGallery.appendChild(thumb);
@@ -1560,24 +1601,43 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
+    function getFileExtension(filename) {
+        return (filename || '').split('.').pop().toLowerCase();
+    }
+
+    function isDocumentFile(file) {
+        const docExts = ['pdf', 'xls', 'xlsx', 'ppt', 'pptx'];
+        return docExts.includes(getFileExtension(file.name));
+    }
+
     function renderPreview(files, container) {
         if (!container) return;
         container.innerHTML = '';
         files.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const item = document.createElement('div');
-                item.className = 'media-preview-item';
+            const item = document.createElement('div');
+            item.className = 'media-preview-item';
 
-                if (file.type.startsWith('image/')) {
-                    item.innerHTML = `<img src="${event.target.result}">`;
-                } else {
-                    item.innerHTML = `<video src="${event.target.result}"></video><span style="position:absolute; bottom:2px; right:2px; font-size:10px; color:white; background:rgba(0,0,0,0.5); padding:0 2px;">▶</span>`;
-                }
-
+            if (isDocumentFile(file)) {
+                const ext = getFileExtension(file.name);
+                const docIcons = { pdf: '📕', xls: '📊', xlsx: '📊', ppt: '📙', pptx: '📙' };
+                const docColors = { pdf: '#ef4444', xls: '#10b981', xlsx: '#10b981', ppt: '#f59e0b', pptx: '#f59e0b' };
+                const icon = docIcons[ext] || '📄';
+                const color = docColors[ext] || '#64748b';
+                item.innerHTML = `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;gap:4px;"><span style="font-size:22px;">${icon}</span><span style="font-size:8px;font-weight:800;color:${color};">${ext.toUpperCase()}</span></div>`;
+                item.title = file.name;
                 container.appendChild(item);
-            };
-            reader.readAsDataURL(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (file.type.startsWith('image/')) {
+                        item.innerHTML = `<img src="${event.target.result}">`;
+                    } else {
+                        item.innerHTML = `<video src="${event.target.result}"></video><span style="position:absolute; bottom:2px; right:2px; font-size:10px; color:white; background:rgba(0,0,0,0.5); padding:0 2px;">▶</span>`;
+                    }
+                    container.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            }
         });
     }
 
@@ -1587,9 +1647,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const ref = storage.ref(`complaints/${Date.now()}_${file.name}`);
             await ref.put(file);
             const url = await ref.getDownloadURL();
+            let fileType = 'image';
+            if (file.type.startsWith('video')) {
+                fileType = 'video';
+            } else if (isDocumentFile(file)) {
+                fileType = 'document';
+            }
             results.push({
                 url,
-                type: file.type.startsWith('video') ? 'video' : 'image',
+                type: fileType,
                 name: file.name
             });
         }
