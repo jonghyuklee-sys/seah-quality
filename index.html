@@ -3935,14 +3935,16 @@
                             <!-- Row 1: 기본 정보 -->
                             <div class="form-field">
                                 <label>구분</label>
-                                <select id="voc-category">
+                                <select id="voc-category" required>
+                                    <option value="">구분 선택</option>
                                     <option value="클레임">클레임 (Claim)</option>
                                     <option value="컴플레인">컴플레인 (Complain)</option>
                                 </select>
                             </div>
                             <div class="form-field">
                                 <label>내수/수출</label>
-                                <select id="voc-market">
+                                <select id="voc-market" required>
+                                    <option value="">선택</option>
                                     <option value="내수">내수</option>
                                     <option value="수출">수출</option>
                                 </select>
@@ -3972,11 +3974,11 @@
                             </div>
                             <div class="form-field">
                                 <label>색상명</label>
-                                <input type="text" id="voc-color" placeholder="Color Name">
+                                <input type="text" id="voc-color" placeholder="Color Name" required>
                             </div>
                             <div class="form-field">
                                 <label>배치번호 (Batch)</label>
-                                <input type="text" id="voc-batch" placeholder="Lot No.">
+                                <input type="text" id="voc-batch" placeholder="Lot No." required>
                             </div>
 
                             <!-- Row 3: 생산 정보 -->
@@ -3986,7 +3988,8 @@
                             </div>
                             <div class="form-field">
                                 <label>생산 라인</label>
-                                <select id="voc-line">
+                                <select id="voc-line" required>
+                                    <option value="">라인 선택</option>
                                     <option value="CPL">CPL</option>
                                     <option value="CRM">CRM</option>
                                     <option value="CGL">CGL</option>
@@ -3998,21 +4001,21 @@
                             </div>
                             <div class="form-field">
                                 <label>생산 일자</label>
-                                <input type="date" id="voc-prod-date">
+                                <input type="date" id="voc-prod-date" required>
                             </div>
 
                             <!-- Row 4: 수량 및 불량 유형, 사진 -->
                             <div class="form-field">
                                 <label>납품 수량</label>
-                                <input type="text" id="voc-delivery-qty" placeholder="수량">
+                                <input type="text" id="voc-delivery-qty" placeholder="수량" required>
                             </div>
                             <div class="form-field">
                                 <label>불만 수량</label>
-                                <input type="text" id="voc-complaint-qty" placeholder="수량">
+                                <input type="text" id="voc-complaint-qty" placeholder="수량" required>
                             </div>
                             <div class="form-field">
                                 <label>불량 유형</label>
-                                <select id="voc-defect-type">
+                                <select id="voc-defect-type" required>
                                     <option value="">유형 선택</option>
                                     <option value="도장박리">도장박리 (Peeling)</option>
                                     <option value="색차">색차 (Color Difference)</option>
@@ -4047,7 +4050,7 @@
                             <div class="form-field" style="grid-column: span 4;">
                                 <label>불만 상세 현상</label>
                                 <textarea id="voc-desc" rows="2"
-                                    placeholder="불만 사항의 구체적인 현상을 입력하세요 (예: 제품 표면에 긁힘 발생, 도장 벗겨짐 등)"></textarea>
+                                    placeholder="불만 사항의 구체적인 현상을 입력하세요 (예: 제품 표면에 긁힘 발생, 도장 벗겨짐 등)" required></textarea>
                             </div>
                         </form>
                     </div>
