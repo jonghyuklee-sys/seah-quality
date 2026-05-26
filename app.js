@@ -4108,239 +4108,7 @@ const initialCertData = [
     { id: 28, name: "JIS G 3131", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" }
 ];
 
-async function loadCertifications() {
-    if (!db) return;
-    try {
-        const snap = await db.collection("certifications").get();
-        let loaded = [];
-        snap.forEach(doc => loaded.push({ docId: doc.id, ...doc.data() }));
-
-        const currentIsAdmin = window.isAdmin || false;
-
-        if (loaded.length !== initialCertData.length && currentIsAdmin) {
-            try {
-                const batchDelete = db.batch();
-                snap.forEach(doc => batchDelete.delete(doc.ref));
-                await batchDelete.commit();
-
-                const batch = db.batch();
-                initialCertData.forEach(d => {
-                    const ref = db.collection("certifications").doc();
-                    batch.set(ref, { ...d, createdAt: new Date().toISOString() });
-                });
-                await batch.commit();
-
-                const newSnap = await db.collection("certifications").get();
-                loaded = [];
-                newSnap.forEach(doc => loaded.push({ docId: doc.id, ...doc.data() }));
-            } catch (seedErr) {
-                console.warn("Seeding failed (permissions?):", seedErr);
-            }
-        }
-
-        if (loaded.length === 0) {
-            localCertifications = initialCertData.map(item => ({ ...item, docId: 'local-' + item.id }));
-        } else {
-            localCertifications = loaded.sort((a, b) => a.id - b.id);
-        }
-        renderCertification();
-    } catch (e) {
-        console.error("Failed to load certifications:", e);
-        localCertifications = initialCertData.map(item => ({ ...item, docId: 'local-' + item.id }));
-        renderCertification();
-    }
-}
-
-function renderCertification() {
-    const tbody = document.getElementById('certification-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    const today = new Date();
-
-    localCertifications.forEach(row => {
-        let remainHtml = '';
-        let validDateDisplay = row.validDate;
-
-        if (row.validDate === 'Infinite') {
-            validDateDisplay = '유효기간 없음';
-            remainHtml = '<span class="status-badge" style="background:#10b981;">Permanent</span>';
-        } else if (row.validDate === 'Pending') {
-            validDateDisplay = '-';
-            remainHtml = '<span class="status-badge" style="background:#64748b;">Pending</span>';
-        } else {
-            validDateDisplay = '~ ' + (row.validDate || '').replace(/-/g, '.');
-            // D-Day Calc
-            const normalizedDate = (row.validDate || '').replace(/\./g, '-');
-            const endDate = new Date(normalizedDate);
-
-            if (!isNaN(endDate.getTime())) {
-                const diffTime = endDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays > 365) {
-                    remainHtml = `<span class="status-badge" style="background:#3b82f6;">D-${diffDays}</span>`;
-                } else if (diffDays > 0) {
-                    remainHtml = `<span class="status-badge" style="background:#f59e0b;">D-${diffDays}</span>`;
-                } else {
-                    remainHtml = `<span class="status-badge" style="background:#ef4444;">Expired</span>`;
-                }
-            } else {
-                remainHtml = '<span class="status-badge" style="background:#64748b;">-</span>';
-            }
-        }
-
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid #e2e8f0';
-        tr.style.height = '48px';
-
-        // Hover effect
-        tr.onmouseover = () => tr.style.background = '#f8fafc';
-        tr.onmouseout = () => tr.style.background = 'white';
-
-        let adminActionHtml = '';
-        const currentIsAdmin = window.isAdmin;
-        if (currentIsAdmin) {
-            adminActionHtml = `
-                    <td class="admin-only" style="text-align:center;">
-                        <button class="btn-icon" onclick="openCertModal('${row.docId}')" style="color:#3b82f6;">✏️</button>
-                        <button class="btn-icon" onclick="deleteCertification('${row.docId}')" style="color:#ef4444;">🗑️</button>
-                    </td>
-                `;
-        } else {
-            adminActionHtml = `<td class="admin-only" style="text-align:center; color:#94a3b8;">-</td>`;
-        }
-
-
-        tr.innerHTML = `
-                <td style="text-align:center; padding:10px; font-weight:bold; color:#64748b;">${row.id}</td>
-                <td style="text-align:center; padding:10px; font-weight:700; color:#1e3a8a;">${row.name}</td>
-                <td style="text-align:left; padding:10px; font-size:13px;">${row.item}</td>
-                <td style="text-align:center; padding:10px; font-size:13px;">${row.org}</td>
-                <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.firstDate}</td>
-                <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.recentDate}</td>
-                <td style="text-align:center; padding:10px; font-size:13px; font-weight:bold;">${validDateDisplay}</td>
-                <td style="text-align:center; padding:10px;">${remainHtml}</td>
-                <td style="text-align:center; padding:10px; font-size:12px; white-space:pre-line; color:#64748b;">${row.note}</td>
-                ${adminActionHtml}
-            `;
-        tbody.appendChild(tr);
-    });
-
-    // Hide 'admin-only' columns if not admin
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = window.isAdmin ? '' : 'none';
-    });
-}
-
-// Modal & Form Logic
-const certModal = document.getElementById('cert-modal');
-const certForm = document.getElementById('cert-form');
-const addCertBtn = document.getElementById('add-cert-btn');
-
-if (addCertBtn) addCertBtn.onclick = () => openCertModal();
-
-window.openCertModal = (docId = null) => {
-    if (!certModal) return;
-    
-    // 'undefined' 또는 'null' 문자열 방어 처리
-    if (docId === 'undefined' || docId === 'null') docId = null;
-
-    document.getElementById('cert-id-hidden').value = docId || '';
-    document.getElementById('cert-modal-title').textContent = docId ? '🏆 인증 정보 수정' : '🏆 신규 인증 등록';
-
-    if (docId) {
-        const row = localCertifications.find(c => c.docId === docId);
-        if (row) {
-            document.getElementById('cert-no').value = row.id;
-            document.getElementById('cert-name').value = row.name;
-            document.getElementById('cert-item').value = row.item;
-            document.getElementById('cert-org').value = row.org;
-            // Handle text-based dates (allow '-')
-            const fDate = row.firstDate || '';
-            const rDate = row.recentDate || '';
-            document.getElementById('cert-first-date').value = fDate;
-            document.getElementById('cert-recent-date').value = rDate;
-
-            // Sync pickers if they look like valid dates
-            const fPicker = document.getElementById('cert-first-date-picker');
-            const rPicker = document.getElementById('cert-recent-date-picker');
-            if (fPicker) fPicker.value = fDate.includes('.') ? fDate.replace(/\./g, '-') : (fDate.length === 10 ? fDate : '');
-            if (rPicker) rPicker.value = rDate.includes('.') ? rDate.replace(/\./g, '-') : (rDate.length === 10 ? rDate : '');
-
-            const vDate = row.validDate || '';
-            document.getElementById('cert-valid-date').value = vDate;
-            const vDatePicker = document.getElementById('cert-valid-date-picker');
-            if (vDatePicker) vDatePicker.value = vDate.includes('.') ? vDate.replace(/\./g, '-') : (vDate.length === 10 ? vDate : '');
-
-            document.getElementById('cert-note').value = row.note;
-        }
-    } else {
-        certForm.reset();
-        // Clear all pickers
-        ['cert-first-date-picker', 'cert-recent-date-picker', 'cert-valid-date-picker'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        // Auto number
-        const maxId = localCertifications.length > 0 ? Math.max(...localCertifications.map(c => c.id)) : 0;
-        document.getElementById('cert-no').value = maxId + 1;
-    }
-    certModal.style.display = 'flex';
-};
-
-if (certForm) {
-    certForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const docId = document.getElementById('cert-id-hidden').value;
-        const data = {
-            id: parseInt(document.getElementById('cert-no').value) || 0,
-            name: document.getElementById('cert-name').value,
-            item: document.getElementById('cert-item').value,
-            org: document.getElementById('cert-org').value,
-            firstDate: document.getElementById('cert-first-date').value,
-            recentDate: document.getElementById('cert-recent-date').value,
-            validDate: document.getElementById('cert-valid-date').value,
-            note: document.getElementById('cert-note').value
-        };
-
-        // 로컬 임시 ID나 undefined가 아닌 유효한 Firestore ID일 때만 수정(Update) 처리
-        const isEdit = docId && !docId.startsWith('local-') && docId !== 'undefined' && docId !== 'null';
-
-        try {
-            if (isEdit) {
-                await db.collection("certifications").doc(docId).update(data);
-            } else {
-                await db.collection("certifications").add({ ...data, createdAt: new Date().toISOString() });
-            }
-            certModal.style.display = 'none';
-            loadCertifications();
-        } catch (err) {
-            alert("저장 실패 (Firestore 권한 또는 규칙을 확인하세요): " + err.message);
-        }
-    };
-}
-
-window.deleteCertification = async (docId) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-    
-    // 로컬 임시 ID나 undefined가 아닌 유효한 Firestore ID일 때만 DB 삭제 처리
-    const isFirestoreDoc = docId && !docId.startsWith('local-') && docId !== 'undefined' && docId !== 'null';
-
-    try {
-        if (isFirestoreDoc) {
-            await db.collection("certifications").doc(docId).delete();
-            loadCertifications();
-        } else {
-            // 로컬 fallback 데이터 상태인 경우 리스트에서 제외하고 화면 갱신
-            localCertifications = localCertifications.filter(c => c.docId !== docId);
-            renderCertification();
-            alert("로컬 화면에서 삭제되었습니다. (DB에 반영하려면 Firebase 권한 설정이 필요합니다)");
-        }
-    } catch (err) {
-        alert("삭제 실패 (Firestore 권한 또는 규칙을 확인하세요): " + err.message);
-    }
-};
+    // [Certification Status Logic - Globally Isolated (Moved to global scope below DOMContentLoaded)]
 
     // --- [12. 생산 가능성 검토 (Feasibility) 엔진 - 전면 재구축] ---
     let localFeasibilityRequests = [];
@@ -4878,5 +4646,239 @@ window.deleteCertification = async (docId) => {
     loadCertifications();
     loadFeasibilityRequests();
     loadNotificationEmails();
+});
+
+// =========================================================================
+// --- [14. Certification Status Logic (Dynamic & Globally Isolated)] ---
+// =========================================================================
+async function loadCertifications() {
+    if (typeof db === 'undefined' || !db) return;
+    try {
+        const snap = await db.collection("certifications").get();
+        let loaded = [];
+        snap.forEach(doc => loaded.push({ docId: doc.id, ...doc.data() }));
+
+        const currentIsAdmin = window.isAdmin || false;
+
+        if (loaded.length !== initialCertData.length && currentIsAdmin) {
+            try {
+                const batchDelete = db.batch();
+                snap.forEach(doc => batchDelete.delete(doc.ref));
+                await batchDelete.commit();
+
+                const batch = db.batch();
+                initialCertData.forEach(d => {
+                    const ref = db.collection("certifications").doc();
+                    batch.set(ref, { ...d, createdAt: new Date().toISOString() });
+                });
+                await batch.commit();
+
+                const newSnap = await db.collection("certifications").get();
+                loaded = [];
+                newSnap.forEach(doc => loaded.push({ docId: doc.id, ...doc.data() }));
+            } catch (seedErr) {
+                console.warn("Seeding failed (permissions?):", seedErr);
+            }
+        }
+
+        if (loaded.length === 0) {
+            localCertifications = initialCertData.map(item => ({ ...item, docId: 'local-' + item.id }));
+        } else {
+            localCertifications = loaded.sort((a, b) => a.id - b.id);
+        }
+        renderCertification();
+    } catch (e) {
+        console.error("Failed to load certifications:", e);
+        localCertifications = initialCertData.map(item => ({ ...item, docId: 'local-' + item.id }));
+        renderCertification();
+    }
+}
+
+function renderCertification() {
+    const tbody = document.getElementById('certification-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const today = new Date();
+
+    localCertifications.forEach(row => {
+        let remainHtml = '';
+        let validDateDisplay = row.validDate;
+
+        if (row.validDate === 'Infinite') {
+            validDateDisplay = '유효기간 없음';
+            remainHtml = '<span class="status-badge" style="background:#10b981;">Permanent</span>';
+        } else if (row.validDate === 'Pending') {
+            validDateDisplay = '-';
+            remainHtml = '<span class="status-badge" style="background:#64748b;">Pending</span>';
+        } else {
+            validDateDisplay = '~ ' + (row.validDate || '').replace(/-/g, '.');
+            // D-Day Calc
+            const normalizedDate = (row.validDate || '').replace(/\./g, '-');
+            const endDate = new Date(normalizedDate);
+
+            if (!isNaN(endDate.getTime())) {
+                const diffTime = endDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 365) {
+                    remainHtml = `<span class="status-badge" style="background:#3b82f6;">D-${diffDays}</span>`;
+                } else if (diffDays > 0) {
+                    remainHtml = `<span class="status-badge" style="background:#f59e0b;">D-${diffDays}</span>`;
+                } else {
+                    remainHtml = `<span class="status-badge" style="background:#ef4444;">Expired</span>`;
+                }
+            } else {
+                remainHtml = '<span class="status-badge" style="background:#64748b;">-</span>';
+            }
+        }
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #e2e8f0';
+        tr.style.height = '48px';
+
+        // Hover effect
+        tr.onmouseover = () => tr.style.background = '#f8fafc';
+        tr.onmouseout = () => tr.style.background = 'white';
+
+        let adminActionHtml = '';
+        const currentIsAdmin = window.isAdmin;
+        if (currentIsAdmin) {
+            adminActionHtml = `
+                    <td class="admin-only" style="text-align:center;">
+                        <button class="btn-icon" onclick="openCertModal('${row.docId}')" style="color:#3b82f6;">✏️</button>
+                        <button class="btn-icon" onclick="deleteCertification('${row.docId}')" style="color:#ef4444;">🗑️</button>
+                    </td>
+                `;
+        } else {
+            adminActionHtml = `<td class="admin-only" style="text-align:center; color:#94a3b8;">-</td>`;
+        }
+
+
+        tr.innerHTML = `
+                <td style="text-align:center; padding:10px; font-weight:bold; color:#64748b;">${row.id}</td>
+                <td style="text-align:center; padding:10px; font-weight:700; color:#1e3a8a;">${row.name}</td>
+                <td style="text-align:left; padding:10px; font-size:13px;">${row.item}</td>
+                <td style="text-align:center; padding:10px; font-size:13px;">${row.org}</td>
+                <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.firstDate}</td>
+                <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.recentDate}</td>
+                <td style="text-align:center; padding:10px; font-size:13px; font-weight:bold;">${validDateDisplay}</td>
+                <td style="text-align:center; padding:10px;">${remainHtml}</td>
+                <td style="text-align:center; padding:10px; font-size:12px; white-space:pre-line; color:#64748b;">${row.note}</td>
+                ${adminActionHtml}
+            `;
+        tbody.appendChild(tr);
+    });
+
+    // Hide 'admin-only' columns if not admin
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = window.isAdmin ? '' : 'none';
+    });
+}
+
+window.openCertModal = (docId = null) => {
+    const certModal = document.getElementById('cert-modal');
+    const certForm = document.getElementById('cert-form');
+    if (!certModal) return;
+    
+    // 'undefined' 또는 'null' 문자열 방어 처리
+    if (docId === 'undefined' || docId === 'null') docId = null;
+
+    document.getElementById('cert-id-hidden').value = docId || '';
+    document.getElementById('cert-modal-title').textContent = docId ? '🏆 인증 정보 수정' : '🏆 신규 인증 등록';
+
+    if (docId) {
+        const row = localCertifications.find(c => c.docId === docId);
+        if (row) {
+            document.getElementById('cert-no').value = row.id;
+            document.getElementById('cert-name').value = row.name;
+            document.getElementById('cert-item').value = row.item;
+            document.getElementById('cert-org').value = row.org;
+            
+            const fDate = row.firstDate || '';
+            const rDate = row.recentDate || '';
+            document.getElementById('cert-first-date').value = fDate;
+            document.getElementById('cert-recent-date').value = rDate;
+
+            const fPicker = document.getElementById('cert-first-date-picker');
+            const rPicker = document.getElementById('cert-recent-date-picker');
+            if (fPicker) fPicker.value = fDate.includes('.') ? fDate.replace(/\./g, '-') : (fDate.length === 10 ? fDate : '');
+            if (rPicker) rPicker.value = rDate.includes('.') ? rDate.replace(/\./g, '-') : (rDate.length === 10 ? rDate : '');
+
+            const vDate = row.validDate || '';
+            document.getElementById('cert-valid-date').value = vDate;
+            const vDatePicker = document.getElementById('cert-valid-date-picker');
+            if (vDatePicker) vDatePicker.value = vDate.includes('.') ? vDate.replace(/\./g, '-') : (vDate.length === 10 ? vDate : '');
+
+            document.getElementById('cert-note').value = row.note;
+        }
+    } else {
+        if (certForm) certForm.reset();
+        ['cert-first-date-picker', 'cert-recent-date-picker', 'cert-valid-date-picker'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const maxId = localCertifications.length > 0 ? Math.max(...localCertifications.map(c => c.id)) : 0;
+        document.getElementById('cert-no').value = maxId + 1;
+    }
+    certModal.style.display = 'flex';
+};
+
+window.deleteCertification = async (docId) => {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+    
+    const isFirestoreDoc = docId && !docId.startsWith('local-') && docId !== 'undefined' && docId !== 'null';
+
+    try {
+        if (isFirestoreDoc) {
+            await db.collection("certifications").doc(docId).delete();
+            loadCertifications();
+        } else {
+            localCertifications = localCertifications.filter(c => c.docId !== docId);
+            renderCertification();
+            alert("로컬 화면에서 삭제되었습니다. (DB에 반영하려면 Firebase 권한 설정이 필요합니다)");
+        }
+    } catch (err) {
+        alert("삭제 실패 (Firestore 권한 또는 규칙을 확인하세요): " + err.message);
+    }
+};
+
+// 전역 이벤트 위임 등록 (DOMContentLoaded 오류와 무관하게 동작 보장)
+document.addEventListener('submit', async (e) => {
+    if (e.target && e.target.id === 'cert-form') {
+        e.preventDefault();
+        const docId = document.getElementById('cert-id-hidden').value;
+        const data = {
+            id: parseInt(document.getElementById('cert-no').value) || 0,
+            name: document.getElementById('cert-name').value,
+            item: document.getElementById('cert-item').value,
+            org: document.getElementById('cert-org').value,
+            firstDate: document.getElementById('cert-first-date').value,
+            recentDate: document.getElementById('cert-recent-date').value,
+            validDate: document.getElementById('cert-valid-date').value,
+            note: document.getElementById('cert-note').value
+        };
+
+        const isEdit = docId && !docId.startsWith('local-') && docId !== 'undefined' && docId !== 'null';
+
+        try {
+            if (isEdit) {
+                await db.collection("certifications").doc(docId).update(data);
+            } else {
+                await db.collection("certifications").add({ ...data, createdAt: new Date().toISOString() });
+            }
+            const certModal = document.getElementById('cert-modal');
+            if (certModal) certModal.style.display = 'none';
+            loadCertifications();
+        } catch (err) {
+            alert("저장 실패 (Firestore 권한 또는 규칙을 확인하세요): " + err.message);
+        }
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target && (e.target.id === 'add-cert-btn' || e.target.closest('#add-cert-btn'))) {
+        openCertModal();
+    }
 });
 
