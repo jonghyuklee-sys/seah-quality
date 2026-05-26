@@ -4139,14 +4139,14 @@ async function loadCertifications() {
         }
 
         if (loaded.length === 0) {
-            localCertifications = [...initialCertData];
+            localCertifications = initialCertData.map(item => ({ ...item, docId: 'local-' + item.id }));
         } else {
             localCertifications = loaded.sort((a, b) => a.id - b.id);
         }
         renderCertification();
     } catch (e) {
         console.error("Failed to load certifications:", e);
-        localCertifications = [...initialCertData];
+        localCertifications = initialCertData.map(item => ({ ...item, docId: 'local-' + item.id }));
         renderCertification();
     }
 }
@@ -4242,6 +4242,10 @@ if (addCertBtn) addCertBtn.onclick = () => openCertModal();
 
 window.openCertModal = (docId = null) => {
     if (!certModal) return;
+    
+    // 'undefined' 또는 'null' 문자열 방어 처리
+    if (docId === 'undefined' || docId === 'null') docId = null;
+
     document.getElementById('cert-id-hidden').value = docId || '';
     document.getElementById('cert-modal-title').textContent = docId ? '🏆 인증 정보 수정' : '🏆 신규 인증 등록';
 
@@ -4300,8 +4304,11 @@ if (certForm) {
             note: document.getElementById('cert-note').value
         };
 
+        // 로컬 임시 ID나 undefined가 아닌 유효한 Firestore ID일 때만 수정(Update) 처리
+        const isEdit = docId && !docId.startsWith('local-') && docId !== 'undefined' && docId !== 'null';
+
         try {
-            if (docId) {
+            if (isEdit) {
                 await db.collection("certifications").doc(docId).update(data);
             } else {
                 await db.collection("certifications").add({ ...data, createdAt: new Date().toISOString() });
@@ -4309,18 +4316,29 @@ if (certForm) {
             certModal.style.display = 'none';
             loadCertifications();
         } catch (err) {
-            alert("저장 실패: " + err.message);
+            alert("저장 실패 (Firestore 권한 또는 규칙을 확인하세요): " + err.message);
         }
     };
 }
 
 window.deleteCertification = async (docId) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
+    
+    // 로컬 임시 ID나 undefined가 아닌 유효한 Firestore ID일 때만 DB 삭제 처리
+    const isFirestoreDoc = docId && !docId.startsWith('local-') && docId !== 'undefined' && docId !== 'null';
+
     try {
-        await db.collection("certifications").doc(docId).delete();
-        loadCertifications();
+        if (isFirestoreDoc) {
+            await db.collection("certifications").doc(docId).delete();
+            loadCertifications();
+        } else {
+            // 로컬 fallback 데이터 상태인 경우 리스트에서 제외하고 화면 갱신
+            localCertifications = localCertifications.filter(c => c.docId !== docId);
+            renderCertification();
+            alert("로컬 화면에서 삭제되었습니다. (DB에 반영하려면 Firebase 권한 설정이 필요합니다)");
+        }
     } catch (err) {
-        alert("삭제 실패: " + err.message);
+        alert("삭제 실패 (Firestore 권한 또는 규칙을 확인하세요): " + err.message);
     }
 };
 
