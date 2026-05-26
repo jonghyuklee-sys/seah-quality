@@ -5,6 +5,38 @@ let localDefects = [];
 let localNotifyEmails = [];
 let localCertifications = []; 
 
+// Initial Seed Data (Globally Available)
+const initialCertData = [
+    { id: 1, name: "ISO 9001", item: "품질경영시스템 (ISO 9001:2015)", org: "한국표준협회", firstDate: "2000-12-01", recentDate: "2024.10.10", validDate: "2027.10.09", note: "3년 주기\n(1년 정기 심사)" },
+    { id: 2, name: "ISO 14001", item: "환경경영시스템 (ISO 14001:2015)", org: "크레비즈인증원", firstDate: "2013.05.24", recentDate: "2025.05.24", validDate: "2028.05.23", note: "3년 주기" },
+    { id: 3, name: "ISO 45001", item: "안전보건경영시스템 (ISO 45001:2018)", org: "크레비즈인증원", firstDate: "2017-12-01", recentDate: "2023.12.01", validDate: "2026.11.30", note: "3년 주기" },
+    { id: 4, name: "KS D 3506", item: "용융아연도금강판 및 강대", org: "한국표준협회", firstDate: "2007-04-11", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
+    { id: 5, name: "KS D 3520", item: "도장 용융 아연 도금 강판 및 강대", org: "한국표준협회", firstDate: "1999-11-25", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
+    { id: 6, name: "KS D 3770", item: "용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2021-09-15", recentDate: "2024.09.14", validDate: "2027.09.14", note: "3년 주기" },
+    { id: 7, name: "KS D 3862", item: "도장용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2020-04-01", recentDate: "2023.04.12", validDate: "2026.03.31", note: "3년 주기" },
+    { id: 8, name: "KS D 6711", item: "알루미늄 및 알루미늄 합금의 도장판 및 띠", org: "한국표준협회", firstDate: "2015-12-23", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
+    { id: 9, name: "JIS G 3302", item: "용융아연도금강판 및 강대", org: "한국표준협회", firstDate: "2009-10-22", recentDate: "2024.10.21", validDate: "2027.10.21", note: "3년 주기" },
+    { id: 10, name: "JIS G 3312", item: "도장용융아연도금강판 및 강대 1류,2류", org: "한국표준협회", firstDate: "2009-10-22", recentDate: "2024.10.21", validDate: "2027.10.21", note: "3년 주기" },
+    { id: 11, name: "JIS G 3321", item: "용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2022-02-11", recentDate: "2025.03.21", validDate: "2028.02.10", note: "3년 주기" },
+    { id: 12, name: "JIS G 3322", item: "도장용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2017-06-02", recentDate: "2023.06.25", validDate: "2026.06.01", note: "3년 주기" },
+    { id: 13, name: "BIS", item: "Continuously Pre-Painted Galvanized Steel Sheets", org: "인도표준협회", firstDate: "2020-09-28", recentDate: "2025.09.28", validDate: "2026.09.27", note: "1년 주기" },
+    { id: 14, name: "MED Module B", item: "That the surface materials and floor coverings whith low flame-spread characteristics : decorative veneers", org: "DNV", firstDate: "2018-12-28", recentDate: "2023.12.11", validDate: "2028.12.10", note: "5년 주기" },
+    { id: 15, name: "MED Module D", item: "That the Quality system for the products.", org: "DNV", firstDate: "2019-10-10", recentDate: "2024.12.19", validDate: "2029.12.18", note: "5년 주기\n(1년 정기 심사)" },
+    { id: 16, name: "HB 인증", item: "도장용융아연도금강판 및 강대(KS D 3520)", org: "한국공기청정협회", firstDate: "2018.09.28", recentDate: "2024.09.27", validDate: "2027.09.27", note: "3년 주기" },
+    { id: 17, name: "HB 인증", item: "컬러 알루미늄 강판(KS D 6711 A3003 H22)", org: "한국공기청정협회", firstDate: "2021.01.29", recentDate: "2024.01.28", validDate: "2027.01.28", note: "3년 주기" },
+    { id: 18, name: "HB 인증", item: "컬러 알루미늄 강판(KS D 6711 A1100 H16)", org: "한국공기청정협회", firstDate: "2021.01.29", recentDate: "2024.01.28", validDate: "2027.01.28", note: "3년 주기" },
+    { id: 19, name: "HB 인증", item: "도장 용융 55%알루미늄-아연 합금 도금 강판 및 강대\n(KS D 3862)", org: "한국공기청정협회", firstDate: "2023.02.28", recentDate: "2023.02.28", validDate: "2026.02.27", note: "3년 주기" },
+    { id: 20, name: "C3", item: "독일 건자재 품목", org: "MPA", firstDate: "2023.01.03", recentDate: "2025.12.22", validDate: "2027.01.31", note: "1년 주기" },
+    { id: 21, name: "ISO 37301", item: "규범준수 경영시스템", org: "KCCA", firstDate: "2023.03.24", recentDate: "2023.03.24", validDate: "2028.03.23", note: "5년 주기\n(1년 정기 심사)" },
+    { id: 22, name: "TISI", item: "태국 수출 (수입자 : 킴텍) 품목", org: "태국산업표준원", firstDate: "2023.05.09", recentDate: "2023.05.09", validDate: "Infinite", note: "주기 없음" },
+    { id: 23, name: "EPD", item: "GI/GL/PPGI/PPGL 등", org: "EPD International", firstDate: "2023.08.22", recentDate: "2023.08.22", validDate: "2028.08.22", note: "5년 주기" },
+    { id: 24, name: "일본 불연 인증", item: "PPGI/PPGL/PPAL", org: "일본 국토교통성", firstDate: "2023.12.07", recentDate: "2023.12.07", validDate: "Infinite", note: "주기 없음" },
+    { id: 25, name: "일본 불연 인증", item: "GL", org: "일본 국토교통성", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 진행 중" },
+    { id: 26, name: "KS D 3034", item: "도장 용융 아연 알루미늄 마그네슘 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" },
+    { id: 27, name: "KS D 3501", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" },
+    { id: 28, name: "JIS G 3131", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" }
+];
+
 // --- [알림 메일 담당자 관리 및 발송 엔진] ---
 async function loadNotificationEmails() {
     if (typeof db === 'undefined') return;
@@ -4073,40 +4105,6 @@ document.addEventListener('keydown', function (event) {
         }
     }
 });
-
-// --- [14. Certification Status Logic] ---
-// --- [14. Certification Status Logic (Dynamic)] ---
-// Initial Seed Data (Only used if DB is empty)
-const initialCertData = [
-    { id: 1, name: "ISO 9001", item: "품질경영시스템 (ISO 9001:2015)", org: "한국표준협회", firstDate: "2000-12-01", recentDate: "2024.10.10", validDate: "2027.10.09", note: "3년 주기\n(1년 정기 심사)" },
-    { id: 2, name: "ISO 14001", item: "환경경영시스템 (ISO 14001:2015)", org: "크레비즈인증원", firstDate: "2013.05.24", recentDate: "2025.05.24", validDate: "2028.05.23", note: "3년 주기" },
-    { id: 3, name: "ISO 45001", item: "안전보건경영시스템 (ISO 45001:2018)", org: "크레비즈인증원", firstDate: "2017-12-01", recentDate: "2023.12.01", validDate: "2026.11.30", note: "3년 주기" },
-    { id: 4, name: "KS D 3506", item: "용융아연도금강판 및 강대", org: "한국표준협회", firstDate: "2007-04-11", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
-    { id: 5, name: "KS D 3520", item: "도장 용융 아연 도금 강판 및 강대", org: "한국표준협회", firstDate: "1999-11-25", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
-    { id: 6, name: "KS D 3770", item: "용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2021-09-15", recentDate: "2024.09.14", validDate: "2027.09.14", note: "3년 주기" },
-    { id: 7, name: "KS D 3862", item: "도장용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2020-04-01", recentDate: "2023.04.12", validDate: "2026.03.31", note: "3년 주기" },
-    { id: 8, name: "KS D 6711", item: "알루미늄 및 알루미늄 합금의 도장판 및 띠", org: "한국표준협회", firstDate: "2015-12-23", recentDate: "2024.06.27", validDate: "2027.06.27", note: "3년 주기" },
-    { id: 9, name: "JIS G 3302", item: "용융아연도금강판 및 강대", org: "한국표준협회", firstDate: "2009-10-22", recentDate: "2024.10.21", validDate: "2027.10.21", note: "3년 주기" },
-    { id: 10, name: "JIS G 3312", item: "도장용융아연도금강판 및 강대 1류,2류", org: "한국표준협회", firstDate: "2009-10-22", recentDate: "2024.10.21", validDate: "2027.10.21", note: "3년 주기" },
-    { id: 11, name: "JIS G 3321", item: "용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2022-02-11", recentDate: "2025.03.21", validDate: "2028.02.10", note: "3년 주기" },
-    { id: 12, name: "JIS G 3322", item: "도장용융 55%알루미늄-아연 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "2017-06-02", recentDate: "2023.06.25", validDate: "2026.06.01", note: "3년 주기" },
-    { id: 13, name: "BIS", item: "Continuously Pre-Painted Galvanized Steel Sheets", org: "인도표준협회", firstDate: "2020-09-28", recentDate: "2025.09.28", validDate: "2026.09.27", note: "1년 주기" },
-    { id: 14, name: "MED Module B", item: "That the surface materials and floor coverings whith low flame-spread characteristics : decorative veneers", org: "DNV", firstDate: "2018-12-28", recentDate: "2023.12.11", validDate: "2028.12.10", note: "5년 주기" },
-    { id: 15, name: "MED Module D", item: "That the Quality system for the products.", org: "DNV", firstDate: "2019-10-10", recentDate: "2024.12.19", validDate: "2029.12.18", note: "5년 주기\n(1년 정기 심사)" },
-    { id: 16, name: "HB 인증", item: "도장용융아연도금강판 및 강대(KS D 3520)", org: "한국공기청정협회", firstDate: "2018.09.28", recentDate: "2024.09.27", validDate: "2027.09.27", note: "3년 주기" },
-    { id: 17, name: "HB 인증", item: "컬러 알루미늄 강판(KS D 6711 A3003 H22)", org: "한국공기청정협회", firstDate: "2021.01.29", recentDate: "2024.01.28", validDate: "2027.01.28", note: "3년 주기" },
-    { id: 18, name: "HB 인증", item: "컬러 알루미늄 강판(KS D 6711 A1100 H16)", org: "한국공기청정협회", firstDate: "2021.01.29", recentDate: "2024.01.28", validDate: "2027.01.28", note: "3년 주기" },
-    { id: 19, name: "HB 인증", item: "도장 용융 55%알루미늄-아연 합금 도금 강판 및 강대\n(KS D 3862)", org: "한국공기청정협회", firstDate: "2023.02.28", recentDate: "2023.02.28", validDate: "2026.02.27", note: "3년 주기" },
-    { id: 20, name: "C3", item: "독일 건자재 품목", org: "MPA", firstDate: "2023.01.03", recentDate: "2025.12.22", validDate: "2027.01.31", note: "1년 주기" },
-    { id: 21, name: "ISO 37301", item: "규범준수 경영시스템", org: "KCCA", firstDate: "2023.03.24", recentDate: "2023.03.24", validDate: "2028.03.23", note: "5년 주기\n(1년 정기 심사)" },
-    { id: 22, name: "TISI", item: "태국 수출 (수입자 : 킴텍) 품목", org: "태국산업표준원", firstDate: "2023.05.09", recentDate: "2023.05.09", validDate: "Infinite", note: "주기 없음" },
-    { id: 23, name: "EPD", item: "GI/GL/PPGI/PPGL 등", org: "EPD International", firstDate: "2023.08.22", recentDate: "2023.08.22", validDate: "2028.08.22", note: "5년 주기" },
-    { id: 24, name: "일본 불연 인증", item: "PPGI/PPGL/PPAL", org: "일본 국토교통성", firstDate: "2023.12.07", recentDate: "2023.12.07", validDate: "Infinite", note: "주기 없음" },
-    { id: 25, name: "일본 불연 인증", item: "GL", org: "일본 국토교통성", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 진행 중" },
-    { id: 26, name: "KS D 3034", item: "도장 용융 아연 알루미늄 마그네슘 합금 도금 강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" },
-    { id: 27, name: "KS D 3501", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" },
-    { id: 28, name: "JIS G 3131", item: "열간 압연 연강판 및 강대", org: "한국표준협회", firstDate: "-", recentDate: "-", validDate: "Pending", note: "취득 검토 중" }
-];
 
     // [Certification Status Logic - Globally Isolated (Moved to global scope below DOMContentLoaded)]
 
