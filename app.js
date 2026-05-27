@@ -4658,12 +4658,9 @@ async function loadCertifications() {
 
         const currentIsAdmin = window.isAdmin || false;
 
-        if (loaded.length !== initialCertData.length && currentIsAdmin) {
+        // 컬렉션이 완전히 비어있을 때만 초기 데이터 시딩
+        if (loaded.length === 0 && currentIsAdmin) {
             try {
-                const batchDelete = db.batch();
-                snap.forEach(doc => batchDelete.delete(doc.ref));
-                await batchDelete.commit();
-
                 const batch = db.batch();
                 initialCertData.forEach(d => {
                     const ref = db.collection("certifications").doc();
