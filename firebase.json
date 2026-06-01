@@ -1,4 +1,11 @@
 {
+    "firestore": {
+        "rules": "firestore.rules"
+    },
+    "storage": [{
+        "bucket": "seah-quality2.firebasestorage.app",
+        "rules": "storage.rules"
+    }],
     "functions": {
         "source": "functions"
     }

@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@seahcm.app';
+    }
+    function isVocUser() {
+      return request.auth != null &&
+        (request.auth.token.email == 'voc@seahcm.app' || request.auth.token.email == 'admin@seahcm.app');
+    }
+
+    match /specs/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /defects/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /complaints/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isVocUser();
+    }
+
+    match /notification_settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /feasibility_requests/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /certifications/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

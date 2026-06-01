@@ -20,17 +20,16 @@
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=4.2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-        (function () {
-            // 이 서비스 정보를 나중에 본인의 키로 교체하세요!
-            emailjs.init("q2oGtAPYvvyOlL3Kq");
-        })();
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof emailjs !== 'undefined') emailjs.init("q2oGtAPYvvyOlL3Kq");
+        });
     </script>
     <style>
         /* 추가 권한 처리: voc-admin-only (담당자+관리자), voc-super-admin-only (관리자 전용) */
@@ -379,9 +378,8 @@
                         <div class="form-field" style="margin-bottom: 16px;">
                             <label for="admin-password"
                                 style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">비밀번호</label>
-                            <input type="password" id="admin-password" placeholder="••••" maxlength="4"
-                                inputmode="numeric" pattern="[0-9]*"
-                                style="width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 8px; transition: border-color 0.2s; box-sizing: border-box;"
+                            <input type="password" id="admin-password" placeholder="••••••" maxlength="20"
+                                style="width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 6px; transition: border-color 0.2s; box-sizing: border-box;"
                                 onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
                         </div>
                         <p id="admin-login-status"
@@ -419,9 +417,8 @@
                         <div class="form-field" style="margin-bottom: 16px;">
                             <label for="voc-password"
                                 style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">비밀번호</label>
-                            <input type="password" id="voc-password" placeholder="••••" maxlength="4"
-                                inputmode="numeric" pattern="[0-9]*"
-                                style="width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 8px; transition: border-color 0.2s; box-sizing: border-box;"
+                            <input type="password" id="voc-password" placeholder="••••••" maxlength="20"
+                                style="width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 6px; transition: border-color 0.2s; box-sizing: border-box;"
                                 onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#e5e7eb'">
                         </div>
                         <p id="voc-login-status"
@@ -4967,6 +4964,7 @@
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <script src="firebase-config.js"></script>

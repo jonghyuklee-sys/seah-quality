@@ -211,11 +211,17 @@ document.addEventListener('DOMContentLoaded', function () {
     updateAdminUI();
 
     if (adminLoginBtn) {
-        adminLoginBtn.onclick = () => {
+        adminLoginBtn.onclick = async () => {
             if (isAdmin) {
                 if (confirm('관리자 모드를 종료하시겠습니까?')) {
+                    try {
+                        await auth.signOut();
+                        await auth.signInAnonymously();
+                    } catch (e) {
+                        console.warn('Sign out failed:', e);
+                    }
                     isAdmin = false;
-                    isVocAuthenticated = false; // VOC 인증도 해제
+                    isVocAuthenticated = false;
                     sessionStorage.removeItem('seahVocAuth');
                     document.body.classList.remove('voc-auth-mode');
                     sessionStorage.removeItem('seahAdminMode');
@@ -231,27 +237,43 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // --- [2.0 통합 인증 관리] --- (임시 단순화 조치)
-    const SEAH_AUTH_CONFIG = {
-        ADMIN: '0000',
-        VOC: '2017'
-    };
-
+    // --- [2.0 통합 인증 관리 (Firebase Auth 기반)] ---
     if (confirmAdminLoginBtn) {
-        confirmAdminLoginBtn.onclick = () => {
+        confirmAdminLoginBtn.onclick = async () => {
             const inputVal = adminPasswordInput ? adminPasswordInput.value.trim() : '';
-            if (inputVal === SEAH_AUTH_CONFIG.ADMIN) {
+            if (!inputVal) return;
+
+            try {
+                confirmAdminLoginBtn.disabled = true;
+                confirmAdminLoginBtn.textContent = '확인 중...';
+
+                await auth.signInWithEmailAndPassword('admin@seahcm.app', inputVal);
                 isAdmin = true;
                 sessionStorage.setItem('seahAdminMode', 'true');
                 updateAdminUI();
                 adminModal.style.display = 'none';
                 alert('관리자 모드로 전환되었습니다.');
-            } else {
-                if (loginStatusMsg) loginStatusMsg.style.display = 'block';
+            } catch (err) {
+                console.error('Admin auth error:', err.code, err.message);
+                if (loginStatusMsg) {
+                    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                        loginStatusMsg.textContent = '⚠️ 비밀번호가 일치하지 않습니다.';
+                    } else if (err.code === 'auth/user-not-found') {
+                        loginStatusMsg.textContent = '⚠️ 관리자 계정이 설정되지 않았습니다.';
+                    } else if (err.code === 'auth/network-request-failed') {
+                        loginStatusMsg.textContent = '⚠️ 네트워크 연결을 확인하세요.';
+                    } else {
+                        loginStatusMsg.textContent = '⚠️ 인증 오류: ' + (err.code || err.message);
+                    }
+                    loginStatusMsg.style.display = 'block';
+                }
                 if (adminPasswordInput) {
                     adminPasswordInput.value = '';
                     adminPasswordInput.focus();
                 }
+            } finally {
+                confirmAdminLoginBtn.disabled = false;
+                confirmAdminLoginBtn.textContent = '확인';
             }
         };
     }
@@ -275,9 +297,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (confirmVocLoginBtn) {
-        confirmVocLoginBtn.onclick = () => {
+        confirmVocLoginBtn.onclick = async () => {
             const inputVal = vocPasswordInput ? vocPasswordInput.value.trim() : '';
-            if (inputVal === SEAH_AUTH_CONFIG.VOC) {
+            if (!inputVal) return;
+
+            try {
+                confirmVocLoginBtn.disabled = true;
+                confirmVocLoginBtn.textContent = '확인 중...';
+
+                await auth.signInWithEmailAndPassword('voc@seahcm.app', inputVal);
                 isVocAuthenticated = true;
                 sessionStorage.setItem('seahVocAuth', 'true');
                 document.body.classList.add('voc-auth-mode');
@@ -286,12 +314,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderVocTable();
                 if (vocPasswordInput) vocPasswordInput.value = '';
                 if (vocLoginStatusMsg) vocLoginStatusMsg.style.display = 'none';
-            } else {
-                if (vocLoginStatusMsg) vocLoginStatusMsg.style.display = 'block';
+            } catch (err) {
+                console.error('VOC auth error:', err.code, err.message);
+                if (vocLoginStatusMsg) {
+                    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                        vocLoginStatusMsg.textContent = '⚠️ 비밀번호가 일치하지 않습니다.';
+                    } else if (err.code === 'auth/user-not-found') {
+                        vocLoginStatusMsg.textContent = '⚠️ VOC 계정이 설정되지 않았습니다.';
+                    } else if (err.code === 'auth/network-request-failed') {
+                        vocLoginStatusMsg.textContent = '⚠️ 네트워크 연결을 확인하세요.';
+                    } else {
+                        vocLoginStatusMsg.textContent = '⚠️ 인증 오류: ' + (err.code || err.message);
+                    }
+                    vocLoginStatusMsg.style.display = 'block';
+                }
                 if (vocPasswordInput) {
                     vocPasswordInput.value = '';
                     vocPasswordInput.focus();
                 }
+            } finally {
+                confirmVocLoginBtn.disabled = false;
+                confirmVocLoginBtn.textContent = '확인';
             }
         };
     }
@@ -758,7 +801,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("✅ 라이브러리 로드 완료:", localFiles.length, "건");
         }).catch(err => {
             console.error("Error loading specs:", err);
-            alert("라이브러리 로드 중 오류가 발생했습니다: " + err.message);
             if (registeredFileList) {
                 registeredFileList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger);">라이브러리 로드 실패: ${err.message}</div>`;
             }
@@ -2569,7 +2611,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             // [병렬 실행] 세 가지 주요 데이터를 동시에 로드하여 전체 시간 단축
             console.time("⏱️ Initial Data Load");
-            const loadTimeout = new Promise(resolve => setTimeout(resolve, 15000));
+            const loadTimeout = new Promise(resolve => setTimeout(resolve, 8000));
             await Promise.race([
                 Promise.all([
                     loadLocalFiles(),
@@ -2581,22 +2623,17 @@ document.addEventListener('DOMContentLoaded', function () {
             ]);
             console.timeEnd("⏱️ Initial Data Load");
 
-            // 로딩 오버레이 제거 (짧은 지연으로 여유 부여)
-            setTimeout(() => {
-                if (overlay) {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        document.body.classList.remove('loading-active');
-                    }, 500);
-                }
-
-                // 동기화 성공 배너 표시
-                if (statusBar) {
-                    statusBar.classList.add('show');
-                    setTimeout(() => statusBar.classList.remove('show'), 3000);
-                }
-            }, 300);
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.body.classList.remove('loading-active');
+                }, 300);
+            }
+            if (statusBar) {
+                statusBar.classList.add('show');
+                setTimeout(() => statusBar.classList.remove('show'), 2000);
+            }
 
         } catch (err) {
             console.error("데이터 초기화 중 오류 발생:", err);

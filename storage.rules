@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@seahcm.app';
+    }
+    function isVocUser() {
+      return request.auth != null &&
+        (request.auth.token.email == 'voc@seahcm.app' || request.auth.token.email == 'admin@seahcm.app');
+    }
+
+    match /specs/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /defects/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /complaints/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() || isVocUser();
+    }
+
+    match /feasibility/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /certifications/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
