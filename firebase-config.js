@@ -12,6 +12,32 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
+// ===================================================================
+// [Firebase App Check / reCAPTCHA]
+// reCAPTCHA 보안 적용 시, 모든 Firebase 요청(Storage/Firestore/Functions)에
+// App Check 토큰이 자동 첨부됩니다. 이 설정이 없으면 storage/unauthorized 오류가 발생합니다.
+//
+// ▼▼▼ 아래 따옴표 안에, 콘솔에서 발급받은 reCAPTCHA "사이트 키"를 붙여넣으세요. ▼▼▼
+//   확인 위치: Firebase 콘솔 > 빌드 > App Check > '앱' 탭 > 웹 앱의 reCAPTCHA 공급업체
+//   (또는 https://www.google.com/recaptcha/admin 의 해당 사이트 '사이트 키')
+const RECAPTCHA_SITE_KEY = "6Lf9zAYtAAAAAO23ZJDR1renckouMmtXgop1Rwll";
+// ▲▲▲ 사이트 키는 공개되어도 되는 값입니다(비밀 키 아님). ▲▲▲
+
+try {
+    if (firebase.appCheck && RECAPTCHA_SITE_KEY && !RECAPTCHA_SITE_KEY.startsWith("여기에")) {
+        // reCAPTCHA v3 (기본). Enterprise를 쓰는 경우 아래 두 줄을 교체하세요:
+        //   firebase.appCheck().activate(
+        //       new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY), true);
+        firebase.appCheck().activate(RECAPTCHA_SITE_KEY, /* isTokenAutoRefreshEnabled */ true);
+        console.log("App Check activated (reCAPTCHA).");
+    } else {
+        console.warn("App Check 미설정: RECAPTCHA_SITE_KEY 값을 입력해야 저장이 정상 동작합니다.");
+    }
+} catch (e) {
+    console.error("App Check 활성화 실패:", e);
+}
+// ===================================================================
+
 const db = firebase.firestore();
 const storage = firebase.storage();
 const auth = firebase.auth();
