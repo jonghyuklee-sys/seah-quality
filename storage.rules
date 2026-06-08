@@ -27,7 +27,9 @@ service firebase.storage {
 
     match /feasibility/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      // 첨부파일 업로드(신규 등록)는 누구나 가능, 삭제는 관리자만
+      // (App Check/reCAPTCHA가 봇 차단. request.resource != null 이면 업로드, null 이면 삭제)
+      allow write: if isAdmin() || request.resource != null;
     }
 
     match /certifications/{allPaths=**} {

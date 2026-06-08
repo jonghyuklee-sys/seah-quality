@@ -32,7 +32,10 @@ service cloud.firestore {
 
     match /feasibility_requests/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      // 신규 검토 요청 등록은 누구나 가능 (App Check/reCAPTCHA가 봇 차단)
+      allow create: if true;
+      // 수정·삭제(회신 등 관리)는 관리자만
+      allow update, delete: if isAdmin();
     }
 
     match /certifications/{docId} {
