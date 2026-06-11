@@ -22,7 +22,10 @@ service cloud.firestore {
 
     match /complaints/{docId} {
       allow read: if true;
-      allow write: if isAdmin() || isVocUser();
+      // 신규 VOC 등록은 누구나 가능
+      allow create: if true;
+      // 수정·삭제는 관리자 및 VOC 담당자만
+      allow update, delete: if isAdmin() || isVocUser();
     }
 
     match /notification_settings/{docId} {

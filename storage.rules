@@ -22,7 +22,8 @@ service firebase.storage {
 
     match /complaints/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin() || isVocUser();
+      // 첨부파일 업로드(신규 등록)는 누구나 가능, 삭제는 관리자 및 VOC 담당자만
+      allow write: if isAdmin() || isVocUser() || request.resource != null;
     }
 
     match /feasibility/{allPaths=**} {
