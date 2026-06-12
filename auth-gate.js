@@ -100,10 +100,23 @@
         var btn = document.getElementById('auth-gate-btn');
         if (checking) checking.style.display = 'none';
         if (btn) btn.style.display = 'inline-flex';
+        // 파일을 직접 연 경우(file://) 로그인 자체가 불가능하므로 미리 안내
+        if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+            showMsg('파일을 직접 열면 로그인할 수 없습니다. 배포된 웹 주소(https://seahqm.web.app)로 접속하세요.');
+        }
+    }
+
+    // 구글 로그인은 http/https에서만 동작 — 파일을 직접 연 경우(file://) 사전 차단
+    function isWebEnvironment() {
+        return location.protocol === 'http:' || location.protocol === 'https:';
     }
 
     // --- 구글 로그인 처리 ---
     function doLogin() {
+        if (!isWebEnvironment()) {
+            showMsg('파일을 직접 열면 로그인할 수 없습니다. 배포된 웹 주소(https://seahqm.web.app)로 접속하세요.');
+            return;
+        }
         var provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ hd: ALLOWED_DOMAIN, prompt: 'select_account' });
         auth.signInWithPopup(provider).then(function (result) {
@@ -116,6 +129,8 @@
             if (err && err.code === 'auth/popup-blocked') {
                 // 팝업이 차단된 환경에서는 리다이렉트 방식으로 전환
                 auth.signInWithRedirect(provider);
+            } else if (err && err.code === 'auth/operation-not-supported-in-this-environment') {
+                showMsg('이 환경에서는 로그인할 수 없습니다. 배포된 웹 주소(https://seahqm.web.app)로 접속하고, 브라우저의 쿠키·저장소 차단을 해제하세요.');
             } else if (err && err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
                 console.error('Google sign-in error:', err);
                 showMsg('로그인 오류: ' + (err.code || err.message));
