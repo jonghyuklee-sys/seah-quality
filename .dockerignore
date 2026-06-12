@@ -1,0 +1,19 @@
+# Cloud Run 정적 이미지에 들어가면 안 되는 것들
+.git
+.gitignore
+.claude
+.firebaserc
+firebase.json
+firestore.rules
+storage.rules
+vercel.json
+Dockerfile
+.dockerignore
+
+# 백엔드 함수는 Firebase 에 따로 배포됨 — 이미지에서 제외
+functions/
+
+# 개발 부산물
+**/node_modules
+**/.env
+*.md

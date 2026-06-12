@@ -8,5 +8,17 @@
     }],
     "functions": {
         "source": "functions"
+    },
+    "hosting": {
+        "site": "seahqm",
+        "public": "hosting-shell",
+        "ignore": ["**/.*"],
+        "rewrites": [{
+            "source": "**",
+            "run": {
+                "serviceId": "seahcm-qhub",
+                "region": "asia-northeast3"
+            }
+        }]
     }
 }

@@ -2,12 +2,22 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    // 관리자: 품질경영팀 이종혁 대리 구글 계정 (비밀번호 관리자 로그인 폐지)
+    // app.js의 ADMIN_EMAILS와 동일하게 유지할 것
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'admin@seahcm.app';
+      return request.auth != null && request.auth.token.email == 'jonghyuk.lee@seah.co.kr';
     }
     function isVocUser() {
-      return request.auth != null &&
-        (request.auth.token.email == 'voc@seahcm.app' || request.auth.token.email == 'admin@seahcm.app');
+      return isAdmin() ||
+        (request.auth != null && request.auth.token.email == 'voc@seahcm.app');
+    }
+    // 세아씨엠 임직원 구글 계정 — auth-gate.js 관문 통과 사용자
+    // (@seah.co.kr 도메인 + 계정 이름에 '씨엠' 포함. 예외 이메일은 auth-gate.js의 EXTRA_ALLOWED_EMAILS와 동일하게 유지)
+    function isSeahUser() {
+      return request.auth != null && request.auth.token.email is string &&
+        request.auth.token.email.matches('.*@seah[.]co[.]kr') &&
+        (request.auth.token.get('name', '').matches('.*씨엠.*') ||
+         request.auth.token.email == 'jonghyuk.lee@seah.co.kr');
     }
 
     match /specs/{allPaths=**} {
@@ -22,15 +32,14 @@ service firebase.storage {
 
     match /complaints/{allPaths=**} {
       allow read: if true;
-      // 첨부파일 업로드(신규 등록)는 누구나 가능, 삭제는 관리자 및 VOC 담당자만
-      allow write: if isAdmin() || isVocUser() || request.resource != null;
+      // 첨부파일 업로드·삭제는 관리자/VOC 담당자/회사 계정만
+      allow write: if isAdmin() || isVocUser() || isSeahUser();
     }
 
     match /feasibility/{allPaths=**} {
       allow read: if true;
-      // 첨부파일 업로드(신규 등록)는 누구나 가능, 삭제는 관리자만
-      // (App Check/reCAPTCHA가 봇 차단. request.resource != null 이면 업로드, null 이면 삭제)
-      allow write: if isAdmin() || request.resource != null;
+      // 첨부파일 업로드는 회사 계정 사용자, 삭제는 관리자만
+      allow write: if isAdmin() || (isSeahUser() && request.resource != null);
     }
 
     match /certifications/{allPaths=**} {

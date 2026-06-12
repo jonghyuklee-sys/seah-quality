@@ -2,12 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // 관리자: 품질경영팀 이종혁 대리 구글 계정 (비밀번호 관리자 로그인 폐지)
+    // app.js의 ADMIN_EMAILS와 동일하게 유지할 것
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'admin@seahcm.app';
+      return request.auth != null && request.auth.token.email == 'jonghyuk.lee@seah.co.kr';
     }
     function isVocUser() {
-      return request.auth != null &&
-        (request.auth.token.email == 'voc@seahcm.app' || request.auth.token.email == 'admin@seahcm.app');
+      return isAdmin() ||
+        (request.auth != null && request.auth.token.email == 'voc@seahcm.app');
+    }
+    // 세아씨엠 임직원 구글 계정 — auth-gate.js 관문 통과 사용자
+    // (@seah.co.kr 도메인 + 계정 이름에 '씨엠' 포함. 예외 이메일은 auth-gate.js의 EXTRA_ALLOWED_EMAILS와 동일하게 유지)
+    function isSeahUser() {
+      return request.auth != null && request.auth.token.email is string &&
+        request.auth.token.email.matches('.*@seah[.]co[.]kr') &&
+        (request.auth.token.get('name', '').matches('.*씨엠.*') ||
+         request.auth.token.email == 'jonghyuk.lee@seah.co.kr');
     }
 
     match /specs/{docId} {
@@ -22,10 +32,10 @@ service cloud.firestore {
 
     match /complaints/{docId} {
       allow read: if true;
-      // 신규 VOC 등록은 누구나 가능
-      allow create: if true;
-      // 수정·삭제는 관리자 및 VOC 담당자만
-      allow update, delete: if isAdmin() || isVocUser();
+      // 신규 VOC 등록은 회사 계정 사용자만 (App Check 제거에 따른 대체 보호)
+      allow create: if isAdmin() || isVocUser() || isSeahUser();
+      // 수정·삭제는 관리자, VOC 담당자, 회사 계정(@seah.co.kr) 사용자 가능 (VOC 비밀번호 폐지)
+      allow update, delete: if isAdmin() || isVocUser() || isSeahUser();
     }
 
     match /notification_settings/{docId} {
@@ -35,8 +45,8 @@ service cloud.firestore {
 
     match /feasibility_requests/{docId} {
       allow read: if true;
-      // 신규 검토 요청 등록은 누구나 가능 (App Check/reCAPTCHA가 봇 차단)
-      allow create: if true;
+      // 신규 검토 요청 등록은 회사 계정 사용자만 (App Check 제거에 따른 대체 보호)
+      allow create: if isAdmin() || isVocUser() || isSeahUser();
       // 수정·삭제(회신 등 관리)는 관리자만
       allow update, delete: if isAdmin();
     }

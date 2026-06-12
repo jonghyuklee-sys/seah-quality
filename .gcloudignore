@@ -1,0 +1,6 @@
+# gcloud run deploy --source 업로드 제외 목록 (Dockerfile/.dockerignore는 빌드에 필요하므로 포함)
+.git
+.claude
+functions/
+**/node_modules
+**/.env

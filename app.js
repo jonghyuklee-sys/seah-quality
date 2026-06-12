@@ -146,8 +146,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    window.isAdmin = sessionStorage.getItem('seahAdminMode') === 'true';
-    let isAdmin = window.isAdmin;
+    // 관리자 권한: 지정된 구글 계정으로 로그인하면 자동 부여 (품질경영팀 이종혁 대리)
+    // firestore.rules / storage.rules의 isAdmin()과 동일하게 유지할 것
+    const ADMIN_EMAILS = ['jonghyuk.lee@seah.co.kr'];
+    window.isAdmin = false;
+    let isAdmin = false;
     let resultsCardWasVisible = false;
 
     // VOC 페이지네이션 및 필터 상태
@@ -162,46 +165,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentPdfUrl = "";
     let currentZoom = 1.3; // 기본 줌 레벨
 
-    // --- [2. 관리자 모드 로직] ---
-    const adminLoginBtn = document.getElementById('admin-login-btn');
-    const adminModal = document.getElementById('admin-modal');
-    const adminPasswordInput = document.getElementById('admin-password');
-    const confirmAdminLoginBtn = document.getElementById('confirm-admin-login');
-    const cancelAdminLoginBtn = document.getElementById('cancel-admin-login');
-    const loginStatusMsg = document.getElementById('admin-login-status');
-    const displayUserName = document.getElementById('display-user-name');
-    const displayUserRole = document.getElementById('display-user-role');
-    const userAvatar = document.getElementById('user-avatar');
-
-
-
+    // --- [2. 관리자 모드 로직 (지정 계정 자동 부여, 비밀번호 로그인 폐지)] ---
     function updateAdminUI() {
         if (isAdmin) {
             document.body.classList.add('admin-mode');
-            if (adminLoginBtn) {
-                adminLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> 로그아웃';
-                adminLoginBtn.classList.replace('btn-secondary', 'btn-danger');
-            }
-            if (displayUserName) displayUserName.textContent = '품질관리자';
-            if (displayUserRole) displayUserRole.textContent = 'Admin Mode';
-            if (userAvatar) {
-                userAvatar.textContent = 'QM';
-                userAvatar.style.background = '#1e3a8a';
-                userAvatar.style.color = '#fff';
-            }
         } else {
             document.body.classList.remove('admin-mode');
-            if (adminLoginBtn) {
-                adminLoginBtn.innerHTML = '<i class="fas fa-lock"></i> 관리자 로그인';
-                adminLoginBtn.classList.replace('btn-danger', 'btn-secondary');
-            }
-            if (displayUserName) displayUserName.textContent = '방문객';
-            if (displayUserRole) displayUserRole.textContent = 'Guest';
-            if (userAvatar) {
-                userAvatar.textContent = 'G';
-                userAvatar.style.background = '#e2e8f0';
-                userAvatar.style.color = '#64748b';
-            }
         }
         window.isAdmin = isAdmin; // Sync with global
         if (typeof renderCertification === 'function') {
@@ -210,81 +179,83 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     updateAdminUI();
 
-    if (adminLoginBtn) {
-        adminLoginBtn.onclick = async () => {
-            if (isAdmin) {
-                if (confirm('관리자 모드를 종료하시겠습니까?')) {
-                    try {
-                        await auth.signOut();
-                        await auth.signInAnonymously();
-                    } catch (e) {
-                        console.warn('Sign out failed:', e);
-                    }
-                    isAdmin = false;
-                    isVocAuthenticated = false;
-                    sessionStorage.removeItem('seahVocAuth');
-                    document.body.classList.remove('voc-auth-mode');
-                    sessionStorage.removeItem('seahAdminMode');
-                    updateAdminUI();
-                    showSection('search-view');
-                }
+    // --- [2.1 사용자 프로필 메뉴 (구글 계정, auth-gate.js에서 저장한 프로필 사용)] ---
+    const profileMenu = document.getElementById('profile-menu');
+    const profileTrigger = document.getElementById('profile-trigger');
+    const profileLogoutBtn = document.getElementById('profile-logout-btn');
+
+    function renderProfileMenu() {
+        if (!profileMenu) return;
+        let profile = window.qhubProfile;
+        if (!profile) {
+            try { profile = JSON.parse(sessionStorage.getItem('qhubProfile') || 'null'); } catch (e) { profile = null; }
+        }
+        if (!profile || !profile.email) {
+            profileMenu.style.display = 'none';
+            if (isAdmin) { isAdmin = false; updateAdminUI(); }
+            return;
+        }
+
+        // 지정 계정이면 관리자 권한 자동 부여
+        const adminNow = ADMIN_EMAILS.includes(profile.email.toLowerCase());
+        if (adminNow !== isAdmin) {
+            isAdmin = adminNow;
+            updateAdminUI();
+        }
+
+        // 계정 이름 규칙 "이름/소속" 파싱 (예: "이종혁/품질경영팀(씨엠)")
+        const parts = (profile.name || '').split('/');
+        const personal = (parts[0] || '').trim();
+        const team = parts.slice(1).join('/').trim();
+
+        document.getElementById('profile-name').textContent = personal ? `${personal}/세아씨엠` : profile.email;
+        const teamLabel = (team && team !== '세아씨엠') ? team : '세아씨엠';
+        document.getElementById('profile-team').textContent = isAdmin ? `${teamLabel} · 관리자` : teamLabel;
+        document.getElementById('profile-email').textContent = profile.email;
+
+        ['profile-avatar-mini', 'profile-photo'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = '';
+            if (profile.photo) {
+                const img = document.createElement('img');
+                img.src = profile.photo;
+                img.alt = '프로필 사진';
+                img.referrerPolicy = 'no-referrer';
+                el.appendChild(img);
             } else {
-                adminModal.style.display = 'flex';
-                adminPasswordInput.value = '';
-                adminPasswordInput.focus();
-                if (loginStatusMsg) loginStatusMsg.style.display = 'none';
+                el.textContent = (personal || profile.email).charAt(0).toUpperCase();
             }
+        });
+        profileMenu.style.display = 'block';
+    }
+
+    if (profileTrigger) {
+        profileTrigger.onclick = (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('open');
+        };
+        document.addEventListener('click', (e) => {
+            if (profileMenu.classList.contains('open') && !profileMenu.contains(e.target)) {
+                profileMenu.classList.remove('open');
+            }
+        });
+    }
+
+    if (profileLogoutBtn) {
+        profileLogoutBtn.onclick = async () => {
+            if (!confirm('로그아웃 하시겠습니까?')) return;
+            sessionStorage.removeItem('qhubProfile');
+            try { await auth.signOut(); } catch (e) { console.warn('Sign out failed:', e); }
+            location.reload();
         };
     }
 
-    // --- [2.0 통합 인증 관리 (Firebase Auth 기반)] ---
-    if (confirmAdminLoginBtn) {
-        confirmAdminLoginBtn.onclick = async () => {
-            const inputVal = adminPasswordInput ? adminPasswordInput.value.trim() : '';
-            if (!inputVal) return;
-
-            try {
-                confirmAdminLoginBtn.disabled = true;
-                confirmAdminLoginBtn.textContent = '확인 중...';
-
-                await auth.signInWithEmailAndPassword('admin@seahcm.app', inputVal);
-                isAdmin = true;
-                sessionStorage.setItem('seahAdminMode', 'true');
-                updateAdminUI();
-                adminModal.style.display = 'none';
-                alert('관리자 모드로 전환되었습니다.');
-            } catch (err) {
-                console.error('Admin auth error:', err.code, err.message);
-                if (loginStatusMsg) {
-                    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-                        loginStatusMsg.textContent = '⚠️ 비밀번호가 일치하지 않습니다.';
-                    } else if (err.code === 'auth/user-not-found') {
-                        loginStatusMsg.textContent = '⚠️ 관리자 계정이 설정되지 않았습니다.';
-                    } else if (err.code === 'auth/network-request-failed') {
-                        loginStatusMsg.textContent = '⚠️ 네트워크 연결을 확인하세요.';
-                    } else {
-                        loginStatusMsg.textContent = '⚠️ 인증 오류: ' + (err.code || err.message);
-                    }
-                    loginStatusMsg.style.display = 'block';
-                }
-                if (adminPasswordInput) {
-                    adminPasswordInput.value = '';
-                    adminPasswordInput.focus();
-                }
-            } finally {
-                confirmAdminLoginBtn.disabled = false;
-                confirmAdminLoginBtn.textContent = '확인';
-            }
-        };
-    }
-    if (cancelAdminLoginBtn) cancelAdminLoginBtn.onclick = () => adminModal.style.display = 'none';
-
-    adminPasswordInput.onkeydown = (e) => {
-        if (e.key === 'Enter') confirmAdminLoginBtn.click();
-    };
+    document.addEventListener('qhub-profile-updated', renderProfileMenu);
+    renderProfileMenu();
 
     // --- [VOC 접근 보안 로직] ---
-    let isVocAuthenticated = sessionStorage.getItem('seahVocAuth') === 'true'; // VOC 인증 상태 (sessionStorage로 새로고침 시 유지)
+    let isVocAuthenticated = true; // 회사 계정 관문(auth-gate.js) 도입으로 VOC 비밀번호 폐지 — 항상 인증된 것으로 처리
     const vocPasswordModal = document.getElementById('voc-password-modal');
     const vocPasswordInput = document.getElementById('voc-password');
     const confirmVocLoginBtn = document.getElementById('confirm-voc-login');
@@ -4104,10 +4075,6 @@ document.addEventListener('keydown', function (event) {
     if (event.key === "Escape") {
         // 이미지 모달 닫기
         if (typeof closeImageModal === 'function') closeImageModal();
-        
-        // 관리자 모달 닫기
-        const adminModal = document.getElementById('admin-modal');
-        if (adminModal) adminModal.style.display = 'none';
         
         // VOC 상세보기 모달 닫기
         const vocModal = document.getElementById('voc-modal');
