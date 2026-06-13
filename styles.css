@@ -180,22 +180,8 @@ body.admin-mode button.admin-only {
 }
 
 .sidebar-header {
-    padding: 22px 24px 20px;
-    position: relative;
-}
-
-/* 시그니처: 헤더 하단 도장 단면 라인 (강판/아연/도료) */
-.sidebar-header::after {
-    content: '';
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    bottom: 0;
-    height: 5px;
-    background: linear-gradient(to bottom,
-            #46505C 0 2px,
-            #9AA4AD 2px 3.5px,
-            #C2351F 3.5px 5px);
+    padding: 24px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-logo {
@@ -205,15 +191,16 @@ body.admin-mode button.admin-only {
 }
 
 .logo-img {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     object-fit: contain;
     background: white;
     padding: 2px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* ── Brand Mark (세아씨엠 Q-HUB) ── */
+/* ── Brand Mark (세아씨엠 Q-HUB) — 리디자인 이전 원본 유지 ── */
 .sidebar-title h1.brand-mark {
     white-space: nowrap;
     line-height: 1.1;
@@ -222,32 +209,50 @@ body.admin-mode button.admin-only {
 .brand-top-row {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 6px;
 }
 
 .sidebar-title .brand-qhub {
-    font-family: var(--font-mono);
-    font-size: 24px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    color: #FFFFFF;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 40%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: brandShimmer 6s ease-in-out infinite;
 }
 
 .sidebar-title .brand-company {
+    font-family: 'Noto Sans KR', sans-serif;
     font-size: 14px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.92);
-    letter-spacing: 1px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 1.5px;
+}
+
+@keyframes brandShimmer {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 .sidebar-title .brand-subtitle {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    color: #98A1A8;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(148, 163, 184, 0.95);
     text-transform: uppercase;
     letter-spacing: 2.5px;
-    margin-top: 4px;
+    margin-top: 3px;
     padding-left: 1px;
 }
 
@@ -5303,10 +5308,14 @@ body {
         font-size: 16px !important;
     }
 
-    /* 상단바: 한 줄 유지 */
+    /* 상단바: 상태바(노치)와 겹치지 않게 + 한 줄 유지 */
     .top-bar {
-        padding-left: max(10px, env(safe-area-inset-left));
-        padding-right: max(10px, env(safe-area-inset-right));
+        padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+        padding-bottom: 8px;
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        min-height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+        align-items: center;
     }
 
     .breadcrumb {
