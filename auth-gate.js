@@ -59,18 +59,21 @@
     gate.style.cssText = [
         'position:fixed', 'inset:0', 'z-index:2147483647',
         'display:flex', 'align-items:center', 'justify-content:center',
-        'background:#f1f5f9', 'font-family:"Pretendard","Noto Sans KR",sans-serif'
+        'background:#F4F5F3', 'font-family:"IBM Plex Sans KR","Noto Sans KR",sans-serif'
     ].join(';');
     gate.innerHTML =
-        '<div style="background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(15,23,42,.12);padding:48px 40px;max-width:400px;width:90%;text-align:center;">' +
-        '<img src="seah-logo.jpg" alt="SeAH" style="height:44px;margin-bottom:20px;" onerror="this.style.display=\'none\'">' +
-        '<h2 style="margin:0 0 8px;font-size:1.3rem;color:#0f172a;">SeAH CM Q-Hub</h2>' +
-        '<p style="margin:0 0 28px;color:#64748b;font-size:.92rem;line-height:1.5;">세아씨엠 임직원 전용 시스템입니다.<br>회사 구글 계정(@' + ALLOWED_DOMAIN + ')으로 로그인하세요.</p>' +
-        '<p id="auth-gate-checking" style="margin:0;color:#94a3b8;font-size:.9rem;">로그인 상태 확인 중...</p>' +
-        '<button id="auth-gate-btn" style="display:none;align-items:center;gap:10px;padding:12px 24px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;font-size:.95rem;font-weight:600;color:#1e293b;">' +
+        '<div style="background:#fff;border:1px solid #DDE0DD;border-radius:10px;box-shadow:0 8px 24px rgba(31,39,48,.10);max-width:400px;width:90%;text-align:center;overflow:hidden;">' +
+        // 시그니처: 도장 단면 라인 (강판/아연/도료)
+        '<div style="height:5px;background:linear-gradient(to bottom,#46505C 0 2px,#9AA4AD 2px 3.5px,#C2351F 3.5px 5px);"></div>' +
+        '<div style="padding:44px 40px 40px;">' +
+        '<img src="seah-logo.jpg" alt="SeAH" style="height:42px;margin-bottom:20px;" onerror="this.style.display=\'none\'">' +
+        '<h2 style="margin:0 0 8px;font-size:1.25rem;color:#26303C;letter-spacing:.3px;">세아씨엠 <span style="font-family:\'IBM Plex Mono\',monospace;font-weight:600;">Q-HUB</span></h2>' +
+        '<p style="margin:0 0 28px;color:#66707A;font-size:.92rem;line-height:1.55;">세아씨엠 임직원 전용 시스템입니다.<br>회사 구글 계정(@' + ALLOWED_DOMAIN + ')으로 로그인하세요.</p>' +
+        '<p id="auth-gate-checking" style="margin:0;color:#98A1A8;font-size:.9rem;">로그인 상태 확인 중...</p>' +
+        '<button id="auth-gate-btn" style="display:none;align-items:center;gap:10px;padding:12px 24px;border:1px solid #C9CDC9;border-radius:4px;background:#fff;cursor:pointer;font-size:.95rem;font-weight:600;color:#2A323C;font-family:inherit;">' +
         '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style="width:18px;height:18px;">구글 계정으로 로그인</button>' +
-        '<p id="auth-gate-msg" style="display:none;margin:18px 0 0;color:#dc2626;font-size:.85rem;"></p>' +
-        '</div>';
+        '<p id="auth-gate-msg" style="display:none;margin:18px 0 0;color:#C2351F;font-size:.85rem;"></p>' +
+        '</div></div>';
 
     function showGate() {
         if (!gate.parentNode) document.documentElement.appendChild(gate);
@@ -84,8 +87,15 @@
         if (el) { el.textContent = text; el.style.display = 'block'; }
     }
 
+    // 로컬 미리보기(localhost) UI 점검용 우회: 저장된 프로필이 있으면 관문 생략 (운영 도메인에는 영향 없음)
+    var DEV_BYPASS = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
+        !!(sessionStorage.getItem('qhubProfile') || localStorage.getItem('qhubDevProfile'));
+    if (DEV_BYPASS && !sessionStorage.getItem('qhubProfile')) {
+        try { sessionStorage.setItem('qhubProfile', localStorage.getItem('qhubDevProfile')); } catch (e) { }
+    }
+
     // 페이지 진입 즉시 관문 표시 (인증 확인 후 통과 시 제거)
-    showGate();
+    if (!DEV_BYPASS) showGate();
 
     // 로그인 유지: 한 번 로그인한 기기는 브라우저를 닫아도 세션이 유지됨
     try {
@@ -156,7 +166,7 @@
             showGate();
             revealLoginButton();
             showMsg(msg);
-        } else {
+        } else if (!DEV_BYPASS) {
             // 미로그인 또는 익명 세션(관리자 모드 종료 직후 등) → 관문 표시
             showGate();
             revealLoginButton();

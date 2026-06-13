@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="세아씨엠 품질관리 시스템 - 강종별 규격 및 기계적 성질 관리">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,9 +16,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Rajdhani:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=4.3">
+    <link rel="stylesheet" href="styles.css?v=5.1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
@@ -181,7 +181,7 @@
             width: 60px;
             height: 60px;
             border: 6px solid #f3f4f6;
-            border-top: 6px solid #1e3a8a;
+            border-top: 6px solid #26303C;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
@@ -200,7 +200,7 @@
         .loading-text {
             font-size: 18px;
             font-weight: 700;
-            color: #1e3a8a;
+            color: #26303C;
             margin: 0;
         }
 
@@ -216,7 +216,7 @@
             left: 50%;
             transform: translateX(-50%);
             padding: 12px 24px;
-            background: rgba(30, 58, 138, 0.95);
+            background: rgba(38, 48, 60, 0.95);
             color: white;
             border-radius: 50px;
             font-size: 14px;
@@ -278,46 +278,46 @@
             <div class="sidebar-nav">
                 <p class="nav-group-title">Main Menu</p>
                 <a href="#search-view" class="active nav-link">
-                    <span>🔍</span> 품질 규격 조회
+                    <i class="fas fa-magnifying-glass nav-ico"></i> 품질 규격 조회
                 </a>
 
                 <a href="#dashboard-view" class="nav-link">
-                    <span>📊</span> 품질 분석 대시보드
+                    <i class="fas fa-chart-column nav-ico"></i> 품질 분석 대시보드
                 </a>
                 <a href="#complaint-view" class="nav-link" data-menu="voc-management">
-                    <span>📢</span> 고객 불만 접수
+                    <i class="fas fa-headset nav-ico"></i> 고객 불만 접수
                 </a>
                 <a href="#voc-log-view" class="nav-link" data-menu="voc-log">
-                    <span>📋</span> 고객 불만 관리
+                    <i class="fas fa-clipboard-list nav-ico"></i> 고객 불만 관리
                 </a>
                 <a href="#line-spec-view" class="nav-link">
-                    <span class="icon">📐</span> 라인별 생산 가능 SPEC
+                    <i class="fas fa-ruler-combined nav-ico"></i> 라인별 생산 가능 SPEC
                 </a>
                 <a href="#prod-feasibility-view" class="nav-link" id="prod-feasibility-btn">
-                    <span>🔬</span> 생산 가능성 검토
+                    <i class="fas fa-vial-circle-check nav-ico"></i> 생산 가능성 검토
                 </a>
                 <a href="#warranty-guide-view" class="nav-link">
-                    <span>📜</span> WARRANTY GUIDE
+                    <i class="fas fa-file-contract nav-ico"></i> WARRANTY GUIDE
                 </a>
 
                 <p class="nav-group-title" style="margin-top: 24px;">Support</p>
                 <a href="#resin-quality-view" class="nav-link">
-                    <span>🧪</span> 수지별 품질 기준
+                    <i class="fas fa-droplet nav-ico"></i> 수지별 품질 기준
                 </a>
                 <a href="#defect-view" class="nav-link">
-                    <span class="icon">📖</span> 불량 유형 도감
+                    <i class="fas fa-book-open nav-ico"></i> 불량 유형 도감
                 </a>
                 <a href="#process-spec-view" class="nav-link">
-                    <span class="icon">🏭</span> 라인별 공정도 및 상세 제원
+                    <i class="fas fa-industry nav-ico"></i> 라인별 공정도 및 상세 제원
                 </a>
                 <a href="#certification-view" class="nav-link">
-                    <span>🏆</span> 품질 인증 현황
+                    <i class="fas fa-certificate nav-ico"></i> 품질 인증 현황
                 </a>
                 <a href="#management-view" class="nav-link admin-only">
-                    <span class="icon">📁</span> 규격 데이터 관리
+                    <i class="fas fa-folder-open nav-ico"></i> 규격 데이터 관리
                 </a>
                 <a href="#settings-view" class="nav-link admin-only">
-                    <span>⚙️</span> 시스템 설정
+                    <i class="fas fa-gear nav-ico"></i> 시스템 설정
                 </a>
             </div>
 
@@ -414,23 +414,23 @@
 
                     <!-- 1-1. Top Search Bar -->
                     <div class="search-container" id="library-search-box"
-                        style="margin: 0 auto 32px auto; max-width: 1000px; border-radius: 50px; padding: 10px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+                        style="margin: 0 auto 32px auto; max-width: 1000px; padding: 18px 22px;">
                         <div class="search-form-grid"
-                            style="grid-template-columns: 1fr 1.5fr 1fr auto; gap: 15px; align-items: center;">
+                            style="grid-template-columns: 1fr 1.5fr 1fr auto; gap: 12px; align-items: center;">
                             <div class="form-field" style="margin-bottom: 0;">
-                                <select id="standard-type" style="border-radius: 25px;">
+                                <select id="standard-type">
                                     <option value="">국가 규격 선택</option>
                                     <option value="KS">KS (한국 표준)</option>
                                     <option value="JIS">JIS (일본 표준)</option>
                                 </select>
                             </div>
                             <div class="form-field" style="margin-bottom: 0;">
-                                <select id="specific-standard" disabled style="border-radius: 25px;">
+                                <select id="specific-standard" disabled>
                                     <option value="">상세 규격 선택</option>
                                 </select>
                             </div>
                             <div class="form-field" style="margin-bottom: 0;">
-                                <select id="steel-type" disabled style="border-radius: 25px;">
+                                <select id="steel-type" disabled>
                                     <option value="">제품군 자동 선택</option>
                                     <optgroup label="냉연/도금 제품">
                                         <option value="PO">PO (산세강판)</option>
@@ -447,15 +447,14 @@
                                     </optgroup>
                                 </select>
                             </div>
-                            <button id="search-btn" class="btn-primary"
-                                style="height: 44px; border-radius: 25px; min-width: 120px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
-                                🔍 품질 규격 조회
+                            <button id="search-btn" class="btn-primary" style="height: 44px; min-width: 132px;">
+                                <i class="fas fa-magnifying-glass"></i> 품질 규격 조회
                             </button>
                         </div>
                         <!-- 안내 문구 (내용 수정) -->
                         <p
                             style="text-align: center; font-size: 13px; color: #64748b; margin: 16px 0 0 0; font-weight: 500;">
-                            * <span style="color: #1e3a8a; font-weight: 700;">ASTM, EN규격</span>은 업로드가 불가능하므로 품질경영팀에 문의
+                            * <span style="color: #26303C; font-weight: 700;">ASTM, EN규격</span>은 업로드가 불가능하므로 품질경영팀에 문의
                             바랍니다.
                         </p>
                     </div>
@@ -465,7 +464,7 @@
                         style="margin-top: 60px; border-top: 1px solid #e2e8f0; padding-top: 40px;">
                         <div style="max-width: 1200px; margin: 0 auto;">
                             <div class="page-header" style="text-align: center; margin-bottom: 30px;">
-                                <h3 style="font-size: 24px; font-weight: 700; color: #1e3a8a;">📋 국가별 주요 규격 비교</h3>
+                                <h3 style="font-size: 24px; font-weight: 700; color: #26303C;">국가별 주요 규격 비교</h3>
                                 <p style="color: #64748b;">주요 국가별 표준 규격의 체계와 종류를 한눈에 비교할 수 있습니다.</p>
                             </div>
 
@@ -473,7 +472,7 @@
                                 <div class="standard-card">
                                     <div class="card-header">
                                         <h3>KS</h3>
-                                        <span class="region-tag">🇰🇷</span>
+                                        <span class="region-tag">KR</span>
                                     </div>
                                     <div class="card-body">
                                         <ul>
@@ -490,7 +489,7 @@
                                 <div class="standard-card">
                                     <div class="card-header">
                                         <h3>JIS</h3>
-                                        <span class="region-tag">🇯🇵</span>
+                                        <span class="region-tag">JP</span>
                                     </div>
                                     <div class="card-body">
                                         <ul>
@@ -506,7 +505,7 @@
                                 <div class="standard-card">
                                     <div class="card-header">
                                         <h3>ASTM</h3>
-                                        <span class="region-tag">🇺🇸</span>
+                                        <span class="region-tag">US</span>
                                     </div>
                                     <div class="card-body">
                                         <ul>
@@ -523,7 +522,7 @@
                                 <div class="standard-card">
                                     <div class="card-header">
                                         <h3>EN</h3>
-                                        <span class="region-tag">🇪🇺</span>
+                                        <span class="region-tag">EU</span>
                                     </div>
                                     <div class="card-body">
                                         <ul>
@@ -776,7 +775,7 @@
                 <section id="process-spec-view" class="page-section" style="display: none;">
                     <div style="max-width: 1200px; margin: 0 auto;">
                         <div class="page-header" style="text-align: center;">
-                            <h2>🏭 라인별 공정도 및 상세 제원</h2>
+                            <h2>라인별 공정도 및 상세 제원</h2>
                             <p>각 생산 라인의 공정 흐름도와 상세 제원을 확인합니다.</p>
                         </div>
 
@@ -795,7 +794,7 @@
                                 <!-- CPL 패널 (연속 산세 라인) -->
                                 <div class="line-spec-panel process-panel active" id="process-panel-cpl">
                                     <div class="line-spec-header">
-                                        <h3>🏭 CPL <small>산세라인 (Pickling Line)</small></h3>
+                                        <h3>CPL <small>산세라인 (Pickling Line)</small></h3>
                                         <p class="line-spec-subtitle">열연코일의 산화스케일 제거 후 냉연/도금 공정 투입용 원판 생산</p>
                                     </div>
                                     <div class="modern-process-grid"
@@ -804,7 +803,7 @@
                                             <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Pay-off Reel</div>
                                                         <div class="station-sub">제품 입측</div>
@@ -828,19 +827,19 @@
                                                         <div class="station-sub">입측 루프</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-vial"></i></div>
                                                         <div class="station-label">Pickling Tank #1</div>
                                                         <div class="station-sub">No.1 산세조</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-vial"></i></div>
                                                         <div class="station-label">Pickling Tank #2</div>
                                                         <div class="station-sub">No.2 산세조</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-vial"></i></div>
                                                         <div class="station-label">Pickling Tank #3</div>
                                                         <div class="station-sub">No.3 산세조</div>
@@ -884,7 +883,7 @@
                                                         <div class="station-sub">출측 절단</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Tension Reel</div>
                                                         <div class="station-sub">제품 권취</div>
@@ -956,7 +955,7 @@
                                 <div class="line-spec-panel process-panel" id="process-panel-crm"
                                     style="display: none;">
                                     <div class="line-spec-header">
-                                        <h3>🏭 CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
+                                        <h3>CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
                                         <p class="line-spec-subtitle">산세강판을 냉간압연하여 목표 두께로 압연 (왕복식 압연 방식)</p>
                                     </div>
                                     <div class="modern-process-grid"
@@ -966,7 +965,7 @@
                                                 <div class="process-row" style="margin-bottom: 0;">
                                                     <!-- 입측 -->
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Pay-off Reel</div>
                                                         <div class="station-sub" style="font-size: 11px;">제품 입측</div>
@@ -980,21 +979,21 @@
 
                                                     <!-- 왕복 작업 구간 -->
                                                     <div class="process-reversing-zone"
-                                                        style="display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(59, 130, 246, 0.04); border: 2px dashed #3b82f6; border-radius: 20px; position: relative; margin: 0 5px;">
+                                                        style="display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(74, 101, 130, 0.04); border: 2px dashed #4A6582; border-radius: 20px; position: relative; margin: 0 5px;">
                                                         <div
-                                                            style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 1px 12px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; z-index: 2;">
+                                                            style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #4A6582; color: white; padding: 1px 12px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; z-index: 2;">
                                                             <i class="fas fa-exchange-alt"></i> 왕복 작업 구간 (Reversing)
                                                         </div>
 
                                                         <div class="process-station">
-                                                            <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            <div class="station-icon" style="color: #26303C;"><i
                                                                     class="fas fa-compact-disc"></i></div>
                                                             <div class="station-label">L.H. Reel</div>
                                                             <div class="station-sub" style="font-size: 11px;">좌측 텐션릴
                                                             </div>
                                                         </div>
                                                         <div class="process-station">
-                                                            <div class="station-icon" style="color: #3b82f6;"><i
+                                                            <div class="station-icon" style="color: #4A6582;"><i
                                                                     class="fas fa-gauge-high"></i></div>
                                                             <div class="station-label">Shape Meter</div>
                                                             <div class="station-sub" style="font-size: 11px;">형상 측정 L
@@ -1015,10 +1014,10 @@
                                                             </div>
                                                         </div>
                                                         <div class="process-station">
-                                                            <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            <div class="station-icon" style="color: #26303C;"><i
                                                                     class="fas fa-industry"></i></div>
                                                             <div class="station-label"
-                                                                style="font-weight: 900; color: #1e3a8a;">6-High Stand
+                                                                style="font-weight: 900; color: #26303C;">6-High Stand
                                                             </div>
                                                             <div class="station-sub"
                                                                 style="font-weight: 700; font-size: 11px;">압연기(핵심)</div>
@@ -1031,14 +1030,14 @@
                                                             </div>
                                                         </div>
                                                         <div class="process-station">
-                                                            <div class="station-icon" style="color: #3b82f6;"><i
+                                                            <div class="station-icon" style="color: #4A6582;"><i
                                                                     class="fas fa-gauge-high"></i></div>
                                                             <div class="station-label">Shape Meter</div>
                                                             <div class="station-sub" style="font-size: 11px;">형상 측정 R
                                                             </div>
                                                         </div>
                                                         <div class="process-station">
-                                                            <div class="station-icon" style="color: #1e3a8a;"><i
+                                                            <div class="station-icon" style="color: #26303C;"><i
                                                                     class="fas fa-compact-disc"></i></div>
                                                             <div class="station-label">R.H. Reel</div>
                                                             <div class="station-sub" style="font-size: 11px;">우측 텐션릴
@@ -1112,7 +1111,7 @@
                                 <div class="line-spec-panel process-panel" id="process-panel-cgl"
                                     style="display: none;">
                                     <div class="line-spec-header">
-                                        <h3>🏭 CGL <small>용융아연/갈바륨도금라인 (Galvanizing & Galvalume)</small></h3>
+                                        <h3>CGL <small>용융아연/갈바륨도금라인 (Galvanizing & Galvalume)</small></h3>
                                         <p class="line-spec-subtitle">GI(용융아연도금) 및 GL(용융갈바륨도금) 제품을 생산하는 연속 도금 라인</p>
                                     </div>
                                     <div class="modern-process-grid"
@@ -1121,7 +1120,7 @@
                                             <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Pay-off Reel</div>
                                                         <div class="station-sub">제품 입측</div>
@@ -1139,7 +1138,7 @@
                                                         <div class="station-sub">코일 접합</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-shower"></i></div>
                                                         <div class="station-label">Pre-cleaning</div>
                                                         <div class="station-sub">예비 세척</div>
@@ -1219,7 +1218,7 @@
                                                         <div class="station-sub">출측 절단</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Tension Reel</div>
                                                         <div class="station-sub">제품 권취</div>
@@ -1292,7 +1291,7 @@
                                 <div class="line-spec-panel process-panel" id="process-panel-1ccl"
                                     style="display: none;">
                                     <div class="line-spec-header">
-                                        <h3>🏭 1CCL <small>연속도장라인 1호기 (Color Coating Line No.1)</small></h3>
+                                        <h3>1CCL <small>연속도장라인 1호기 (Color Coating Line No.1)</small></h3>
                                         <p class="line-spec-subtitle">아연도금강판 및 알루미늄 강판에 다양한 색상의 도료를 코팅하는 라인</p>
                                     </div>
                                     <div class="modern-process-grid"
@@ -1301,7 +1300,7 @@
                                             <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Pay-off Reel</div>
                                                         <div class="station-sub">제품 입측</div>
@@ -1319,7 +1318,7 @@
                                                         <div class="station-sub">코일 접합</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-shower"></i></div>
                                                         <div class="station-label">Pre-cleaning</div>
                                                         <div class="station-sub">예비 세척</div>
@@ -1393,7 +1392,7 @@
                                                         <div class="station-sub">형상 교정</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-magnifying-glass"></i></div>
                                                         <div class="station-label">Inspection Zone</div>
                                                         <div class="station-sub">품질 검사</div>
@@ -1411,7 +1410,7 @@
                                                         <div class="station-sub">출측 절단</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Tension Reel</div>
                                                         <div class="station-sub">제품 권취</div>
@@ -1483,7 +1482,7 @@
                                 <div class="line-spec-panel process-panel" id="process-panel-2ccl"
                                     style="display: none;">
                                     <div class="line-spec-header">
-                                        <h3>🏭 2CCL <small>연속도장라인 2호기 (Color Coating Line No.2)</small></h3>
+                                        <h3>2CCL <small>연속도장라인 2호기 (Color Coating Line No.2)</small></h3>
                                         <p class="line-spec-subtitle">고품질 가전용 및 건재용 컬러강판을 생산하는 최신 설비 라인</p>
                                     </div>
                                     <div class="modern-process-grid"
@@ -1492,7 +1491,7 @@
                                             <div class="process-map-container">
                                                 <div class="process-row" style="margin-bottom: 50px;">
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Pay-off Reel</div>
                                                         <div class="station-sub">제품 입측</div>
@@ -1516,7 +1515,7 @@
                                                         <div class="station-sub">입측 루프</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-shower"></i></div>
                                                         <div class="station-label">Cleaning Zone</div>
                                                         <div class="station-sub">표면 세척</div>
@@ -1560,7 +1559,7 @@
                                                         <div class="station-sub">상도 건조/냉각</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-layer-group"></i></div>
                                                         <div class="station-label">Laminator</div>
                                                         <div class="station-sub">라미 필름</div>
@@ -1602,7 +1601,7 @@
                                                         <div class="station-sub">출측 루프</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-magnifying-glass"></i></div>
                                                         <div class="station-label">Inspection</div>
                                                         <div class="station-sub">품질 검사</div>
@@ -1620,7 +1619,7 @@
                                                         <div class="station-sub">출측 절단</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Tension Reel</div>
                                                         <div class="station-sub">제품 권취</div>
@@ -1691,7 +1690,7 @@
                                 <div class="line-spec-panel process-panel" id="process-panel-3ccl"
                                     style="display: none;">
                                     <div class="line-spec-header">
-                                        <h3>🏭 3CCL <small>연속도장라인 3호기 (Color Coating Line No.3)</small></h3>
+                                        <h3>3CCL <small>연속도장라인 3호기 (Color Coating Line No.3)</small></h3>
                                         <p class="line-spec-subtitle">최신 설비를 갖춘 가전전용 컬러강판 라인</p>
                                     </div>
                                     <div class="modern-process-grid"
@@ -1702,7 +1701,7 @@
                                                 <!-- 첫 번째 줄: 입측 ~ 상도 공정 (11개) -->
                                                 <div class="process-row" style="margin-bottom: 70px;">
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Pay-off Reel</div>
                                                         <div class="station-sub">제품 입측</div>
@@ -1732,7 +1731,7 @@
                                                         <div class="station-sub">입측 루프</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #3b82f6;"><i
+                                                        <div class="station-icon" style="color: #4A6582;"><i
                                                                 class="fas fa-shower"></i></div>
                                                         <div class="station-label">Cleaning Zone</div>
                                                         <div class="station-sub">표면 세척</div>
@@ -1816,7 +1815,7 @@
                                                         <div class="station-sub">평탄도 보정</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-magnifying-glass"></i></div>
                                                         <div class="station-label">Inspection Zone</div>
                                                         <div class="station-sub">품질 검사</div>
@@ -1834,7 +1833,7 @@
                                                         <div class="station-sub">출측 절단</div>
                                                     </div>
                                                     <div class="process-station">
-                                                        <div class="station-icon" style="color: #1e3a8a;"><i
+                                                        <div class="station-icon" style="color: #26303C;"><i
                                                                 class="fas fa-compact-disc"></i></div>
                                                         <div class="station-label">Tension Reel</div>
                                                         <div class="station-sub">제품 권취</div>
@@ -1905,7 +1904,7 @@
                 <section id="line-spec-view" class="page-section" style="display: none;">
                     <div style="max-width: 1200px; margin: 0 auto;">
                         <div class="page-header" style="text-align: center; position: relative;">
-                            <h2>📐 라인별 생산 가능 SPEC</h2>
+                            <h2>라인별 생산 가능 SPEC</h2>
                             <p>각 생산 라인별로 제조 가능한 두께 및 폭 범위를 확인합니다.</p>
 
                             <!-- 관리자 전용 그리드 컨트롤 -->
@@ -1928,7 +1927,7 @@
                                     <h4
                                         style="margin: 0; font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; white-space: nowrap;">
                                         <span class="header-icon"
-                                            style="background: #eff6ff; color: #3b82f6; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 16px;">
+                                            style="background: #EFF2F5; color: #4A6582; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 16px;">
                                             <i class="fas fa-calculator"></i>
                                         </span>
                                         <span class="header-text">생산 가능 여부 자동 판단</span>
@@ -1940,7 +1939,7 @@
                                     </p>
                                 </div>
                                 <button onclick="checkProductionCapability()" class="btn-primary auto-check-btn"
-                                    style="padding: 10px 24px; font-weight: 700; border-radius: 8px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border: none; color: white; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                                    style="padding: 10px 24px; font-weight: 700; border-radius: 8px; background: #26303C; border: none; color: white; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
                                     <i class="fas fa-rocket"></i> 판단하기
                                 </button>
                             </div>
@@ -2014,7 +2013,7 @@
                             <!-- CPL 탭 -->
                             <div class="line-spec-panel active" id="panel-line-cpl">
                                 <div class="line-spec-header">
-                                    <h3>🏭 CPL <small>산세라인 (Pickling Line)</small></h3>
+                                    <h3>CPL <small>산세라인 (Pickling Line)</small></h3>
                                     <p class="line-spec-subtitle">열연코일의 산화스케일 제거 후 냉연/도금 공정 투입용 원판 생산</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2049,7 +2048,7 @@
                             <!-- CRM 탭 -->
                             <div class="line-spec-panel" id="panel-line-crm">
                                 <div class="line-spec-header">
-                                    <h3>🏭 CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
+                                    <h3>CRM <small>냉간압연라인 (Cold Rolling Mill)</small></h3>
                                     <p class="line-spec-subtitle">산세강판을 냉간압연하여 목표 두께로 압연</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2084,7 +2083,7 @@
                             <!-- CGL GI 탭 (HTML Flow 유지) -->
                             <div class="line-spec-panel" id="panel-line-cgl">
                                 <div class="line-spec-header">
-                                    <h3>🏭 CGL GI <small>용융아연도금라인 (Galvanizing Line)</small></h3>
+                                    <h3>CGL GI <small>용융아연도금라인 (Galvanizing Line)</small></h3>
                                     <p class="line-spec-subtitle">미려한 표면과 우수한 가공성/내식성을 보유한 용융아연도금강판 생산 (GI)</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2105,7 +2104,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2125,7 +2124,7 @@
                                             <p style="margin: 0;">* 0.4T 이하 Z220이상, 0.801T 초과 Z80이하일 경우 수주 활동 시 품질
                                                 협의 필요
                                             </p>
-                                            <p style="margin: 0; color: #1e3a8a; font-weight: 600;"> 협의 영역 : 주문 투입 전
+                                            <p style="margin: 0; color: #26303C; font-weight: 600;"> 협의 영역 : 주문 투입 전
                                                 생산가능성 검토 진행 필요 영역</p>
                                         </div>
 
@@ -2147,7 +2146,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2160,7 +2159,7 @@
                                         <div class="chart-footer-notes"
                                             style="margin-top: 10px; font-size: 11px; color: #475569; line-height: 1.6;">
                                             <p style="margin: 0;"> 드로잉용 강판으로 가공성 우수</p>
-                                            <p style="margin: 0; color: #1e3a8a; font-weight: 600;"> 협의 영역 : 주문 투입 전
+                                            <p style="margin: 0; color: #26303C; font-weight: 600;"> 협의 영역 : 주문 투입 전
                                                 생산가능성 검토 진행 필요 영역</p>
                                         </div>
 
@@ -2182,7 +2181,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2195,7 +2194,7 @@
                                         <div class="chart-footer-notes"
                                             style="margin-top: 10px; font-size: 11px; color: #475569; line-height: 1.6;">
                                             <p style="margin: 0;"> 심가공용 강판으로 딥드로잉 가공에 적합</p>
-                                            <p style="margin: 0; color: #1e3a8a; font-weight: 600;"> 협의 영역 : 주문 투입 전
+                                            <p style="margin: 0; color: #26303C; font-weight: 600;"> 협의 영역 : 주문 투입 전
                                                 생산가능성 검토 진행 필요 영역</p>
                                         </div>
 
@@ -2217,7 +2216,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2230,7 +2229,7 @@
                                         <div class="chart-footer-notes"
                                             style="margin-top: 10px; font-size: 11px; color: #475569; line-height: 1.6;">
                                             <p style="margin: 0;"> 구조용 강판으로 강도 우수</p>
-                                            <p style="margin: 0; color: #1e3a8a; font-weight: 600;"> 협의 영역 : 주문 투입 전
+                                            <p style="margin: 0; color: #26303C; font-weight: 600;"> 협의 영역 : 주문 투입 전
                                                 생산가능성 검토 진행 필요 영역</p>
                                         </div>
 
@@ -2252,7 +2251,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2274,7 +2273,7 @@
                             <!-- CGL GL 탭 (HTML Flow 유지) -->
                             <div class="line-spec-panel" id="panel-line-cgl-gl">
                                 <div class="line-spec-header">
-                                    <h3>🏭 CGL GL <small>용융갈바륨도금라인 (Galvalume Line)</small></h3>
+                                    <h3>CGL GL <small>용융갈바륨도금라인 (Galvalume Line)</small></h3>
                                     <p class="line-spec-subtitle">냉연강판에 55% 알루미늄-아연 합금 도금을 입히는 연속 도금 라인</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2295,7 +2294,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2310,7 +2309,7 @@
                                             <p style="margin: 0;">* 후부착 : 도금부착량 AZ120 초과</p>
                                             <p style="margin: 0;">* BMT 0.3t 미만 사전 생산가능 검토 필요</p>
                                             <p style="margin: 0;">* 0.35T 이하 AZ120이상일 경우 수주 활동 시 품질 협의 필요</p>
-                                            <p style="margin: 0; color: #1e3a8a; font-weight: 600;"> DQ(POSHRD2),
+                                            <p style="margin: 0; color: #26303C; font-weight: 600;"> DQ(POSHRD2),
                                                 DDQ(POSHRD3) 기존 생산 Size외 확대 시 생산성 검토 필요</p>
                                         </div>
 
@@ -2332,7 +2331,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2368,7 +2367,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2404,7 +2403,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2437,7 +2436,7 @@
                                                     </div> 협의
                                                 </span><span style="display: flex; align-items: center; gap: 3px;">
                                                     <div
-                                                        style="width:10px; height:10px; background:#1e3a8a; border:1px solid #0f172a; border-radius:2px;">
+                                                        style="width:10px; height:10px; background:#26303C; border:1px solid #0f172a; border-radius:2px;">
                                                     </div> 후부착
                                                 </span>
 
@@ -2461,7 +2460,7 @@
                             <!-- 1CCL 탭 -->
                             <div class="line-spec-panel" id="panel-line-1ccl">
                                 <div class="line-spec-header">
-                                    <h3>🏭 1CCL <small>연속도장라인 1호기 (Color Coating Line No.1)</small></h3>
+                                    <h3>1CCL <small>연속도장라인 1호기 (Color Coating Line No.1)</small></h3>
                                     <p class="line-spec-subtitle">아연도금강판 및 알루미늄 강판에 다양한 색상의 도료를 코팅하는 라인</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2517,7 +2516,7 @@
                             <!-- 2CCL 탭 -->
                             <div class="line-spec-panel" id="panel-line-2ccl">
                                 <div class="line-spec-header">
-                                    <h3>🏭 2CCL <small>연속도장라인 2호기 (Color Coating Line No.2)</small></h3>
+                                    <h3>2CCL <small>연속도장라인 2호기 (Color Coating Line No.2)</small></h3>
                                     <p class="line-spec-subtitle">고품질 가전용 및 건재용 컬러강판을 생산하는 최신 설비 라인</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2690,7 +2689,7 @@
                             <!-- 3CCL 탭 -->
                             <div class="line-spec-panel" id="panel-line-3ccl">
                                 <div class="line-spec-header">
-                                    <h3>🏭 3CCL <small>연속도장라인 3호기 (Color Coating Line No.3)</small></h3>
+                                    <h3>3CCL <small>연속도장라인 3호기 (Color Coating Line No.3)</small></h3>
                                     <p class="line-spec-subtitle">최신 설비를 갖춘 가전전용 컬러강판 라인</p>
                                 </div>
                                 <div class="spec-charts-grid">
@@ -2785,7 +2784,7 @@
                 <section id="warranty-guide-view" class="page-section" style="display: none;">
                     <div style="max-width: 1200px; margin: 0 auto;">
                         <div class="page-header" style="text-align: center;">
-                            <h2>📜 WARRANTY GUIDE</h2>
+                            <h2>WARRANTY GUIDE</h2>
                             <p>제품의 판매 활성화를 위한 지역별 / 수지별 품질 보증 가이드라인입니다.</p>
                         </div>
 
@@ -2806,7 +2805,7 @@
                                 <!-- [Tab 1] 고위험 국가 테이블 -->
                                 <div class="warranty-panel active" id="warranty-panel-high-risk">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                                        <h4 style="font-size: 18px; font-weight: 800; color: #1e3a8a;">📊 위도 ( 5 ~ 30 도
+                                        <h4 style="font-size: 18px; font-weight: 800; color: #26303C;">위도 ( 5 ~ 30 도
                                             ) +
                                             고위험 국가</h4>
                                         <span class="badge badge-orange" style="font-size: 11px;">High Risk</span>
@@ -2816,32 +2815,32 @@
                                         <table class="data-table"
                                             style="min-width: 1000px; text-align: center; border: none;">
                                             <thead>
-                                                <tr style="background: #1e3a8a; color: #ffffff !important;">
+                                                <tr style="background: #26303C; color: #ffffff !important;">
                                                     <th rowspan="2"
-                                                        style="background: #1e3a8a; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #26303C; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         제품군</th>
                                                     <th rowspan="2"
-                                                        style="background: #1e3a8a; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #26303C; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         PEEL/FLAKE (박리)</th>
                                                     <th rowspan="2"
-                                                        style="background: #1e3a8a; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #26303C; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         PERFORATION (천공)</th>
                                                     <th colspan="3"
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         COLOR FADING (변색/탈색)</th>
                                                     <th colspan="3"
                                                         style="background: #1d4ed8; color: #ffffff !important;">
                                                         CHALK (백화/묻어남)</th>
                                                 </tr>
-                                                <tr style="background: #3b82f6; color: #ffffff !important;">
+                                                <tr style="background: #4A6582; color: #ffffff !important;">
                                                     <th
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         기간</th>
                                                     <th
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         ROOF</th>
                                                     <th
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         WALL</th>
                                                     <th
                                                         style="background: #1d4ed8; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
@@ -3002,7 +3001,7 @@
                                 <!-- [Tab 2] 저위험 국가 테이블 -->
                                 <div class="warranty-panel" id="warranty-panel-low-risk" style="display: none;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                                        <h4 style="font-size: 18px; font-weight: 800; color: #1e3a8a;">📊 위도 ( 30 도 이상 )
+                                        <h4 style="font-size: 18px; font-weight: 800; color: #26303C;">위도 ( 30 도 이상 )
                                             +
                                             저위험 국가</h4>
                                         <span class="badge badge-blue" style="font-size: 11px;">Low Risk</span>
@@ -3012,32 +3011,32 @@
                                         <table class="data-table"
                                             style="min-width: 1000px; text-align: center; border: none;">
                                             <thead>
-                                                <tr style="background: #1e3a8a; color: #ffffff !important;">
+                                                <tr style="background: #26303C; color: #ffffff !important;">
                                                     <th rowspan="2"
-                                                        style="background: #1e3a8a; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #26303C; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         제품군</th>
                                                     <th rowspan="2"
-                                                        style="background: #1e3a8a; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #26303C; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         PEEL/FLAKE (박리)</th>
                                                     <th rowspan="2"
-                                                        style="background: #1e3a8a; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #26303C; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         PERFORATION (천공)</th>
                                                     <th colspan="3"
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         COLOR FADING (변색/탈색)</th>
                                                     <th colspan="3"
                                                         style="background: #1d4ed8; color: #ffffff !important;">
                                                         CHALK (백화/묻어남)</th>
                                                 </tr>
-                                                <tr style="background: #3b82f6; color: #ffffff !important;">
+                                                <tr style="background: #4A6582; color: #ffffff !important;">
                                                     <th
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         기간</th>
                                                     <th
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         ROOF</th>
                                                     <th
-                                                        style="background: #1e40af; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
+                                                        style="background: #3D5A75; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
                                                         WALL</th>
                                                     <th
                                                         style="background: #1d4ed8; border-right: 1px solid rgba(255,255,255,0.1); color: #ffffff !important;">
@@ -3182,12 +3181,12 @@
                                         </table>
                                     </div>
                                     <div
-                                        style="margin-top: 25px; padding: 20px; background: #eff6ff; border-radius: 12px; border: 1px solid #dbeafe;">
+                                        style="margin-top: 25px; padding: 20px; background: #EFF2F5; border-radius: 12px; border: 1px solid #E2E8EE;">
                                         <p
                                             style="font-size: 14px; color: #1d4ed8; font-weight: 800; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
                                             <i class="fas fa-snowflake"></i> 저위험 국가 리스트
                                         </p>
-                                        <p style="font-size: 13px; color: #1e40af; line-height: 1.6;">
+                                        <p style="font-size: 13px; color: #3D5A75; line-height: 1.6;">
                                             - 북미 (미국, 캐나다), 아시아 (러시아, 일본, 중국), 유럽 등<br>
                                             - 위 리스트 외 UV 지수 고위험 국가(호주, 뉴질랜드, 남미국가 등)를 제외한 모든 지역
                                         </p>
@@ -3198,7 +3197,7 @@
                                 <!-- [Tab 3] AL 소재 적용 불소 제품 -->
                                 <div class="warranty-panel" id="warranty-panel-al-fluorine" style="display: none;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
-                                        <h4 style="font-size: 18px; font-weight: 800; color: #1e3a8a;">📍 AL 소재 적용 불소 제품
+                                        <h4 style="font-size: 18px; font-weight: 800; color: #26303C;">AL 소재 적용 불소 제품
                                             (해안
                                             거리별 보증)</h4>
                                     </div>
@@ -3228,7 +3227,7 @@
                                                         <td style="color: #ef4444;">NO Warranty</td>
                                                         <td rowspan="4" style="background: #f8fafc; font-size: 12px;">
                                                             <strong>CHALK</strong><br>ROOF / WALL<br><span
-                                                                style="color: #3b82f6;">ΔE 5.0 NO.8</span>
+                                                                style="color: #4A6582;">ΔE 5.0 NO.8</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -3252,15 +3251,15 @@
                                         <div class="mobile-warranty-list" id="mw-list-al-high"></div>
                                         <!-- 저위험 -->
                                         <div class="search-container pc-only-table"
-                                            style="flex: 1; padding: 20px; border-radius: 12px; border-top: 4px solid #3b82f6; margin: 0; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto;">
+                                            style="flex: 1; padding: 20px; border-radius: 12px; border-top: 4px solid #4A6582; margin: 0; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto;">
                                             <h4
-                                                style="margin-bottom: 20px; color: #3b82f6; font-size: 16px; font-weight: 700;">
+                                                style="margin-bottom: 20px; color: #4A6582; font-size: 16px; font-weight: 700;">
                                                 <i class="fas fa-check-circle"></i> 저위험 국가
                                             </h4>
                                             <table class="data-table"
                                                 style="width: 100%; text-align: center; white-space: nowrap;">
                                                 <thead>
-                                                    <tr style="background: #eff6ff;">
+                                                    <tr style="background: #EFF2F5;">
                                                         <th style="min-width: 150px;">해안 기준</th>
                                                         <th style="min-width: 110px;">2 COAT</th>
                                                         <th style="min-width: 110px;">3 COAT</th>
@@ -3274,7 +3273,7 @@
                                                         <td>15Y</td>
                                                         <td rowspan="4" style="background: #f8fafc; font-size: 12px;">
                                                             <strong>CHALK</strong><br>ROOF / WALL<br><span
-                                                                style="color: #3b82f6;">ΔE 5.0 NO.8</span>
+                                                                style="color: #4A6582;">ΔE 5.0 NO.8</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -3299,7 +3298,7 @@
                                     </div>
                                     <div
                                         style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; color: #475569; line-height: 1.8;">
-                                        <p><strong style="color: #1e3a8a; font-size: 15px;">※ 공통 준수 사항:</strong></p>
+                                        <p><strong style="color: #26303C; font-size: 15px;">※ 공통 준수 사항:</strong></p>
                                         <p>① 소재 자체의 부식으로 인한 불량은 보증에서 제외됩니다.</p>
                                         <p>② 건물 소유주는 정기적인 정수 세척 관리가 필요합니다.</p>
                                     </div>
@@ -3331,12 +3330,12 @@
                     <div class="page-header prod-feasibility-header"
                         style="position: relative; text-align: center; margin-bottom: 24px; padding-bottom: 10px; display: flex; justify-content: center; align-items: center;">
                         <div style="display: inline-block;">
-                            <h2 style="margin-bottom: 8px;">🔬 생산 가능성 검토</h2>
+                            <h2 style="margin-bottom: 8px;">생산 가능성 검토</h2>
                             <p style="margin-bottom: 0; color: #64748b;">영업 부문의 신규 사양 검토 요청을 품질경영팀에서 기술적으로 분석하고 검토 결과를
                                 공유합니다.</p>
                         </div>
                         <button id="add-feasibility-btn" class="btn-primary"
-                            style="position: absolute; right: 0; top: 0; width: auto; padding: 12px 24px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 10px; font-weight: 700; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
+                            style="position: absolute; right: 0; top: 0; width: auto; padding: 12px 24px; background: #26303C; border-radius: 10px; font-weight: 700; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
                             <i class="fas fa-plus-circle"></i> 신규 검토 요청
                         </button>
                     </div>
@@ -3345,7 +3344,7 @@
                     <div class="feas-dash-grid" style="max-width: 1200px; margin: 0 auto 16px auto;">
                         <!-- 전체 요청 -->
                         <div
-                            style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border-radius: 12px; padding: 14px 16px; color: white; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
+                            style="background: linear-gradient(135deg, #26303C 0%, #3D5A75 100%); border-radius: 12px; padding: 14px 16px; color: white; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(30,58,138,0.25);">
                             <div
                                 style="position: absolute; right: -8px; top: -8px; width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 50%;">
                             </div>
@@ -3373,15 +3372,15 @@
                         </div>
                         <!-- 검토중 -->
                         <div
-                            style="background: white; border-radius: 12px; padding: 14px 16px; border: 1px solid #dbeafe; position: relative; overflow: hidden; box-shadow: 0 2px 8px rgba(59,130,246,0.08);">
+                            style="background: white; border-radius: 12px; padding: 14px 16px; border: 1px solid #E2E8EE; position: relative; overflow: hidden; box-shadow: 0 2px 8px rgba(59,130,246,0.08);">
                             <div
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #EFF2F5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">
                                 🔍</div>
-                            <div style="font-size: 10px; color: #3b82f6; font-weight: 600; letter-spacing: 0.5px;">검토중
+                            <div style="font-size: 10px; color: #4A6582; font-weight: 600; letter-spacing: 0.5px;">검토중
                             </div>
                             <div style="display: flex; align-items: baseline; gap: 3px; margin-top: 4px;">
                                 <span id="feas-dash-reviewing"
-                                    style="font-size: 24px; font-weight: 900; color: #2563eb; line-height: 1;">0</span>
+                                    style="font-size: 24px; font-weight: 900; color: #3D5A75; line-height: 1;">0</span>
                                 <span style="font-size: 11px; color: #93c5fd;">건</span>
                             </div>
                         </div>
@@ -3483,10 +3482,10 @@
                         style="width: 95%; max-width: 860px; padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.25);">
                         <!-- 모달 헤더 -->
                         <div
-                            style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 22px 28px; color: white; display: flex; justify-content: space-between; align-items: center;">
+                            style="background: #26303C; padding: 22px 28px; color: white; display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <h3 id="feasibility-modal-title" style="margin: 0; font-size: 18px; font-weight: 800;">
-                                    📋 생산 가능성 검토 요청서</h3>
+                                    생산 가능성 검토 요청서</h3>
                                 <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.8;">
                             </div>
                             <span onclick="document.getElementById('feasibility-modal').style.display='none'"
@@ -3501,8 +3500,8 @@
                                 <!-- ① 요청자 기본 정보 -->
                                 <div
                                     style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">
-                                    <i class="fas fa-user-tie" style="font-size: 18px; color: #1e3a8a;"></i>
-                                    <span style="font-size: 15px; font-weight: 800; color: #1e3a8a;">요청자 정보</span>
+                                    <i class="fas fa-user-tie" style="font-size: 18px; color: #26303C;"></i>
+                                    <span style="font-size: 15px; font-weight: 800; color: #26303C;">요청자 정보</span>
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Requester
                                         Info</span>
                                 </div>
@@ -3530,8 +3529,8 @@
                                 <!-- ② 제품 사양 정보 -->
                                 <div
                                     style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">
-                                    <i class="fas fa-cogs" style="font-size: 18px; color: #1e3a8a;"></i>
-                                    <span style="font-size: 15px; font-weight: 800; color: #1e3a8a;">제품 사양 정보 (기준 없으면
+                                    <i class="fas fa-cogs" style="font-size: 18px; color: #26303C;"></i>
+                                    <span style="font-size: 15px; font-weight: 800; color: #26303C;">제품 사양 정보 (기준 없으면
                                         해당 없음 명기)</span>
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Product
                                         Specification</span>
@@ -3681,8 +3680,8 @@
                                 <!-- ③ 고객 및 현장 정보 -->
                                 <div
                                     style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0;">
-                                    <i class="fas fa-building" style="font-size: 18px; color: #1e3a8a;"></i>
-                                    <span style="font-size: 15px; font-weight: 800; color: #1e3a8a;">고객 및 현장 정보</span>
+                                    <i class="fas fa-building" style="font-size: 18px; color: #26303C;"></i>
+                                    <span style="font-size: 15px; font-weight: 800; color: #26303C;">고객 및 현장 정보</span>
                                     <span style="font-size: 12px; color: #94a3b8; margin-left: auto;">Customer & Site
                                         Info</span>
                                 </div>
@@ -3808,7 +3807,7 @@
                                         class="btn-secondary"
                                         style="width: auto; padding: 0 28px; height: 44px;">취소</button>
                                     <button type="submit" class="btn-primary" id="save-feasibility-btn"
-                                        style="width: auto; padding: 0 32px; height: 44px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                                        style="width: auto; padding: 0 32px; height: 44px; background: #26303C;">
                                         <i class="fas fa-save"></i> 저장하기
                                     </button>
                                 </div>
@@ -3888,11 +3887,11 @@
                     <div class="search-container" style="margin: 0 auto 24px auto; max-width: 1100px;">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                            <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">📝 VOC 상세 정보
+                            <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">VOC 상세 정보
                                 접수
                             </h4>
                             <button type="submit" form="voc-form" class="btn-primary"
-                                style="padding: 10px 24px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius: 8px; font-weight: 700;">
+                                style="padding: 10px 24px; background: #26303C; border-radius: 8px; font-weight: 700;">
                                 <i class="fas fa-check-circle"></i> VOC 접수완료
                             </button>
                         </div>
@@ -4034,7 +4033,7 @@
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                             <div style="display: flex; align-items: center; gap: 15px;">
-                                <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">📋 VOC 내역
+                                <h4 class="section-title-line" style="margin-bottom: 0; border-bottom: none;">VOC 내역
                                     조회
                                 </h4>
                                 <div class="filter-box" style="display: flex; align-items: center; gap: 8px;">
@@ -4318,7 +4317,7 @@
                                         </select>
                                     </div>
                                     <button id="modal-voc-save-btn" class="btn-primary"
-                                        style="width: 100%; height: 45px; font-weight: 700; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">모든
+                                        style="width: 100%; height: 45px; font-weight: 700; background: #26303C;">모든
                                         변경 내용 저장하기</button>
                                 </div>
                             </div>
@@ -4386,7 +4385,7 @@
                         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin: 0 auto 20px auto; max-width: 1200px;">
                         <!-- [1] 생산 라인별 발생 현황 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">🏭 생산 라인별
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">생산 라인별
                                 발생 현황
                             </h4>
                             <div style="height: 290px;">
@@ -4398,8 +4397,7 @@
                         </div>
                         <!-- [2] 클레임/컴플레인 비중 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">⚖️
-                                클레임/컴플레인
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">클레임/컴플레인
                                 비중
                             </h4>
                             <div style="height: 290px; position: relative;">
@@ -4411,7 +4409,7 @@
                         </div>
                         <!-- [3] 월별 VOC 발생 추이 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">📈 월별 VOC
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">월별 VOC
                                 발생 추이
                             </h4>
                             <div style="height: 290px;">
@@ -4423,7 +4421,7 @@
                         </div>
                         <!-- [4] 내수 vs 수출 비중 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">🌐 내수 vs
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">내수 vs
                                 수출
                                 비중
                             </h4>
@@ -4436,7 +4434,7 @@
                         </div>
                         <!-- [5] 담당 팀별 VOC 현황 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">👥 담당 팀별
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">담당 팀별
                                 VOC 현황
                             </h4>
                             <div style="height: 290px;">
@@ -4448,7 +4446,7 @@
                         </div>
                         <!-- [6] 라인별 예상 손실 비용 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">💰 라인별 예상
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">라인별 예상
                                 손실 비용
                             </h4>
                             <div style="height: 290px;">
@@ -4460,7 +4458,7 @@
                         </div>
                         <!-- [7] 불량 유형별 비용 분석 -->
                         <div class="search-container" style="margin-bottom: 0; padding: 24px;">
-                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">📊 불량 유형별
+                            <h4 class="section-title-line" style="margin-bottom: 15px; padding-bottom: 10px;">불량 유형별
                                 비용 분석
                             </h4>
                             <div style="height: 290px;">
@@ -4482,7 +4480,7 @@
 
                     <div class="search-container"
                         style="margin: 0 auto 24px auto; max-width: 1000px; text-align: center;">
-                        <h4 class="section-title-line" style="text-align: center;">🎨 수지(제품) 선택</h4>
+                        <h4 class="section-title-line" style="text-align: center;">수지(제품) 선택</h4>
                         <div id="resin-select-buttons" class="resin-grid" style="justify-content: center;">
                             <!-- Buttons will be generated by app.js -->
                             <button class="btn-secondary resin-btn" data-resin="RMP">RMP</button>
@@ -4544,10 +4542,10 @@
                             style="width:90%; max-width:480px; background:white; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:85vh; overflow-y:auto;">
                             <!-- Modal Header -->
                             <div
-                                style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                                style="background:#26303C; padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
                                 <h3 id="defect-modal-title"
                                     style="margin:0; color:white; font-size:18px; font-weight:600;">
-                                    📷 불량 유형 등록</h3>
+                                    불량 유형 등록</h3>
                                 <span onclick="document.getElementById('defect-modal').style.display='none'"
                                     style="color:white; font-size:24px; cursor:pointer; opacity:0.8; transition:opacity 0.2s;"
                                     onmouseover="this.style.opacity='1'"
@@ -4562,7 +4560,7 @@
                                         style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">불량명</label>
                                     <input type="text" id="defect-title" placeholder="예: 흑청/백청/적청" required
                                         style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.2s; box-sizing:border-box;"
-                                        onfocus="this.style.borderColor='#3b82f6'"
+                                        onfocus="this.style.borderColor='#4A6582'"
                                         onblur="this.style.borderColor='#e5e7eb'">
                                 </div>
                                 <!-- 사진 업로드 -->
@@ -4587,7 +4585,7 @@
                                         원인</label>
                                     <textarea id="defect-reason" rows="2" placeholder="주요 발생 원인 입력" required
                                         style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                        onfocus="this.style.borderColor='#3b82f6'"
+                                        onfocus="this.style.borderColor='#4A6582'"
                                         onblur="this.style.borderColor='#e5e7eb'"></textarea>
                                 </div>
                                 <!-- 내부 검토 항목 -->
@@ -4597,7 +4595,7 @@
                                         검토 항목 <span style="font-weight:400; color:#6b7280;">(생산)</span></label>
                                     <textarea id="defect-internal" rows="3" placeholder="생산 현장 검토 항목 입력" required
                                         style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                        onfocus="this.style.borderColor='#3b82f6'"
+                                        onfocus="this.style.borderColor='#4A6582'"
                                         onblur="this.style.borderColor='#e5e7eb'"></textarea>
                                 </div>
                                 <!-- 외부 검토 항목 -->
@@ -4607,7 +4605,7 @@
                                         검토 항목 <span style="font-weight:400; color:#6b7280;">(영업)</span></label>
                                     <textarea id="defect-external" rows="2" placeholder="영업/고객사 측 검토 항목 입력" required
                                         style="width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                        onfocus="this.style.borderColor='#3b82f6'"
+                                        onfocus="this.style.borderColor='#4A6582'"
                                         onblur="this.style.borderColor='#e5e7eb'"></textarea>
                                 </div>
                                 <!-- 버튼 -->
@@ -4619,7 +4617,7 @@
                                         onmouseover="this.style.background='#f9fafb'"
                                         onmouseout="this.style.background='white'">취소</button>
                                     <button type="submit"
-                                        style="padding:10px 24px; border:none; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity 0.2s;"
+                                        style="padding:10px 24px; border:none; background:#26303C; color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity 0.2s;"
                                         onmouseover="this.style.opacity='0.9'"
                                         onmouseout="this.style.opacity='1'">저장하기</button>
                                 </div>
@@ -4639,7 +4637,7 @@
                     <div style="max-width: 600px; margin: 0 auto;">
                         <!-- VOC Notification Settings -->
                         <div class="search-container admin-only">
-                            <h3 class="section-title-line">✉️ VOC 알림 설정</h3>
+                            <h3 class="section-title-line">VOC 알림 설정</h3>
                             <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
                                 VOC가 새롭게 접수되면 아래 등록된 담당자들에게 이메일 알림이 발송됩니다.
                             </p>
@@ -4683,7 +4681,7 @@
                             <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
                                 <thead>
                                     <tr
-                                        style="background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); color: white; text-align: center;">
+                                        style="background: linear-gradient(135deg, #26303C 0%, #172554 100%); color: white; text-align: center;">
                                         <th
                                             style="padding: 12px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); width: 50px;">
                                             구분</th>
@@ -4730,10 +4728,10 @@
                         <div class="modal-content"
                             style="width:90%; max-width:500px; background:white; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto;">
                             <div
-                                style="background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                                style="background:#26303C; padding:20px 24px; border-radius:16px 16px 0 0; display:flex; justify-content:space-between; align-items:center;">
                                 <h3 id="cert-modal-title"
                                     style="margin:0; color:white; font-size:18px; font-weight:600;">
-                                    🏆 인증 정보 수정</h3>
+                                    인증 정보 수정</h3>
                                 <span onclick="document.getElementById('cert-modal').style.display='none'"
                                     style="color:white; font-size:24px; cursor:pointer; opacity:0.8; transition:opacity 0.2s;"
                                     onmouseover="this.style.opacity='1'"
@@ -4834,7 +4832,7 @@
                                         onclick="document.getElementById('cert-modal').style.display='none'"
                                         style="padding:10px 20px; border:1px solid #d1d5db; background:white; color:#374151; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer;">취소</button>
                                     <button type="submit"
-                                        style="padding:10px 24px; border:none; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">저장</button>
+                                        style="padding:10px 24px; border:none; background:#26303C; color:white; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">저장</button>
                                 </div>
                             </form>
                         </div>
@@ -4906,7 +4904,7 @@
                             style="padding: 6px 14px; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #475569;">다음</button>
                     </div>
                     <span style="font-size: 13px; color: #64748b; font-weight: 500;">
-                        Page: <span id="current-page-num" style="color: #1e3a8a; font-weight: 700;">1</span> / <span
+                        Page: <span id="current-page-num" style="color: #26303C; font-weight: 700;">1</span> / <span
                             id="total-pages">1</span>
                     </span>
                     <!-- 확대/축소 -->
@@ -4934,7 +4932,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="auth-gate.js?v=3"></script>
+    <script src="auth-gate.js?v=5"></script>
 
 
     <!-- Config and Logic -->
@@ -4944,7 +4942,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <script src="data.js"></script>
-    <script src="app.js?v=4.9"></script>
+    <script src="app.js?v=5.1"></script>
     <script>
         // 안전망: JS 오류로 init()가 실행되지 않아도 20초 후 로딩 화면 강제 제거
         setTimeout(function () {

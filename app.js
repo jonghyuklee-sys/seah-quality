@@ -660,6 +660,14 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
+    // 오버레이 탭 시 모바일 사이드바 닫기
+    if (sidebarOverlay) {
+        sidebarOverlay.onclick = () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+        };
+    }
+
     // --- [4. 규격서 라이브러리 엔진] ---
     const registeredFileList = document.getElementById('registered-file-list');
     const specFileInput = document.getElementById('spec-file');
@@ -1126,15 +1134,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div style="font-size:13px; line-height:1.6; color:#475569;">
                         <div style="margin-bottom:12px;">
-                            <div style="font-weight:700; color:#1e3a8a; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">🔍 예상 원인</div>
+                            <div style="font-weight:700; color:#26303C; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">🔍 예상 원인</div>
                             <div style="padding-left:2px;">${defect.reason || '-'}</div>
                         </div>
                         <div style="margin-bottom:12px;">
-                            <div style="font-weight:700; color:#1e3a8a; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">🏭 내부 검토 항목 (생산)</div>
+                            <div style="font-weight:700; color:#26303C; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">🏭 내부 검토 항목 (생산)</div>
                             <div style="padding-left:2px; white-space:pre-wrap;">${defect.internal || '-'}</div>
                         </div>
                         <div>
-                            <div style="font-weight:700; color:#1e3a8a; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">💼 외부 검토 항목 (영업)</div>
+                            <div style="font-weight:700; color:#26303C; margin-bottom:4px; font-size:12px; display:flex; align-items:center; gap:6px;">💼 외부 검토 항목 (영업)</div>
                             <div style="padding-left:2px; white-space:pre-wrap;">${defect.external || '-'}</div>
                         </div>
                     </div>
@@ -1382,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td style="padding:10px 8px; text-align:center; font-size:13px; color:#64748b; white-space:nowrap;">${v.receiptDate}</td>
                 <td style="padding:10px 8px; font-weight:700; color:#1e293b; text-align:center;">${v.customer}</td>
                 <td style="padding:10px 8px; text-align:center; color:#475569; vertical-align:middle;">${managerDisplay}</td>
-                <td style="padding:10px 8px; text-align:center;"><span style="font-weight:700; color:#1e3a8a; background:#eff6ff; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
+                <td style="padding:10px 8px; text-align:center;"><span style="font-weight:700; color:#26303C; background:#EFF2F5; padding:2px 8px; border-radius:4px; font-size:12px;">${v.line}</span></td>
                 <td style="padding:10px 8px; text-align:center; color:#334155; font-weight:500; white-space:nowrap;">${v.color || '-'}</td>
                 <td class="voc-title-cell" style="padding:10px 8px; color:#334155; font-weight:500; text-align:center; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${isNewEntry(v) ? '<span style="display:inline-block; background:#10b981; color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px; vertical-align:middle; letter-spacing:0.5px;">NEW</span>' : ''}${v.title}</td>
                 <td style="padding:10px 14px; text-align:center;"><span class="voc-status ${v.status === '완료' ? 'status-done' : 'status-pending'}" style="font-size:11px;">${v.status}</span></td>
@@ -1988,8 +1996,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     datasets: [{
                         label: '발생 건수',
                         data: Object.values(lineMap),
-                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(74, 101, 130, 0.8)',
+                        borderColor: '#3D5A75',
                         borderWidth: 1,
                         borderRadius: 6
                     }]
@@ -2072,7 +2080,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     labels: Object.keys(marketMap),
                     datasets: [{
                         data: Object.values(marketMap),
-                        backgroundColor: ['#3b82f6', '#10b981'],
+                        backgroundColor: ['#4A6582', '#10b981'],
                         borderWidth: 2, borderColor: '#fff'
                     }]
                 },
@@ -3602,7 +3610,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     style = 'background-image: repeating-linear-gradient(45deg, #94a3b8, #94a3b8 1px, transparent 1px, transparent 3px);';
                 }
                 if (status === 3) {
-                    bg = '#1e3a8a';
+                    bg = '#26303C';
                 }
                 const cellStyle = `background-color: ${bg}; ${style} cursor: ${isGlobalGridEditMode ? 'pointer' : 'default'}; transition: all 0.1s;`;
                 html += `<td style="${cellStyle}" 
@@ -3858,7 +3866,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 // 기존 불가가 아닌 경우에만 3으로 변경 (범위 밖이면 이미 0)
                                 if (status !== 0) {
                                     status = 3;
-                                    message = "<br><small style='color:#1e40af;'>* 고도금(AZ120 초과)으로 인해 후부착 공정이 필요합니다.</small>";
+                                    message = "<br><small style='color:#3D5A75;'>* 고도금(AZ120 초과)으로 인해 후부착 공정이 필요합니다.</small>";
                                 }
                             } else {
                                 // 후부착 불가능 -> 생산 불가
@@ -3882,7 +3890,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let resultHtml = "";
         if (status === 1) resultHtml = `<div style="padding:15px; background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; border-radius:8px;">✅ <strong>[생산 가능]</strong> 입력하신 스펙은 정상 생산 범위 내에 있습니다.${message}</div>`;
         else if (status === 2) resultHtml = `<div style="padding:15px; background:#fff7ed; border:1px solid #ffedd5; color:#9a3412; border-radius:8px;">⚠️ <strong>[기술 협의]</strong> 해당 스펙은 사전 품질 검토(기술 협의)가 필요한 영역입니다.${message}</div>`;
-        else if (status === 3) resultHtml = `<div style="padding:15px; background:#eff6ff; border:1px solid #dbeafe; color:#1e40af; border-radius:8px;">ℹ️ <strong>[후부착 필요]</strong> 특수 공정(후부착 등) 협의 후 생산 가능합니다.${message}</div>`;
+        else if (status === 3) resultHtml = `<div style="padding:15px; background:#EFF2F5; border:1px solid #E2E8EE; color:#3D5A75; border-radius:8px;">ℹ️ <strong>[후부착 필요]</strong> 특수 공정(후부착 등) 협의 후 생산 가능합니다.${message}</div>`;
         else resultHtml = `<div style="padding:15px; background:#fef2f2; border:1px solid #fee2e2; color:#ef4444; border-radius:8px;">❌ <strong>[생산 불가]</strong> 현재 해당 라인의 설비 능력 범위를 벗어나는 스펙입니다.</div>`;
 
         resultEl.innerHTML = resultHtml;
@@ -4322,7 +4330,7 @@ document.addEventListener('keydown', function (event) {
             tr.onmouseout = () => tr.style.background = 'transparent';
             tr.onclick = (e) => { if (!e.target.closest('.feas-delete-btn')) openFeasibilityModal(req.id); };
 
-            const statusMap = { '접수': {c:'#64748b',i:'⏳'}, '검토중': {c:'#3b82f6',i:'🔍'}, '승인': {c:'#10b981',i:'✅'}, '불가': {c:'#ef4444',i:'❌'}, '보완요청': {c:'#f59e0b',i:'⚠️'} };
+            const statusMap = { '접수': {c:'#64748b',i:'⏳'}, '검토중': {c:'#4A6582',i:'🔍'}, '승인': {c:'#10b981',i:'✅'}, '불가': {c:'#ef4444',i:'❌'}, '보완요청': {c:'#f59e0b',i:'⚠️'} };
             const st = statusMap[req.status] || statusMap['접수'];
             const tDisp = req.thicknessStd ? '규격' : ([req.thicknessMin, req.thicknessMax].filter(Boolean).join('~') || req.thickness || '');
             const wDisp = req.widthStd ? '규격' : ([req.widthMin, req.widthMax].filter(Boolean).join('~') || req.width || '');
@@ -4335,13 +4343,13 @@ document.addEventListener('keydown', function (event) {
             }
 
             const hasAttachments = req.attachments && req.attachments.length > 0;
-            const attachmentIcon = hasAttachments ? `<i class="fas fa-paperclip" style="font-size:10px; color:#3b82f6; margin-left:5px;" title="첨부파일 ${req.attachments.length}개"></i>` : '';
+            const attachmentIcon = hasAttachments ? `<i class="fas fa-paperclip" style="font-size:10px; color:#4A6582; margin-left:5px;" title="첨부파일 ${req.attachments.length}개"></i>` : '';
 
             tr.innerHTML = `
                 <td style="padding:10px 6px; text-align:center; color:#94a3b8; font-size:12px;">${filtered.length - idx}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569; white-space:nowrap;">${req.requestDate || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px;">${requesterDisp}</td>
-                <td style="padding:10px 6px; text-align:center;"><span style="background:#eff6ff; color:#1e3a8a; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">${req.material || '-'}</span></td>
+                <td style="padding:10px 6px; text-align:center;"><span style="background:#EFF2F5; color:#26303C; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">${req.material || '-'}</span></td>
                 <td style="padding:10px 6px; text-align:center; font-size:11px; color:#475569; font-family:'Roboto Mono',monospace;">${specStr}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569;">${req.steelGrade || '-'}</td>
                 <td style="padding:10px 6px; text-align:center; font-size:12px; color:#475569;">${req.standard || '-'}</td>
@@ -4721,7 +4729,7 @@ function renderCertification() {
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 if (diffDays > 365) {
-                    remainHtml = `<span class="status-badge" style="background:#3b82f6;">D-${diffDays}</span>`;
+                    remainHtml = `<span class="status-badge" style="background:#4A6582;">D-${diffDays}</span>`;
                 } else if (diffDays > 0) {
                     remainHtml = `<span class="status-badge" style="background:#f59e0b;">D-${diffDays}</span>`;
                 } else {
@@ -4745,7 +4753,7 @@ function renderCertification() {
         if (currentIsAdmin) {
             adminActionHtml = `
                     <td class="admin-only" style="text-align:center;">
-                        <button class="btn-icon" onclick="openCertModal('${row.docId}')" style="color:#3b82f6;">✏️</button>
+                        <button class="btn-icon" onclick="openCertModal('${row.docId}')" style="color:#4A6582;">✏️</button>
                         <button class="btn-icon" onclick="deleteCertification('${row.docId}')" style="color:#ef4444;">🗑️</button>
                     </td>
                 `;
@@ -4756,7 +4764,7 @@ function renderCertification() {
 
         tr.innerHTML = `
                 <td style="text-align:center; padding:10px; font-weight:bold; color:#64748b;">${row.id}</td>
-                <td style="text-align:center; padding:10px; font-weight:700; color:#1e3a8a;">${row.name}</td>
+                <td style="text-align:center; padding:10px; font-weight:700; color:#26303C;">${row.name}</td>
                 <td style="text-align:left; padding:10px; font-size:13px;">${row.item}</td>
                 <td style="text-align:center; padding:10px; font-size:13px;">${row.org}</td>
                 <td style="text-align:center; padding:10px; font-size:13px; color:#475569;">${row.firstDate}</td>
